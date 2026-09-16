@@ -1,0 +1,16 @@
+{
+  "name": "xystudio-web",
+  "type": "module",
+  "version": "2.0.0",
+  "private": true,
+  "description": "XyStudio AI — versi web (Astro) with Groq API",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0",
+    "start": "astro dev --host 0.0.0.0",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "astro": "^5.14.1"
+  }
+}

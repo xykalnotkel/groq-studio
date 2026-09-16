@@ -1,11 +1,14 @@
-# Groq Studio 💜⚡
+# XyStudio AI 💜⚡
 
 Aplikasi Android (Flutter) untuk bikin **judul, deskripsi, artikel, penjelasan aplikasi,
 deskripsi Play Store, caption + hashtag, ide nama, catatan rilis, copy iklan, email,
 dan brainstorming** — semuanya ditenagai **Groq API** (Llama 4, GPT-OSS, Qwen3, Kimi K2).
 
 **Repo:** <https://github.com/xykalnotkel/groq-studio> ·
-**CI:** setiap push ke `main` otomatis menjalankan format-check → analyze → test → build APK + AAB.
+**CI:** setiap push ke `main` otomatis menjalankan format-check → analyze → test → build APK + AAB + web.
+
+> Ada dua versi: **aplikasi Android** (folder ini) dan **versi web** (folder
+> [`web/`](web/README.md) — Astro, bisa dibuka langsung di browser).
 
 > Preview tampilan (statis): buka `preview/ui_preview.html` di browser.
 
@@ -18,7 +21,9 @@ kata demi kata (streaming), bisa disalin, dibagikan, dan tersimpan otomatis di r
 
 | Fitur | Keterangan |
 |---|---|
-| 15 mode generate | Judul, Deskripsi, Artikel, Penjelasan Aplikasi, Play Store, Caption & Hashtag, Ide Nama, Catatan Rilis, Copy Iklan, Email & Pengumuman, Brainstorming, **Script Video**, **Prompt Gambar**, **Kalender Konten**, Prompt Bebas |
+| 20 mode generate | Judul, Deskripsi, Artikel, Penjelasan Aplikasi, Play Store, Caption & Hashtag, Ide Nama, Catatan Rilis, Copy Iklan, Email & Pengumuman, Brainstorming, Script Video, Prompt Gambar, Kalender Konten, **Terjemah & Parafrase**, **Deskripsi Produk**, **Thread X**, **Riset Keyword & SEO**, **Balas Chat Pembeli**, Prompt Bebas |
+| Splash screen | Logo + credit **Built in XyVerse** saat aplikasi dibuka |
+| Popup komunitas | Ajakan gabung **Saluran WA XyVerse**: tombol X, centang "Jangan tampilkan lagi", tombol **Laporkan bug** |
 | Streaming real-time | Hasil muncul per kata, ada tombol **Hentikan** |
 | Bahasa bisa diganti | Indonesia, English, Melayu, Jepang, Mandarin, Arab, Spanyol |
 | Gaya & panjang | Profesional / Santai / Persuasif / Lucu / Formal / Inspiratif × Singkat / Sedang / Panjang |
@@ -72,6 +77,23 @@ Android bisa meminta konfirmasi. Isi API key Groq kamu sendiri di tab **Setelan*
    → tombol **Tes koneksi** untuk memastikan berhasil.
 
 ---
+
+## 🔑 Dua cara pakai API key
+
+| Cara | Untuk siapa | Cara pasang |
+|---|---|---|
+| **Ketik manual di aplikasi** | Pemakaian pribadi; key milik sendiri | Tab **Setelan** → tempel key → Simpan (tersimpan di perangkat) |
+| **Ditanam saat build** | APK yang dibagikan ke banyak orang | `flutter build apk --release --obfuscate --split-debug-info=build/symbols --dart-define=GROQ_API_KEY=gsk_xxx` |
+
+Untuk CI, cukup taruh key di secret `GROQ_API_KEY` pada repo — workflow akan
+menyuntikkannya otomatis lewat `--dart-define`.
+
+⚠️ **Keamanan:** apa pun yang di-`--dart-define` **masih bisa diekstrak** dari
+APK oleh orang yang tahu caranya (walau jauh lebih sulit berkat
+`--obfuscate`). Jadi:
+- Pakai key dengan limit/kuota terpisah untuk APK yang disebar luas.
+- Jangan pernah menaruh key mentah di dalam source code yang di-commit.
+- Opsi paling aman: biarkan setiap pengguna memakai key-nya sendiri.
 
 ## 🚀 Cara menjalankan di laptop
 
@@ -209,6 +231,17 @@ selesai → otomatis tersimpan ke Riwayat
 | Tidak ada koneksi | Pastikan HP online; aplikasi butuh internet untuk menghubungi Groq |
 
 ---
+
+## 🌐 Versi Web (Astro)
+
+```bash
+cd web
+npm install
+npm run dev      # http://localhost:4321
+```
+
+Halaman: `/` landing · `/app` generator (streaming + riwayat) · `/about`.
+Detail lengkap ada di [`web/README.md`](web/README.md).
 
 ## 🏪 Materi Play Store
 

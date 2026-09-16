@@ -20,7 +20,7 @@ class PromptBuilder {
     String extra = '',
   }) {
     final system = <String>[
-      'Kamu adalah Groq Studio, penulis dan content strategist profesional '
+      'Kamu adalah XyStudio AI, penulis dan content strategist profesional '
           'yang bekerja di dalam aplikasi Android.',
       '',
       'Aturan wajib:',

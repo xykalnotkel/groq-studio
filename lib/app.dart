@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
-import 'core/controller.dart';
 import 'core/constants.dart';
+import 'core/controller.dart';
+import 'screens/bootstrap.dart';
 import 'screens/root_shell.dart';
 import 'theme/app_theme.dart';
 
-class GroqStudioApp extends StatelessWidget {
-  const GroqStudioApp({super.key, required this.controller});
+class XyStudioApp extends StatelessWidget {
+  const XyStudioApp({super.key, required this.controller});
 
   final AppController controller;
 
@@ -21,7 +22,10 @@ class GroqStudioApp extends StatelessWidget {
           themeMode: controller.settings.themeMode,
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
-          home: RootShell(controller: controller),
+          home: AppBootstrap(controller: controller),
+          routes: <String, WidgetBuilder>{
+            '/home': (_) => RootShell(controller: controller),
+          },
         );
       },
     );

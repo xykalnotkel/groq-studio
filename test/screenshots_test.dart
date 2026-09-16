@@ -15,14 +15,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:groq_studio/app.dart';
-import 'package:groq_studio/core/controller.dart';
-import 'package:groq_studio/core/storage.dart';
-import 'package:groq_studio/models/generation_mode.dart';
-import 'package:groq_studio/models/settings.dart';
-import 'package:groq_studio/theme/app_theme.dart';
-import 'package:groq_studio/widgets/mode_selector.dart';
-import 'package:groq_studio/widgets/result_view.dart';
+import 'package:xystudio/app.dart';
+import 'package:xystudio/core/controller.dart';
+import 'package:xystudio/core/storage.dart';
+import 'package:xystudio/models/generation_mode.dart';
+import 'package:xystudio/models/settings.dart';
+import 'package:xystudio/theme/app_theme.dart';
+import 'package:xystudio/widgets/mode_selector.dart';
+import 'package:xystudio/widgets/result_view.dart';
 
 // Ukuran file PNG akhir (standar Play Store).
 const Size kGolden = Size(1080, 1920);
@@ -132,14 +132,18 @@ void main() {
   });
 
   testWidgets('01 — Halaman utama', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'hide_channel_popup': true,
+    });
     await _setPhone(tester);
 
     final controller = AppController(StorageService());
     await controller.load();
 
-    await tester.pumpWidget(_phoneFrame(GroqStudioApp(controller: controller)));
+    await tester.pumpWidget(_phoneFrame(XyStudioApp(controller: controller)));
     await tester.pump();
+    // Lewati splash screen (2,1 detik).
+    await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(milliseconds: 500));
 
     await expectLater(
@@ -149,7 +153,9 @@ void main() {
   }, tags: <String>['screenshot']);
 
   testWidgets('02 — Hasil generate', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'hide_channel_popup': true,
+    });
     await _setPhone(tester);
 
     await tester.pumpWidget(
@@ -215,8 +221,10 @@ void main() {
     final controller = AppController(StorageService());
     await controller.load();
 
-    await tester.pumpWidget(_phoneFrame(GroqStudioApp(controller: controller)));
+    await tester.pumpWidget(_phoneFrame(XyStudioApp(controller: controller)));
     await tester.pump();
+    // Lewati splash screen (2,1 detik).
+    await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(milliseconds: 300));
 
     await tester.tap(find.text('Riwayat'));
@@ -230,14 +238,18 @@ void main() {
   }, tags: <String>['screenshot']);
 
   testWidgets('04 — Setelan', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'hide_channel_popup': true,
+    });
     await _setPhone(tester);
 
     final controller = AppController(StorageService());
     await controller.load();
 
-    await tester.pumpWidget(_phoneFrame(GroqStudioApp(controller: controller)));
+    await tester.pumpWidget(_phoneFrame(XyStudioApp(controller: controller)));
     await tester.pump();
+    // Lewati splash screen (2,1 detik).
+    await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(milliseconds: 300));
 
     await tester.tap(find.text('Setelan'));
@@ -250,15 +262,39 @@ void main() {
     );
   }, tags: <String>['screenshot']);
 
-  testWidgets('05 — Mode lengkap', (WidgetTester tester) async {
+  testWidgets('06 — Popup saluran WA', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await _setPhone(tester);
 
     final controller = AppController(StorageService());
     await controller.load();
 
-    await tester.pumpWidget(_phoneFrame(GroqStudioApp(controller: controller)));
+    await tester.pumpWidget(_phoneFrame(XyStudioApp(controller: controller)));
     await tester.pump();
+    // Lewati splash screen (2,1 detik).
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 700));
+
+    await expectLater(
+      find.byKey(const Key('phone-frame')),
+      matchesGoldenFile('goldens/06_popup.png'),
+    );
+  }, tags: <String>['screenshot']);
+
+  testWidgets('05 — Mode lengkap', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'hide_channel_popup': true,
+    });
+    await _setPhone(tester);
+
+    final controller = AppController(StorageService());
+    await controller.load();
+
+    await tester.pumpWidget(_phoneFrame(XyStudioApp(controller: controller)));
+    await tester.pump();
+    // Lewati splash screen (2,1 detik).
+    await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(milliseconds: 300));
 
     // Geser daftar mode agar mode baru (Script Video, Prompt Gambar,

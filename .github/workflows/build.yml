@@ -101,6 +101,11 @@ jobs:
         run: |
           set -e
           ARGS="--$MODE"
+          if [ "$MODE" = "release" ]; then
+            # Obfuscate supaya key hasil --dart-define lebih sulit dibaca
+            # kalau APK dibongkar. Symbols diunggah terpisah.
+            ARGS="$ARGS --obfuscate --split-debug-info=build/symbols"
+          fi
           if [ -n "$GROQ_API_KEY" ]; then
             ARGS="$ARGS --dart-define=GROQ_API_KEY=$GROQ_API_KEY"
           fi
@@ -123,6 +128,14 @@ jobs:
           done
           cp "build/app/outputs/bundle/$MODE/app-$MODE.aab" "dist/GroqStudio-$VERSION.aab"
           ls -lh dist
+
+      - name: Upload symbol obfuscation
+        if: ${{ inputs.mode != 'debug' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: symbols-${{ env.VERSION }}
+          path: build/symbols
+          retention-days: 30
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

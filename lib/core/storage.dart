@@ -11,6 +11,8 @@ class StorageService {
 
   static const String _kSettings = 'settings';
   static const String _kHistory = 'history';
+  static const String _kHidePopup = 'hide_channel_popup';
+  static const String _kLaunchCount = 'launch_count';
 
   Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -42,5 +44,18 @@ class StorageService {
 
   Future<void> saveHistory(List<HistoryItem> items) async {
     await _prefs?.setString(_kHistory, HistoryItem.encodeList(items));
+  }
+
+  /// Pengguna mencentang "jangan tampilkan lagi" di popup saluran WA.
+  bool loadHideChannelPopup() => _prefs?.getBool(_kHidePopup) ?? false;
+
+  Future<void> setHideChannelPopup(bool value) async {
+    await _prefs?.setBool(_kHidePopup, value);
+  }
+
+  int loadLaunchCount() => _prefs?.getInt(_kLaunchCount) ?? 0;
+
+  Future<void> setLaunchCount(int value) async {
+    await _prefs?.setInt(_kLaunchCount, value);
   }
 }

@@ -277,6 +277,6 @@ Future<void> showModelSheet(BuildContext context, AppController controller) {
 }
 
 /// Aksi berbagi teks.
-Future<void> shareText(String text, {String subject = 'Hasil Groq Studio'}) {
+Future<void> shareText(String text, {String subject = 'Hasil XyStudio AI'}) {
   return SharePlus.instance.share(ShareParams(text: text, subject: subject));
 }

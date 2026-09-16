@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/constants.dart';
+import '../widgets/about_dialog.dart';
 import '../core/controller.dart';
 import '../models/settings.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/morphing_background.dart';
+
+import 'package:url_launcher/url_launcher.dart';
+
 import '../widgets/option_sheets.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -448,14 +452,52 @@ class _SettingsScreenState extends State<SettingsScreen>
                             );
                           },
                         ),
-                        const AboutListTile(),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.campaign_rounded,
+                            color: Color(0xFF25D366),
+                          ),
+                          title: const Text('Gabung Saluran WA'),
+                          subtitle: Text(
+                            AppInfo.waChannelName,
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          trailing: const Icon(
+                            Icons.open_in_new_rounded,
+                            size: 16,
+                          ),
+                          onTap: () => _openUrl(context, AppInfo.waChannelUrl),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.bug_report_rounded),
+                          title: const Text('Laporkan bug'),
+                          subtitle: const Text(
+                            'Chat WhatsApp XyVerse',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                          trailing: const Icon(
+                            Icons.open_in_new_rounded,
+                            size: 16,
+                          ),
+                          onTap: () => _openUrl(context, AppInfo.bugReportUrl),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.info_outline_rounded),
+                          title: const Text('Tentang aplikasi'),
+                          subtitle: Text(
+                            '${AppInfo.name} v${AppInfo.version} • ${AppInfo.credit}',
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => showAboutAppDialog(context),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 18),
                   Center(
                     child: Text(
-                      'Groq Studio v${AppInfo.version} • dibuat dengan Flutter 💜',
+                      '${AppInfo.name} v${AppInfo.version} • ${AppInfo.credit} 💜',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface
                             .withValues(alpha: 0.45),
@@ -525,5 +567,15 @@ class _PickerTile<T> extends StatelessWidget {
         if (picked != null) onPicked(picked);
       },
     );
+  }
+}
+
+Future<void> _openUrl(BuildContext context, String url) async {
+  try {
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  } catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Tidak bisa membuka $url')));
   }
 }

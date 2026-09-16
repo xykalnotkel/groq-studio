@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants.dart';
 import '../core/controller.dart';
 import '../models/generation_mode.dart';
 import '../models/settings.dart';
@@ -232,7 +233,7 @@ class _Header extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Groq Studio',
+                AppInfo.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(

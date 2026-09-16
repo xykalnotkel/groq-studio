@@ -33,6 +33,6 @@ Future<void> main() async {
 
   runZonedGuarded<void>(() async {
     await controller.load();
-    runApp(GroqStudioApp(controller: controller));
+    runApp(XyStudioApp(controller: controller));
   }, (error, stack) => debugPrint('Bootstrap error: $error'));
 }

@@ -276,6 +276,108 @@ class GenerationMode {
           'beserta alasannya.',
     ),
     GenerationMode(
+      id: 'terjemah',
+      label: 'Terjemah & Parafrase',
+      icon: Icons.g_translate_rounded,
+      hint: 'Terjemahkan atau tulis ulang dengan gaya baru',
+      placeholder: 'Contoh: terjemahkan ke bahasa Inggris — "Aplikasi ini membantu kamu mencatat keuangan"',
+      color: Color(0xFF8B5CF6),
+      temperature: 0.5,
+      instruction:
+          'Terjemahkan atau tulis ulang teks pada brief.\n'
+          'Keluarkan:\n'
+          '1. **Terjemahan utama** — hasil terbaik, natural, tidak kaku\n'
+          '2. **Versi formal** — untuk dokumen/email\n'
+          '3. **Versi santai** — untuk percakapan sehari-hari\n'
+          '4. **3 parafrase** — arti sama, susunan berbeda\n'
+          '5. **Catatan** — sebutkan idiom atau istilah yang kamu sesuaikan\n'
+          'Jangan menambahkan informasi baru yang tidak ada di teks asli.',
+    ),
+    GenerationMode(
+      id: 'produk',
+      label: 'Deskripsi Produk',
+      icon: Icons.shopping_bag_rounded,
+      hint: 'Judul + bullet + SEO buat toko online',
+      placeholder:
+          'Contoh: tas ransel laptop anti air bahan kanvas, harga 350 ribuan',
+      color: Color(0xFFFFB347),
+      temperature: 0.8,
+      instruction:
+          'Buat materi deskripsi produk untuk toko online.\n'
+          'Keluarkan:\n'
+          '1. **Judul produk** — 3 opsi, maks 70 karakter, mengandung kata kunci utama\n'
+          '2. **Ringkasan** — 2 kalimat yang menjual\n'
+          '3. **Poin manfaat** — 5-7 bullet, fokus pada manfaat bukan sekadar spesifikasi\n'
+          '4. **Deskripsi lengkap** — 150-250 kata, enak dibaca di HP\n'
+          '5. **Spesifikasi** — tabel sederhana (bahan, ukuran, berat, garansi)\n'
+          '6. **Kata kunci SEO** — 8 kata kunci\n'
+          '7. **Ide bonus/urgensi** — 3 ide promo singkat',
+    ),
+    GenerationMode(
+      id: 'thread',
+      label: 'Thread X / Twitter',
+      icon: Icons.forum_rounded,
+      hint: 'Rangkaian tweet yang bikin orang baca sampai habis',
+      placeholder: 'Contoh: thread tentang 5 kebiasaan kecil yang bikin hidup lebih rapi',
+      color: Color(0xFF60A5FA),
+      temperature: 0.95,
+      maxTokens: 3072,
+      instruction:
+          'Buat thread untuk X/Twitter berdasarkan brief.\n'
+          'Keluarkan:\n'
+          '1. **Tweet pembuka** — 3 opsi hook (maks 240 karakter), '
+          'harus bikin orang berhenti scroll\n'
+          '2. **Isi thread** — 8-12 tweet bernomor, masing-masing maks 240 '
+          'karakter, satu ide per tweet\n'
+          '3. **Tweet penutup** — rangkuman + ajakan (follow/retweet/komentar)\n'
+          '4. **3 ide kutipan** — kalimat yang bisa dijadikan gambar\n'
+          '5. **3 hashtag** yang relevan\n'
+          'Tulis dengan ritme cepat, kalimat pendek, dan hindari basa-basi.',
+    ),
+    GenerationMode(
+      id: 'seo',
+      label: 'Riset Keyword & SEO',
+      icon: Icons.travel_explore_rounded,
+      hint: 'Keyword, meta, dan outline artikel',
+      placeholder: 'Contoh: website jasa laundry kiloan di Bandung',
+      color: Color(0xFF34D399),
+      temperature: 0.7,
+      maxTokens: 3072,
+      instruction:
+          'Lakukan riset keyword & rencana SEO berdasarkan brief.\n'
+          'Keluarkan:\n'
+          '1. **Keyword utama** — 1 kata kunci fokus + alasannya\n'
+          '2. **Keyword turunan** — 15 kata kunci (long-tail), dikelompokkan '
+          'berdasarkan niat: informatif, komersial, transaksional\n'
+          '3. **Meta title** — 3 opsi, maks 60 karakter\n'
+          '4. **Meta description** — 3 opsi, maks 155 karakter\n'
+          '5. **Outline artikel** — struktur H2/H3 yang siap ditulis\n'
+          '6. **5 ide judul artikel** dengan skor potensi klik (1-10)\n'
+          '7. **Internal link** — 5 ide tautan antar halaman\n'
+          '8. **FAQ** — 4 pertanyaan yang sering dicari orang',
+    ),
+    GenerationMode(
+      id: 'cs',
+      label: 'Balas Chat Pembeli',
+      icon: Icons.support_agent_rounded,
+      hint: 'Balasan CS ramah untuk komplain, tanya, atau nego',
+      placeholder:
+          'Contoh: pembeli komplain pesanan telat 3 hari, minta refund',
+      color: Color(0xFFF87171),
+      temperature: 0.6,
+      instruction:
+          'Buat balasan chat customer service berdasarkan brief.\n'
+          'Keluarkan 3 versi:\n'
+          '1. **Empati & solusi** — mengakui masalah, lalu kasih jalan keluar\n'
+          '2. **Singkat & to the point** — maks 3 kalimat, untuk chat cepat\n'
+          '3. **Versi lengkap** — sopan, terstruktur, cocok untuk email/komplain besar\n'
+          'Setiap versi: gunakan bahasa ramah, tidak defensif, sebutkan '
+          'langkah konkret yang akan dilakukan, dan akhiri dengan kalimat '
+          'yang menenangkan.\n'
+          'Tambahkan juga 3 template balasan cepat untuk pertanyaan yang '
+          'sering muncul (stok, ongkir, estimasi sampai).',
+    ),
+    GenerationMode(
       id: 'custom',
       label: 'Prompt Bebas',
       icon: Icons.auto_awesome_rounded,

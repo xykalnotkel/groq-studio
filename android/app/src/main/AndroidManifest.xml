@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="Groq Studio"
+        android:label="XyStudio AI"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

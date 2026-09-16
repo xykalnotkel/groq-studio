@@ -1,0 +1,172 @@
+---
+/**
+ * Popup ajakan gabung saluran WhatsApp.
+ * - Tombol X untuk menutup
+ * - Centang "Jangan tampilkan lagi" (disimpan di localStorage)
+ * - Tombol "Laporkan bug" → chat WhatsApp
+ */
+import { APP } from '../data/app.js';
+---
+
+<div class="cp-overlay" id="channel-popup" hidden>
+  <div class="cp-card" role="dialog" aria-modal="true" aria-labelledby="cp-title">
+    <div class="cp-hero">
+      <img src="/wa-channel.png" alt="Ilustrasi gabung saluran WhatsApp XyVerse" />
+      <button class="cp-close" id="cp-close" aria-label="Tutup">✕</button>
+    </div>
+
+    <div class="cp-body">
+      <h3 id="cp-title">Gabung {APP.waChannelName}</h3>
+      <p class="cp-desc">
+        Dapatkan kabar fitur baru, template prompt, dan tips nulis pakai AI —
+        langsung di WhatsApp kamu. Gratis, dan bisa keluar kapan saja.
+      </p>
+
+      <ul class="cp-list">
+        <li><span>⚡</span> Update fitur duluan sebelum rilis</li>
+        <li><span>✨</span> Template prompt &amp; ide konten gratis</li>
+        <li><span>💬</span> Tanya jawab bareng pengguna lain</li>
+      </ul>
+
+      <a class="btn green cp-join" href={APP.waChannelUrl} target="_blank" rel="noopener">
+        Gabung Sekarang
+      </a>
+
+      <label class="cp-check">
+        <input type="checkbox" id="cp-dontshow" />
+        <span class="cp-box" aria-hidden="true"></span>
+        <span>Jangan tampilkan lagi</span>
+      </label>
+
+      <a class="cp-bug" href={APP.bugReportUrl} target="_blank" rel="noopener">
+        🐞 Laporkan bug
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cp-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: grid; place-items: center;
+    padding: 18px;
+    background: rgba(5, 5, 12, .62);
+    backdrop-filter: blur(6px);
+    animation: fade .28s ease both;
+  }
+  .cp-overlay[hidden] { display: none; }
+  @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+
+  .cp-card {
+    width: 100%; max-width: 420px;
+    background: #12121f;
+    border: 1px solid #262640;
+    border-radius: 26px;
+    overflow: hidden;
+    box-shadow: 0 40px 90px rgba(0, 0, 0, .6);
+    animation: pop .42s cubic-bezier(.2,0,0,1) both;
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(14px) scale(.94) }
+    to   { opacity: 1; transform: none }
+  }
+
+  .cp-hero { position: relative; height: 176px; overflow: hidden; }
+  .cp-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cp-hero::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,.32), transparent 42%, #12121f 96%);
+  }
+  .cp-close {
+    position: absolute; top: 12px; right: 12px; z-index: 2;
+    width: 34px; height: 34px; border: 0; border-radius: 50%;
+    background: rgba(0, 0, 0, .45); color: #fff; font-size: 15px;
+    cursor: pointer; line-height: 1;
+    display: grid; place-items: center;
+    transition: background .2s, transform .2s;
+  }
+  .cp-close:hover { background: rgba(0, 0, 0, .7); transform: rotate(90deg); }
+
+  .cp-body { padding: 8px 24px 20px; }
+  .cp-body h3 {
+    font-size: 20px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 8px;
+  }
+  .cp-desc { font-size: 13.6px; color: #a9a9c4; line-height: 1.6; margin-bottom: 14px; }
+
+  .cp-list { list-style: none; margin-bottom: 16px; }
+  .cp-list li {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 13.5px; margin-bottom: 7px; color: #d6d6e6;
+  }
+  .cp-list span { font-size: 14px; }
+
+  .cp-join { width: 100%; margin-bottom: 10px; }
+
+  .cp-check {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13.5px; font-weight: 600; cursor: pointer;
+    padding: 6px 2px; user-select: none;
+  }
+  .cp-check input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .cp-box {
+    width: 21px; height: 21px; flex: none;
+    border: 1.6px solid #34344f; border-radius: 7px;
+    display: grid; place-items: center;
+    transition: all .18s;
+  }
+  .cp-check input:checked + .cp-box {
+    background: linear-gradient(120deg, var(--indigo), var(--violet));
+    border-color: transparent;
+  }
+  .cp-check input:checked + .cp-box::after {
+    content: '✓'; color: #fff; font-size: 13px; font-weight: 900;
+  }
+
+  .cp-bug {
+    display: block; text-align: center; margin-top: 8px;
+    font-size: 12.8px; font-weight: 600; color: #7f7f9c;
+  }
+  .cp-bug:hover { color: var(--pink); }
+</style>
+
+<script>
+  const KEY = 'xystudio:hide-channel-popup';
+  const COUNT_KEY = 'xystudio:launch-count';
+  const overlay = document.getElementById('channel-popup');
+  const closeBtn = document.getElementById('cp-close');
+  const checkbox = document.getElementById('cp-dontshow');
+
+  function closePopup() {
+    if (checkbox && checkbox.checked) {
+      try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    }
+    if (overlay) overlay.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  if (overlay && closeBtn) {
+    closeBtn.addEventListener('click', closePopup);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closePopup();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !overlay.hidden) closePopup();
+    });
+
+    let hidden = false;
+    let count = 0;
+    try {
+      hidden = localStorage.getItem(KEY) === '1';
+      count = parseInt(localStorage.getItem(COUNT_KEY) || '0', 10) + 1;
+      localStorage.setItem(COUNT_KEY, String(count));
+    } catch (e) {}
+
+    // Tampil di kunjungan pertama, lalu tiap kunjungan ke-4.
+    if (!hidden && (count <= 1 || count % 4 === 0)) {
+      setTimeout(() => {
+        overlay.hidden = false;
+        document.body.style.overflow = 'hidden';
+      }, 900);
+    }
+  }
+</script>

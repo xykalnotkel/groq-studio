@@ -5,7 +5,8 @@ library;
 ///
 /// Contoh:
 /// ```bash
-/// flutter build apk --dart-define=GROQ_API_KEY=gsk_xxx
+/// flutter build apk --release --obfuscate --split-debug-info=build/symbols \
+///   --dart-define=GROQ_API_KEY=gsk_xxx
 /// ```
 /// Nilai ini dipakai hanya jika pengguna belum menyimpan key sendiri
 /// lewat menu Setelan di dalam aplikasi.
@@ -17,11 +18,29 @@ const String kEnvApiKey = String.fromEnvironment(
 class AppInfo {
   AppInfo._();
 
-  static const String name = 'Groq Studio';
-  static const String tagline = 'Studio konten AI bertenaga Groq';
-  static const String version = '1.0.0';
+  static const String name = 'XyStudio AI';
+  static const String tagline = 'Tulis apa saja, jadi cepat';
+  static const String version = '2.0.0';
+
+  /// Credit pembuat — tampil di splash screen & halaman Tentang.
+  static const String brand = 'XyVerse';
+  static const String credit = 'Built in XyVerse';
+
   static const String keysUrl = 'https://console.groq.com/keys';
   static const String docsUrl = 'https://console.groq.com/docs/models';
+  static const String githubUrl = 'https://github.com/xykalnotkel/groq-studio';
+
+  // ── Komunitas & bantuan ──────────────────────────────────────────────
+  static const String waChannelUrl =
+      'https://whatsapp.com/channel/0029VbB7nwuJZg3ym6UQ4Z1L';
+  static const String waChannelName = 'Saluran WA XyVerse';
+  static const String bugReportPhone = '6283116632566';
+  static const String bugReportMessage =
+      'Halo XyVerse! Saya mau lapor bug di XyStudio AI:%0A%0A'
+      '• Perangkat / HP:%0A• Versi aplikasi:%0A• Mode yang dipakai:%0A'
+      '• Cerita singkat:%0A• Screenshot (boleh dilampirkan terpisah)';
+  static const String bugReportUrl =
+      'https://wa.me/$bugReportPhone?text=$bugReportMessage';
 }
 
 /// Informasi model Groq.
@@ -106,6 +125,7 @@ class GroqModelInfo {
         .replaceAll('-instruct', '')
         .replaceAll('-versatile', '')
         .replaceAll('-instant', '')
+        .replaceAll('-0905', '')
         .replaceAll('meta-llama/', '')
         .replaceAll('moonshotai/', '');
   }

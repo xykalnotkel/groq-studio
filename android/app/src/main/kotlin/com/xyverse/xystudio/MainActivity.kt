@@ -1,4 +1,4 @@
-package com.groqstudio.groq_studio
+package com.xyverse.xystudio
 
 import io.flutter.embedding.android.FlutterActivity
 

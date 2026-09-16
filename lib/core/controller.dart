@@ -39,6 +39,8 @@ class AppController extends ChangeNotifier {
   bool _loadingModels = false;
   String? _modelsError;
   Duration _elapsed = Duration.zero;
+  int _launchCount = 0;
+  bool _hideChannelPopup = false;
   DateTime? _startedAt;
   Timer? _ticker;
 
@@ -59,6 +61,7 @@ class AppController extends ChangeNotifier {
       _status == GenerationStatus.streaming;
   bool get isLoadingModels => _loadingModels;
   String? get modelsError => _modelsError;
+  bool get hideChannelPopup => _hideChannelPopup;
 
   /// Key yang dipakai: punya pengguna, atau hasil inject saat build.
   String get apiKey =>
@@ -73,6 +76,7 @@ class AppController extends ChangeNotifier {
     await _storage.init();
     _settings = _storage.loadSettings();
     _history = _storage.loadHistory();
+    _hideChannelPopup = _storage.loadHideChannelPopup();
     notifyListeners();
     if (hasApiKey) {
       unawaited(refreshModels());
@@ -85,6 +89,35 @@ class AppController extends ChangeNotifier {
     _ticker?.cancel();
     _client?.close();
     super.dispose();
+  }
+
+  /// Dipanggil sekali setiap aplikasi dibuka.
+  ///
+  /// Popup ajakan gabung saluran WA tampil di kunjungan pertama, lalu
+  /// setiap 4 kali buka — kecuali pengguna mencentang
+  /// "jangan tampilkan lagi".
+  Future<void> registerLaunch() async {
+    _launchCount = _storage.loadLaunchCount() + 1;
+    await _storage.setLaunchCount(_launchCount);
+    _hideChannelPopup = _storage.loadHideChannelPopup();
+    notifyListeners();
+  }
+
+  bool get shouldShowChannelPopup =>
+      !_hideChannelPopup && (_launchCount <= 1 || _launchCount % 4 == 0);
+
+  Future<void> setHideChannelPopup(bool value) async {
+    _hideChannelPopup = value;
+    notifyListeners();
+    await _storage.setHideChannelPopup(value);
+  }
+
+  /// Untuk keperluan demo: paksa tampilkan popup lagi.
+  Future<void> resetChannelPopup() async {
+    await setHideChannelPopup(false);
+    _launchCount = 0;
+    await _storage.setLaunchCount(0);
+    notifyListeners();
   }
 
   // ── Pengaturan ────────────────────────────────────────────────────────

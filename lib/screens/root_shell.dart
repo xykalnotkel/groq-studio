@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/controller.dart';
+import '../widgets/join_channel_dialog.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
@@ -17,6 +18,16 @@ class RootShell extends StatefulWidget {
 
 class _RootShellState extends State<RootShell> {
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Popup ajakan gabung saluran WA tampil setelah halaman siap.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await JoinChannelDialog.maybeShow(context, widget.controller);
+    });
+  }
 
   void _goTo(int index) => setState(() => _index = index);
 

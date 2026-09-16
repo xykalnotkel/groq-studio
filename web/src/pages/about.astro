@@ -1,0 +1,136 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP, MODES } from '../data/app.js';
+
+const stack = [
+  { label: 'Android', value: 'Flutter 3.47 · Dart 3.13 · Material 3' },
+  { label: 'Web', value: 'Astro 5 · vanilla JS · SSG' },
+  { label: 'AI', value: 'Groq Cloud (Llama 4, GPT-OSS, Qwen3, Kimi K2)' },
+  { label: 'Penyimpanan', value: 'SharedPreferences (Android) · localStorage (web)' },
+  { label: 'Build', value: 'GitHub Actions → APK, AAB, & Release otomatis' },
+];
+---
+
+<Base title={`Tentang ${APP.name}`} description={`Tentang ${APP.name}, studio menulis AI ${APP.credit}.`}>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="/">
+        <img src="/logo.png" alt="" width="34" height="34" />
+        <span>{APP.name}</span>
+      </a>
+      <nav>
+        <a href="/">Beranda</a>
+        <a href="/app">Web App</a>
+        <a class="btn sm" href="/app">Mulai Nulis</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap about">
+    <section class="hero card">
+      <img src="/logo.png" alt="" width="86" height="86" class="logo" />
+      <h1>{APP.name}</h1>
+      <p class="muted">{APP.tagline} · Versi {APP.version}</p>
+      <div class="credit">{APP.credit}</div>
+      <p class="desc">
+        {APP.name} adalah studio menulis AI yang membantu kamu mengubah satu
+        kalimat ide menjadi tulisan jadi — artikel, deskripsi produk, caption,
+        naskah video, prompt gambar, sampai balasan chat pembeli. Semua
+        ditenagai Groq, salah satu layanan inferensi AI tercepat saat ini,
+        sehingga hasilnya muncul kata demi kata dalam hitungan detik.
+      </p>
+      <div class="cta">
+        <a class="btn" href="/app">Buka Web App</a>
+        <a class="btn ghost" href={APP.releasesUrl} target="_blank" rel="noopener">Download APK</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>{MODES.length} mode generate</h2>
+      <div class="modes">
+        {MODES.map((m) => <span class="mode">{m.label}</span>)}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Dibuat dengan</h2>
+      <div class="stack">
+        {stack.map((s) => (
+          <div class="stack-row">
+            <span class="muted">{s.label}</span>
+            <strong>{s.value}</strong>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="card links">
+      <h2>Tautan</h2>
+      <div class="link-grid">
+        <a href={APP.waChannelUrl} target="_blank" rel="noopener">💬 Gabung {APP.waChannelName}</a>
+        <a href={APP.bugReportUrl} target="_blank" rel="noopener">🐞 Laporkan bug</a>
+        <a href={APP.githubUrl} target="_blank" rel="noopener">💻 Source code</a>
+        <a href={APP.keysUrl} target="_blank" rel="noopener">🔑 Ambil API key Groq</a>
+      </div>
+    </section>
+
+    <section class="card privasi">
+      <h2>Privasi</h2>
+      <p class="muted">
+        API key Groq milikmu disimpan hanya di perangkat/browser kamu dan
+        dikirim langsung ke <code>api.groq.com</code>. Tidak ada server
+        perantara, tidak ada analitik, dan pengembang tidak menyimpan teks
+        apa pun yang kamu hasilkan.
+      </p>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .nav { padding: 16px 0; border-bottom: 1px solid var(--line);
+         background: rgba(10,10,20,.7); backdrop-filter: blur(12px);
+         position: sticky; top: 0; z-index: 20; }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+  .brand img { border-radius: 9px; }
+  .nav nav { display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 600; }
+  .nav nav a { color: var(--muted); }
+  .nav nav a:hover { color: var(--text); }
+
+  .about { padding: 34px 22px 20px; display: grid; gap: 16px; }
+  .hero { text-align: center; padding: 34px 24px; }
+  .logo { border-radius: 22px; box-shadow: 0 18px 44px rgba(124,92,255,.35); }
+  h1 { font-size: 30px; font-weight: 800; letter-spacing: -.7px; margin: 14px 0 4px; }
+  .credit {
+    display: inline-block; margin: 14px 0 16px;
+    padding: 7px 16px; border-radius: 999px;
+    background: linear-gradient(120deg, rgba(124,92,255,.2), rgba(34,211,238,.2));
+    border: 1px solid rgba(124,92,255,.34);
+    font-weight: 800; font-size: 13px; letter-spacing: .6px;
+  }
+  .desc { max-width: 640px; margin: 0 auto; color: #b9b9d0; font-size: 14.6px; }
+  .cta { display: flex; gap: 12px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+
+  h2 { font-size: 19px; font-weight: 800; margin-bottom: 14px; letter-spacing: -.3px; }
+  .modes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mode { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line);
+          background: rgba(26,26,43,.6); font-size: 12.6px; font-weight: 600; }
+
+  .stack-row { display: flex; justify-content: space-between; gap: 16px;
+               padding: 11px 0; border-bottom: 1px dashed var(--line); font-size: 13.8px; }
+  .stack-row:last-child { border-bottom: 0; }
+
+  .link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .link-grid a { padding: 13px 16px; border-radius: 14px; border: 1px solid var(--line);
+                 background: rgba(26,26,43,.6); font-size: 13.8px; font-weight: 600;
+                 transition: border-color .2s, transform .18s; }
+  .link-grid a:hover { border-color: var(--violet); transform: translateY(-2px); }
+
+  .privasi p { font-size: 14px; }
+  code { background: rgba(124,92,255,.16); padding: 2px 6px; border-radius: 6px; font-size: 13px; }
+
+  @media (max-width: 700px) {
+    .link-grid { grid-template-columns: 1fr; }
+    .stack-row { flex-direction: column; gap: 2px; }
+  }
+</style>

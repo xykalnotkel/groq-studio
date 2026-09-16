@@ -1,0 +1,505 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP, MODES, LANGUAGES, TONES, LENGTHS, MODELS } from '../data/app.js';
+
+// Key bawaan (opsional) yang disuntikkan saat build:
+//   PUBLIC_GROQ_API_KEY=gsk_xxx npm run build
+// Ingat: apa pun yang diawali PUBLIC_ akan terlihat di bundle browser.
+const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
+---
+
+<Base title={`${APP.name} — Web App`} description="Bikin judul, artikel, caption, script video, dan prompt gambar langsung dari browser.">
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="/">
+        <img src="/logo.png" alt="" width="34" height="34" />
+        <span>{APP.name}</span>
+      </a>
+      <nav>
+        <a href="/">Beranda</a>
+        <a href="/about">Tentang</a>
+        <button class="btn sm ghost" id="btn-settings">⚙ Setelan</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap app-grid">
+    <!-- KIRI: formulir -->
+    <section class="card pane">
+      <p class="label">Mau dibuatin apa?</p>
+      <div class="modes" id="modes">
+        {MODES.map((m, i) => (
+          <button class={`chip mode-chip${i === 0 ? ' active' : ''}`} data-mode={m.id}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      <p class="label" style="margin-top:20px">Ceritakan sebentar</p>
+      <textarea id="brief" rows="5" placeholder="Contoh: aplikasi pencatat keuangan untuk anak kos yang bisa scan struk"></textarea>
+      <textarea id="extra" rows="2" style="margin-top:10px" placeholder="Tambahan: target audiens, kata kunci, catatan (opsional)"></textarea>
+
+      <div class="opts">
+        <label>
+          <span class="label">Bahasa</span>
+          <select id="lang">
+            {LANGUAGES.map((l) => <option value={l.code}>{l.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span class="label">Gaya</span>
+          <select id="tone">
+            {TONES.map((t) => <option value={t.id}>{t.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span class="label">Panjang</span>
+          <select id="length">
+            {LENGTHS.map((l) => <option value={l.id} selected={l.id === 'sedang'}>{l.label}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div class="opts">
+        <label>
+          <span class="label">Model</span>
+          <select id="model">
+            {MODELS.map((m) => <option value={m.id}>{m.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span class="label">Kreativitas: <b id="temp-val">0.8</b></span>
+          <input type="range" id="temp" min="0" max="1.5" step="0.1" value="0.8" />
+        </label>
+      </div>
+
+      <button class="btn" id="btn-generate" style="width:100%;margin-top:18px">
+        ✨ Buat Judul
+      </button>
+      <p class="muted small" id="status" style="margin-top:10px"></p>
+    </section>
+
+    <!-- KANAN: hasil -->
+    <section class="card pane result-pane">
+      <div class="result-head">
+        <p class="label" style="margin:0">Hasil</p>
+        <div class="result-actions">
+          <button class="chip" id="btn-copy">⧉ Salin</button>
+          <button class="chip" id="btn-clear">🗑 Bersihkan</button>
+        </div>
+      </div>
+      <div id="result" class="md result-box">
+        <p class="muted">
+          Belum ada hasil. Pilih mode di kiri, tulis idemu, lalu tekan tombolnya.
+          Kalau belum punya API key Groq, buka <b>Setelan</b> dulu ya — gratis.
+        </p>
+      </div>
+      <div class="history">
+        <p class="label">Riwayat (tersimpan di browser ini)</p>
+        <div id="history-list" class="hist-list">
+          <p class="muted small">Belum ada riwayat.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Panel setelan -->
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <strong>Setelan</strong>
+        <button class="chip" id="btn-close-sheet">Tutup</button>
+      </div>
+      <label class="field">
+        <span class="label">API key Groq</span>
+        <input
+          type="password"
+          id="apikey"
+          placeholder="gsk_xxxxxxxxxxxxxxxxxxxx"
+          value={BUILD_KEY}
+          autocomplete="off"
+        />
+      </label>
+      <p class="muted small">
+        Key disimpan hanya di browser ini (localStorage) dan dikirim langsung ke
+        api.groq.com. Ambil gratis di
+        <a href={APP.keysUrl} target="_blank" rel="noopener" style="color:var(--cyan)">console.groq.com/keys</a>.
+        {BUILD_KEY
+          ? 'Aplikasi ini sudah menyertakan key bawaan — kamu bisa pakai itu atau ganti dengan punyamu.'
+          : ''}
+      </p>
+      <div class="sheet-actions">
+        <button class="btn sm" id="btn-save-key">Simpan key</button>
+        <button class="btn sm ghost" id="btn-test-key">Tes koneksi</button>
+      </div>
+      <p class="muted small" id="key-status" style="margin-top:10px"></p>
+      <hr style="margin:18px 0;border:0;border-top:1px solid var(--line)" />
+      <p class="muted small">
+        Butuh bantuan?
+        <a href={APP.bugReportUrl} target="_blank" rel="noopener" style="color:var(--pink)">🐞 Laporkan bug</a>
+        ·
+        <a href={APP.waChannelUrl} target="_blank" rel="noopener" style="color:var(--green)">Gabung saluran WA</a>
+      </p>
+      <p class="credit-line">{APP.credit}</p>
+    </div>
+  </div>
+</Base>
+
+<script define:vars={{ MODES, BUILD_KEY, APP }}>
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    modes: $('modes'), brief: $('brief'), extra: $('extra'),
+    lang: $('lang'), tone: $('tone'), length: $('length'),
+    model: $('model'), temp: $('temp'), tempVal: $('temp-val'),
+    generate: $('btn-generate'), status: $('status'), result: $('result'),
+    copy: $('btn-copy'), clear: $('btn-clear'), history: $('history-list'),
+    settings: $('btn-settings'), sheet: $('sheet'), closeSheet: $('btn-close-sheet'),
+    apikey: $('apikey'), saveKey: $('btn-save-key'), testKey: $('btn-test-key'),
+    keyStatus: $('key-status'),
+  };
+
+  const KEY_STORE = 'xystudio:apikey';
+  const PREF_STORE = 'xystudio:prefs';
+  const HIST_STORE = 'xystudio:history';
+  const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
+  let mode = MODES[0];
+  let controller = null;
+  let busy = false;
+
+  // ── preferensi ──────────────────────────────────────────────────
+  function loadPrefs() {
+    try { return JSON.parse(localStorage.getItem(PREF_STORE) || '{}'); } catch { return {}; }
+  }
+  function savePrefs(p) {
+    try { localStorage.setItem(PREF_STORE, JSON.stringify(p)); } catch {}
+  }
+  const prefs = loadPrefs();
+  if (prefs.lang) els.lang.value = prefs.lang;
+  if (prefs.tone) els.tone.value = prefs.tone;
+  if (prefs.length) els.length.value = prefs.length;
+  if (prefs.model) els.model.value = prefs.model;
+  if (prefs.temp) { els.temp.value = prefs.temp; els.tempVal.textContent = prefs.temp; }
+  if (prefs.mode) {
+    const m = MODES.find((x) => x.id === prefs.mode);
+    if (m) { mode = m; syncModeChips(); }
+  }
+  try {
+    const savedKey = localStorage.getItem(KEY_STORE);
+    if (savedKey) els.apikey.value = savedKey;
+  } catch {}
+
+  function syncPrefs() {
+    savePrefs({
+      lang: els.lang.value, tone: els.tone.value, length: els.length.value,
+      model: els.model.value, temp: els.temp.value, mode: mode.id,
+    });
+  }
+  ['lang', 'tone', 'length', 'model'].forEach((k) => els[k].addEventListener('change', syncPrefs));
+  els.temp.addEventListener('input', () => { els.tempVal.textContent = els.temp.value; syncPrefs(); });
+
+  function syncModeChips() {
+    els.modes.querySelectorAll('.mode-chip').forEach((c) => {
+      c.classList.toggle('active', c.dataset.mode === mode.id);
+    });
+    els.generate.textContent = busy ? '■ Hentikan' : `✨ Buat ${mode.label}`;
+  }
+
+  els.modes.addEventListener('click', (e) => {
+    const btn = e.target.closest('.mode-chip');
+    if (!btn) return;
+    mode = MODES.find((m) => m.id === btn.dataset.mode) || mode;
+    syncModeChips();
+    syncPrefs();
+  });
+
+  // ── setelan ─────────────────────────────────────────────────────
+  els.settings.addEventListener('click', () => { els.sheet.hidden = false; });
+  els.closeSheet.addEventListener('click', () => { els.sheet.hidden = true; });
+  els.sheet.addEventListener('click', (e) => { if (e.target === els.sheet) els.sheet.hidden = true; });
+
+  els.saveKey.addEventListener('click', () => {
+    const v = els.apikey.value.trim();
+    try { v ? localStorage.setItem(KEY_STORE, v) : localStorage.removeItem(KEY_STORE); } catch {}
+    els.keyStatus.textContent = v ? 'API key tersimpan di browser ini 🔐' : 'API key dihapus.';
+  });
+
+  els.testKey.addEventListener('click', async () => {
+    const key = currentKey();
+    if (!key) { els.keyStatus.textContent = 'Isi API key dulu ya.'; return; }
+    els.keyStatus.textContent = 'Menguji koneksi…';
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: { Authorization: `Bearer ${key}` },
+      });
+      if (!r.ok) throw new Error(String(r.status));
+      const data = await r.json();
+      els.keyStatus.textContent = `Terhubung! ${data.data?.length ?? 0} model tersedia ✅`;
+    } catch (err) {
+      els.keyStatus.textContent = `Gagal terhubung (${err.message}). Cek key & internet kamu.`;
+    }
+  });
+
+  function currentKey() {
+    const typed = els.apikey.value.trim();
+    if (typed) return typed;
+    try { return localStorage.getItem(KEY_STORE) || BUILD_KEY || ''; } catch { return BUILD_KEY || ''; }
+  }
+
+  // ── generate ────────────────────────────────────────────────────
+  function buildMessages() {
+    const lang = els.lang.options[els.lang.selectedIndex].text;
+    const tone = els.tone.options[els.tone.selectedIndex].text;
+    const length = els.length.options[els.length.selectedIndex].text;
+    const system = [
+      'Kamu adalah XyStudio AI, penulis dan content strategist profesional.',
+      'Aturan wajib:',
+      '1. Balas HANYA dengan hasil yang diminta, tanpa pembuka basa-basi.',
+      '2. Gunakan Markdown rapi: judul pakai ##, poin pakai -, penekanan pakai **tebal**.',
+      `3. Bahasa keluaran: ${lang}.`,
+      `4. Gaya penulisan: ${tone}.`,
+      `5. Panjang: ${length}.`,
+      '6. Kalau brief kurang jelas, buat asumsi masuk akal dan langsung kerjakan.',
+    ].join('\n');
+
+    const user = [
+      'TUGAS: ' + mode.instruction,
+      '',
+      'OBJEK / BRIEF PENGGUNA:',
+      '"""',
+      els.brief.value.trim(),
+      '"""',
+      els.extra.value.trim() ? '\nTAMBAHAN:\n"""\n' + els.extra.value.trim() + '\n"""' : '',
+    ].join('\n');
+
+    return { system, user };
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function renderMd(src) {
+    let html = escapeHtml(src);
+    html = html.replace(/```([\s\S]*?)```/g, (_, c) => `<pre><code>${c}</code></pre>`);
+    html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+    html = html.replace(/^&gt; (.*)$/gm, '<blockquote>$1</blockquote>');
+    html = html.replace(/^---$/gm, '<hr/>');
+    html = html.replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>');
+    html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+    html = html.replace(/^\s*(\d+)\. (.*)$/gm, '<li>$1. $2</li>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    html = html.replace(/\n\n/g, '</p><p>');
+    return '<p>' + html + '</p>';
+  }
+
+  function setBusy(v) {
+    busy = v;
+    syncModeChips();
+    els.generate.classList.toggle('stop', v);
+  }
+
+  async function generate() {
+    if (busy) { controller?.abort(); return; }
+
+    const brief = els.brief.value.trim();
+    if (!brief) { els.status.textContent = 'Tulis dulu brief-nya ya 🙂'; return; }
+    const key = currentKey();
+    if (!key) {
+      els.status.textContent = 'API key Groq belum ada. Buka Setelan ⚙ lalu tempel key kamu.';
+      els.sheet.hidden = false;
+      return;
+    }
+
+    const { system, user } = buildMessages();
+    controller = new AbortController();
+    setBusy(true);
+    els.status.textContent = 'Sedang menulis…';
+    els.result.innerHTML = '<p class="muted">✍️ …</p>';
+
+    const started = performance.now();
+    try {
+      const res = await fetch(GROQ_URL, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+        body: JSON.stringify({
+          model: els.model.value,
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user },
+          ],
+          temperature: parseFloat(els.temp.value),
+          max_tokens: mode.max || 2048,
+          stream: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const msg = err?.error?.message || `HTTP ${res.status}`;
+        throw new Error(
+          res.status === 401 ? 'API key tidak valid. Cek lagi di Setelan.' :
+          res.status === 429 ? 'Kuota Groq penuh (rate limit). Tunggu sebentar.' :
+          msg
+        );
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let out = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const raw of lines) {
+          const line = raw.trim();
+          if (!line.startsWith('data:')) continue;
+          const data = line.slice(5).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const json = JSON.parse(data);
+            const delta = json?.choices?.[0]?.delta?.content;
+            if (delta) {
+              out += delta;
+              els.result.innerHTML = renderMd(out);
+            }
+          } catch {}
+        }
+      }
+
+      els.result.innerHTML = renderMd(out);
+      const secs = ((performance.now() - started) / 1000).toFixed(1);
+      els.status.textContent = `Selesai dalam ${secs}s · ${out.trim().split(/\s+/).length} kata · ${els.model.value}`;
+      saveHistory(out);
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        els.status.textContent = 'Dihentikan.';
+      } else {
+        els.status.textContent = 'Gagal: ' + err.message;
+        els.result.innerHTML = `<p class="muted">Gagal menghasilkan teks. ${escapeHtml(err.message)}</p>`;
+      }
+    } finally {
+      setBusy(false);
+      controller = null;
+    }
+  }
+
+  els.generate.addEventListener('click', generate);
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') generate();
+  });
+
+  els.copy.addEventListener('click', async () => {
+    const text = els.result.innerText;
+    try {
+      await navigator.clipboard.writeText(text);
+      els.status.textContent = 'Teks berhasil disalin ✅';
+    } catch {
+      els.status.textContent = 'Browser memblokir clipboard. Salin manual ya.';
+    }
+  });
+
+  els.clear.addEventListener('click', () => {
+    els.result.innerHTML = '<p class="muted">Hasil dibersihkan.</p>';
+    els.status.textContent = '';
+  });
+
+  // ── riwayat ─────────────────────────────────────────────────────
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HIST_STORE) || '[]'); } catch { return []; }
+  }
+  function saveHistory(text) {
+    if (!text.trim()) return;
+    const list = loadHistory();
+    list.unshift({
+      id: String(Date.now()), mode: mode.label, brief: els.brief.value.trim(),
+      output: text, model: els.model.value, at: new Date().toISOString(),
+    });
+    try { localStorage.setItem(HIST_STORE, JSON.stringify(list.slice(0, 50))); } catch {}
+    renderHistory();
+  }
+  function renderHistory() {
+    const list = loadHistory();
+    if (!list.length) { els.history.innerHTML = '<p class="muted small">Belum ada riwayat.</p>'; return; }
+    els.history.innerHTML = list.slice(0, 12).map((h) => `
+      <div class="hist" data-id="${h.id}">
+        <div class="hist-top">
+          <span class="hist-mode">${escapeHtml(h.mode)}</span>
+          <span class="muted small">${new Date(h.at).toLocaleDateString('id-ID')}</span>
+        </div>
+        <p class="hist-brief">${escapeHtml(h.brief.slice(0, 90))}</p>
+      </div>`).join('');
+    els.history.querySelectorAll('.hist').forEach((el) => {
+      el.addEventListener('click', () => {
+        const item = list.find((x) => x.id === el.dataset.id);
+        if (!item) return;
+        els.result.innerHTML = renderMd(item.output);
+        els.brief.value = item.brief;
+        els.status.textContent = `Dibuka dari riwayat · ${item.mode}`;
+      });
+    });
+  }
+  renderHistory();
+  syncModeChips();
+</script>
+
+<style>
+  .nav { padding: 16px 0; border-bottom: 1px solid var(--line);
+         background: rgba(10,10,20,.7); backdrop-filter: blur(12px);
+         position: sticky; top: 0; z-index: 20; }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+  .brand img { border-radius: 9px; }
+  .nav nav { display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 600; }
+  .nav nav a { color: var(--muted); }
+  .nav nav a:hover { color: var(--text); }
+
+  .app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 26px 22px 60px; align-items: start; }
+  .pane { padding: 22px; }
+  .modes { display: flex; flex-wrap: wrap; gap: 7px; }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .opts label { display: flex; flex-direction: column; gap: 6px; }
+  .opts select, .opts input[type="range"] { height: 46px; }
+
+  .btn.stop { background: linear-gradient(120deg, #ef4444, #b91c1c); box-shadow: 0 14px 34px rgba(239,68,68,.3); }
+
+  .result-pane { display: flex; flex-direction: column; min-height: 480px; }
+  .result-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .result-actions { display: flex; gap: 8px; }
+  .result-box { flex: 1; overflow-y: auto; max-height: 60vh; padding: 4px 2px; }
+  .history { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .hist-list { display: grid; gap: 8px; max-height: 220px; overflow-y: auto; }
+  .hist { padding: 10px 12px; border-radius: 13px; border: 1px solid var(--line);
+          background: rgba(26,26,43,.6); cursor: pointer; transition: border-color .2s, transform .18s; }
+  .hist:hover { border-color: var(--violet); transform: translateY(-2px); }
+  .hist-top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .hist-mode { font-size: 11px; font-weight: 800; color: var(--violet); }
+  .hist-brief { font-size: 12.8px; color: #c6c6d8; margin: 0; }
+
+  .sheet { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center;
+           background: rgba(5,5,12,.66); backdrop-filter: blur(6px); padding: 18px; }
+  .sheet[hidden] { display: none; }
+  .sheet-card { width: 100%; max-width: 440px; background: #12121f;
+                border: 1px solid var(--line); border-radius: 24px; padding: 22px;
+                box-shadow: var(--shadow); animation: pop .34s cubic-bezier(.2,0,0,1) both; }
+  @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.96) } to { opacity: 1; transform: none } }
+  .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .field { display: block; margin-bottom: 12px; }
+  .sheet-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .credit-line { margin-top: 14px; text-align: center; font-weight: 800;
+                 font-size: 12.5px; letter-spacing: .5px; color: var(--muted); }
+
+  @media (max-width: 900px) {
+    .app-grid { grid-template-columns: 1fr; }
+    .opts { grid-template-columns: 1fr; }
+    .result-box { max-height: none; }
+  }
+</style>
