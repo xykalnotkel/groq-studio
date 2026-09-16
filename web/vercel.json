@@ -2,6 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     {
+      "source": "/",
+      "has": [{ "type": "host", "value": "dl.xystudio.my.id" }],
+      "destination": "/download",
+      "statusCode": 302
+    },
+    {
       "source": "/android",
       "destination": "https://github.com/xykalnotkel/groq-studio/releases/download/v3.2.0/XyStudio-3.2.0-arm64-v8a.apk",
       "statusCode": 302
@@ -15,13 +21,6 @@
       "source": "/universal",
       "destination": "https://github.com/xykalnotkel/groq-studio/releases/download/v3.2.0/XyStudio-3.2.0-universal.apk",
       "statusCode": 302
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "dl.xystudio.my.id" }],
-      "destination": "/download"
     }
   ]
 }
