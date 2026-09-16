@@ -176,9 +176,8 @@ class _HomeScreenState extends State<HomeScreen>
       _mode = next;
       _engine = next.engines.isEmpty ? null : next.engines.first;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Mode acak: ${next.label}')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Mode acak: ${next.label}')));
   }
 
   Future<void> _pasteClipboard() async {
@@ -186,9 +185,8 @@ class _HomeScreenState extends State<HomeScreen>
     final text = data?.text?.trim() ?? '';
     if (!mounted) return;
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Papan klip kosong')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Papan klip kosong')));
       return;
     }
     setState(() => _brief.text = text);
@@ -213,14 +211,14 @@ class _HomeScreenState extends State<HomeScreen>
       }
     } on PlatformException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message ?? 'Dikte gagal')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message ?? 'Dikte gagal')));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dikte gagal. Coba lagi.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Dikte gagal. Coba lagi.')));
     } finally {
       if (mounted) setState(() => _listening = false);
     }
@@ -509,8 +507,7 @@ class _Header extends StatelessWidget {
             const SizedBox(width: 2),
             if (defaultTargetPlatform == TargetPlatform.android)
               IconButton(
-                tooltip:
-                    'Mengambang: studio mini di atas aplikasi lain, geser dan ubah ukuran',
+                tooltip: 'Mengambang: studio mini di atas aplikasi lain, geser dan ubah ukuran',
                 onPressed: onEnterPip,
                 icon: const Icon(Icons.picture_in_picture_alt_rounded),
               ),
@@ -654,9 +651,7 @@ class _BriefCard extends StatelessWidget {
             runSpacing: 8,
             children: <Widget>[
               _SettingChip(
-                icon: listening
-                    ? Icons.mic_rounded
-                    : Icons.mic_none_rounded,
+                icon: listening ? Icons.mic_rounded : Icons.mic_none_rounded,
                 label: listening ? 'Mendengar…' : 'Dikte',
                 onTap: onDictate,
               ),

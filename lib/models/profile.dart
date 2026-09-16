@@ -35,11 +35,7 @@ class UserProfile {
 
 /// Draf brief yang tersimpan supaya tidak hilang kalau app tertutup.
 class DraftBrief {
-  const DraftBrief({
-    this.modeId = 'judul',
-    this.brief = '',
-    this.extra = '',
-  });
+  const DraftBrief({this.modeId = 'judul', this.brief = '', this.extra = ''});
 
   final String modeId;
   final String brief;

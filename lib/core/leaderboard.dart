@@ -172,3 +172,16 @@ String formatTokens(int value) {
   }
   return '$value';
 }
+
+String initials(String name) {
+  final trimmed = name.trim();
+  if (trimmed.isEmpty) return '?';
+  final parts = trimmed.split(RegExp(r'\s+'));
+  String first(String value) =>
+      value.isEmpty ? '' : value.substring(0, 1).toUpperCase();
+  if (parts.length == 1) return first(parts.first);
+  final a = first(parts.first);
+  final b = first(parts.last);
+  if (a.isEmpty) return '?';
+  return '$a$b';
+}

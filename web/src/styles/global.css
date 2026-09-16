@@ -191,7 +191,7 @@ img, svg, video, canvas {
   margin: 0 0 9px 2px;
 }
 
-textarea, input[type="text"], input[type="password"], select {
+textarea, input[type="text"], input[type="password"], input[type="email"], input[type="number"], select {
   width: 100%;
   background: var(--surface-2);
   border: 1px solid var(--line);

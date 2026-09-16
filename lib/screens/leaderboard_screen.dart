@@ -5,11 +5,12 @@ import '../core/controller.dart';
 import '../core/leaderboard.dart';
 import '../models/profile.dart';
 import '../theme/app_theme.dart';
+import '../theme/motion.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/morphing_background.dart';
 
-/// Papan peringkat penghabis token Groq.
+/// Papan peringkat penghabis token Groq — data live, bukan dummy.
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key, required this.controller});
 
@@ -112,9 +113,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
   }
 
   void _toast(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -128,6 +128,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
         final rows = _weekly ? board.weekly : board.all;
         final mine = _weekly ? board.meWeek : board.me;
         final logged = controller.profile?.isLoggedIn ?? false;
+        final top = rows.isEmpty
+            ? 0
+            : (_weekly ? rows.first.weekTokens : rows.first.tokens);
 
         return Scaffold(
           backgroundColor: Colors.transparent,
@@ -139,27 +142,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               child: RefreshIndicator(
                 onRefresh: _boot,
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
+                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 36),
                   children: <Widget>[
-                    Text(
-                      'Papan token',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
+                    _Header(weekly: _weekly, week: board.week),
+                    const SizedBox(height: 14),
+                    _StatsStrip(
+                      writers: board.total,
+                      week: board.week,
+                      myTokens: logged
+                          ? (mine == null
+                                ? controller.stats.totalTokens
+                                : (_weekly ? mine.weekTokens : mine.tokens))
+                          : controller.stats.totalTokens,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Siapa yang paling rakus token Groq minggu ini '
-                      'dan sepanjang masa.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        height: 1.5,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.58,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
                     _AuthCard(
                       logged: logged,
                       register: _register,
@@ -170,6 +166,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                       pin: _pin,
                       profile: controller.profile,
                       mine: mine,
+                      rows: rows,
+                      weekly: _weekly,
                       tokens: controller.stats.totalTokens,
                       onToggleMode: () =>
                           setState(() => _register = !_register),
@@ -179,29 +177,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                       onSignOut: _signOut,
                     ),
                     const SizedBox(height: 18),
-                    SegmentedButton<bool>(
-                      segments: const <ButtonSegment<bool>>[
-                        ButtonSegment<bool>(
-                          value: false,
-                          label: Text('Sepanjang masa'),
-                          icon: Icon(Icons.public_rounded, size: 16),
-                        ),
-                        ButtonSegment<bool>(
-                          value: true,
-                          label: Text('Minggu ini'),
-                          icon: Icon(Icons.bolt_rounded, size: 16),
-                        ),
-                      ],
-                      selected: <bool>{_weekly},
-                      onSelectionChanged: (selection) =>
-                          setState(() => _weekly = selection.first),
+                    _PeriodToggle(
+                      weekly: _weekly,
+                      onChanged: (value) => setState(() => _weekly = value),
                     ),
                     const SizedBox(height: 16),
                     if (_loading)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 40),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
+                      const _Skeleton()
                     else if (_error != null && rows.isEmpty)
                       GlassCard(
                         padding: const EdgeInsets.all(18),
@@ -213,22 +195,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                         ),
                       )
                     else ...<Widget>[
-                      if (rows.isNotEmpty) _Podium(rows: rows, weekly: _weekly),
-                      const SizedBox(height: 14),
+                      _Podium(rows: rows, weekly: _weekly),
+                      const SizedBox(height: 16),
                       if (rows.isEmpty)
-                        GlassCard(
-                          padding: const EdgeInsets.all(20),
-                          child: Text(
-                            'Papan masih sepi. Masuk, lalu generate — '
-                            'token-mu akan muncul di sini.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              height: 1.55,
-                            ),
-                          ),
-                        )
+                        const _EmptyArena()
                       else
                         GlassCard(
-                          padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+                          padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
                           child: Column(
                             children: <Widget>[
                               for (var i = 0; i < rows.length; i++)
@@ -236,26 +209,26 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                                   entry: rows[i],
                                   weekly: _weekly,
                                   highlight: mine?.id == rows[i].id,
-                                  medal: i < 3,
+                                  top: top,
                                 ),
                             ],
                           ),
                         ),
-                      if (mine != null && mine.rank > 3) ...<Widget>[
+                      if (mine != null && mine.rank > 10) ...<Widget>[
                         const SizedBox(height: 12),
                         _RankTile(
                           entry: mine,
                           weekly: _weekly,
                           highlight: true,
-                          medal: false,
+                          top: top,
                         ),
                       ],
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Text(
                         board.total == 0
-                            ? 'Belum ada yang masuk papan.'
+                            ? 'Data live. Belum ada yang generate.'
                             : '${board.total} penulis terdaftar'
-                              '${board.week.isEmpty ? '' : ' · ${board.week}'}',
+                                  '${board.week.isEmpty ? '' : ' · ${board.week}'}',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
@@ -275,6 +248,231 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
   }
 }
 
+class _Header extends StatelessWidget {
+  const _Header({required this.weekly, required this.week});
+
+  final bool weekly;
+  final String week;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                'Papan token',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.6,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: AppColors.mint.withValues(alpha: 0.14),
+                border: Border.all(
+                  color: AppColors.mint.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: AppColors.mint,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Live',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.mint,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          weekly
+              ? 'Peringkat minggu ini$weekLabel. Skor dari generate sungguhan.'
+              : 'Siapa paling rakus token Groq. Skor dari generate sungguhan, bukan dummy.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            height: 1.5,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String get weekLabel => week.isEmpty ? '' : ' ($week)';
+}
+
+class _StatsStrip extends StatelessWidget {
+  const _StatsStrip({
+    required this.writers,
+    required this.week,
+    required this.myTokens,
+  });
+
+  final int writers;
+  final String week;
+  final int myTokens;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: _StatCell(
+            label: 'Penulis',
+            value: writers == 0 ? '—' : '$writers',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _StatCell(
+            label: 'Minggu',
+            value: week.isEmpty ? '—' : week.replaceFirst('20', ''),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _StatCell(
+            label: 'Token kamu',
+            value: myTokens == 0 ? '0' : formatTokens(myTokens),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatCell extends StatelessWidget {
+  const _StatCell({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            label.toUpperCase(),
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontSize: 9.5,
+              letterSpacing: 1.1,
+              fontWeight: FontWeight.w800,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PeriodToggle extends StatelessWidget {
+  const _PeriodToggle({required this.weekly, required this.onChanged});
+
+  final bool weekly;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: _PeriodChip(
+            label: 'Sepanjang masa',
+            selected: !weekly,
+            onTap: () => onChanged(false),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _PeriodChip(
+            label: 'Minggu ini',
+            selected: weekly,
+            onTap: () => onChanged(true),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PeriodChip extends StatelessWidget {
+  const _PeriodChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        height: 42,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          gradient: selected ? AppTheme.brand : null,
+          color: selected ? null : theme.colorScheme.surfaceContainerHighest,
+          border: Border.all(
+            color: selected
+                ? Colors.transparent
+                : theme.colorScheme.outline.withValues(alpha: 0.7),
+          ),
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            color: selected ? Colors.white : theme.colorScheme.onSurface,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AuthCard extends StatelessWidget {
   const _AuthCard({
     required this.logged,
@@ -286,6 +484,8 @@ class _AuthCard extends StatelessWidget {
     required this.pin,
     required this.profile,
     required this.mine,
+    required this.rows,
+    required this.weekly,
     required this.tokens,
     required this.onToggleMode,
     required this.onToggleObscure,
@@ -302,6 +502,8 @@ class _AuthCard extends StatelessWidget {
   final TextEditingController pin;
   final UserProfile? profile;
   final LeaderboardEntry? mine;
+  final List<LeaderboardEntry> rows;
+  final bool weekly;
   final int tokens;
   final VoidCallback onToggleMode;
   final VoidCallback onToggleObscure;
@@ -312,71 +514,13 @@ class _AuthCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     if (logged && profile != null) {
-      return GlassCard(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: <Widget>[
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                gradient: AppTheme.brand,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Text(
-                  profile!.name.isEmpty
-                      ? '?'
-                      : profile!.name.characters.first.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    profile!.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    profile!.email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 11,
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.55,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    mine == null
-                        ? '${formatTokens(tokens)} token di perangkat ini'
-                        : 'Peringkat #${mine!.rank} · '
-                              '${formatTokens(mine!.tokens)} token',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            TextButton(onPressed: onSignOut, child: const Text('Keluar')),
-          ],
-        ),
+      return _YouCard(
+        profile: profile!,
+        mine: mine,
+        rows: rows,
+        weekly: weekly,
+        tokens: tokens,
+        onSignOut: onSignOut,
       );
     }
 
@@ -386,14 +530,14 @@ class _AuthCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            register ? 'Buat akun papan' : 'Masuk ke papan',
+            register ? 'Ambil tempat di papan' : 'Masuk ke papan',
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Pakai email dan PIN 4-6 digit. Tidak ada kata sandi rumit.',
+            'Email + PIN 4-6 digit. Nama tampil publik, email di-hash.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
             ),
@@ -443,23 +587,176 @@ class _AuthCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           GradientButton(
-            label: busy
-                ? 'Menyimpan…'
-                : (register ? 'Daftar' : 'Masuk'),
+            label: busy ? 'Menyimpan…' : (register ? 'Daftar' : 'Masuk'),
             icon: register
                 ? Icons.person_add_alt_1_rounded
                 : Icons.login_rounded,
+            loading: busy,
             onPressed: busy ? null : onSubmit,
           ),
           TextButton(
             onPressed: busy ? null : onToggleMode,
             child: Text(
-              register
-                  ? 'Sudah punya akun? Masuk'
-                  : 'Belum punya akun? Daftar',
+              register ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar',
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _YouCard extends StatelessWidget {
+  const _YouCard({
+    required this.profile,
+    required this.mine,
+    required this.rows,
+    required this.weekly,
+    required this.tokens,
+    required this.onSignOut,
+  });
+
+  final UserProfile profile;
+  final LeaderboardEntry? mine;
+  final List<LeaderboardEntry> rows;
+  final bool weekly;
+  final int tokens;
+  final VoidCallback onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final score = mine == null
+        ? tokens
+        : (weekly ? mine!.weekTokens : mine!.tokens);
+    final next = _gapToNext();
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      borderColor: AppColors.violet.withValues(alpha: 0.45),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              _Avatar(name: profile.name, size: 48),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      profile.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      mine == null
+                          ? 'Belum ada peringkat. Generate dulu.'
+                          : 'Peringkat #${mine!.rank}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(onPressed: onSignOut, child: const Text('Keluar')),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              Text(
+                formatTokens(score),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'token',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
+          if (next != null) ...<Widget>[
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                value: next.$1,
+                minHeight: 7,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                color: AppColors.violet,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              next.$2,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 11.5,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  (double, String)? _gapToNext() {
+    if (mine == null) return null;
+    if (mine!.rank <= 1) {
+      return (1, 'Kamu di puncak papan ini.');
+    }
+    LeaderboardEntry? above;
+    for (final row in rows) {
+      if (row.rank == mine!.rank - 1) {
+        above = row;
+        break;
+      }
+    }
+    if (above == null) return null;
+    final mineScore = weekly ? mine!.weekTokens : mine!.tokens;
+    final aboveScore = weekly ? above.weekTokens : above.tokens;
+    final gap = (aboveScore - mineScore + 1).clamp(1, 1000000000);
+    final denom = aboveScore == 0 ? 1 : aboveScore;
+    final value = (mineScore / denom).clamp(0.04, 0.96).toDouble();
+    return (value, '${formatTokens(gap)} token lagi untuk #${above.rank}');
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.name, this.size = 36, this.color});
+
+  final String name;
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: color == null ? AppTheme.brand : null,
+        color: color,
+        borderRadius: BorderRadius.circular(size * 0.34),
+      ),
+      child: Text(
+        initials(name),
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: size * 0.36,
+        ),
       ),
     );
   }
@@ -483,17 +780,18 @@ class _Podium extends StatelessWidget {
           child: _PodiumCard(
             entry: second,
             place: 2,
-            height: 132,
+            height: 148,
             color: const Color(0xFF94A3B8),
             weekly: weekly,
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
+          flex: 11,
           child: _PodiumCard(
             entry: first,
             place: 1,
-            height: 168,
+            height: 186,
             color: AppColors.amber,
             weekly: weekly,
           ),
@@ -503,7 +801,7 @@ class _Podium extends StatelessWidget {
           child: _PodiumCard(
             entry: third,
             place: 3,
-            height: 116,
+            height: 132,
             color: const Color(0xFFD97706),
             weekly: weekly,
           ),
@@ -535,26 +833,38 @@ class _PodiumCard extends StatelessWidget {
     final score = entry == null
         ? '—'
         : formatTokens(weekly ? entry!.weekTokens : entry!.tokens);
-    return Container(
+    return AnimatedContainer(
+      duration: AppMotion.normal,
       height: height,
       padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: <Color>[
-            color.withValues(alpha: place == 1 ? 0.42 : 0.22),
-            color.withValues(alpha: 0.08),
+            color.withValues(alpha: place == 1 ? 0.46 : 0.24),
+            color.withValues(alpha: 0.07),
           ],
         ),
         border: Border.all(color: color.withValues(alpha: 0.55)),
+        boxShadow: place == 1
+            ? <BoxShadow>[
+                BoxShadow(
+                  color: color.withValues(alpha: 0.28),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         children: <Widget>[
+          _Avatar(name: name, size: place == 1 ? 44 : 36, color: color),
+          const SizedBox(height: 6),
           Text(
             '#$place',
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
               color: color,
             ),
@@ -588,13 +898,13 @@ class _RankTile extends StatelessWidget {
     required this.entry,
     required this.weekly,
     required this.highlight,
-    required this.medal,
+    required this.top,
   });
 
   final LeaderboardEntry entry;
   final bool weekly;
   final bool highlight;
-  final bool medal;
+  final int top;
 
   @override
   Widget build(BuildContext context) {
@@ -606,9 +916,10 @@ class _RankTile extends StatelessWidget {
       3: const Color(0xFFD97706),
     };
     final accent = colors[entry.rank] ?? theme.colorScheme.primary;
+    final bar = top <= 0 ? 0.0 : (score / top).clamp(0.04, 1.0);
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         color: highlight
@@ -620,49 +931,155 @@ class _RankTile extends StatelessWidget {
               )
             : null,
       ),
-      child: Row(
+      child: Column(
         children: <Widget>[
-          SizedBox(
-            width: 36,
-            child: Text(
-              medal ? '#${entry.rank}' : '${entry.rank}',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: medal ? accent : theme.colorScheme.onSurface,
+          Row(
+            children: <Widget>[
+              SizedBox(
+                width: 36,
+                child: Text(
+                  '#${entry.rank}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: entry.rank <= 3
+                        ? accent
+                        : theme.colorScheme.onSurface,
+                  ),
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  entry.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              _Avatar(
+                name: entry.name,
+                size: 32,
+                color: entry.rank <= 3 ? accent : null,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      entry.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      '${entry.generates} generate',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${entry.generates} generate',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
+              ),
+              Text(
+                formatTokens(score),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: accent,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Text(
-            formatTokens(score),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: accent,
+          const SizedBox(height: 7),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: bar,
+              minHeight: 4,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              color: accent.withValues(alpha: 0.85),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _EmptyArena extends StatelessWidget {
+  const _EmptyArena();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GlassCard(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+      child: Column(
+        children: <Widget>[
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: AppTheme.brand,
+            ),
+            child: const Icon(
+              Icons.leaderboard_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Papan masih sepi',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Bukan dummy: belum ada yang generate. Daftar, lalu buat sesuatu — '
+            'posisi #1 masih kosong.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              height: 1.55,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Skeleton extends StatelessWidget {
+  const _Skeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.surfaceContainerHighest;
+    Widget bar(double h, [double w = double.infinity]) => Container(
+      height: h,
+      width: w,
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
+    return Column(
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
+            Expanded(child: bar(120)),
+            const SizedBox(width: 8),
+            Expanded(child: bar(160)),
+            const SizedBox(width: 8),
+            Expanded(child: bar(100)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        bar(56),
+        bar(56),
+        bar(56),
+      ],
     );
   }
 }

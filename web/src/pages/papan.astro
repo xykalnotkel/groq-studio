@@ -3,16 +3,25 @@ import Base from '../layouts/Base.astro';
 import { APP } from '../data/app.js';
 ---
 
-<Base current="papan" title={`Papan token — ${APP.name}`} description="Papan peringkat penghabis token Groq di XyStudio AI.">
+<Base current="papan" title={`Papan token — ${APP.name}`} description="Papan peringkat penghabis token Groq yang live di XyStudio AI. Bukan dummy.">
   <main class="wrap board">
     <header class="hero card">
-      <p class="kicker">Papan penghabis token</p>
+      <div class="hero-top">
+        <p class="kicker">Papan penghabis token</p>
+        <span class="live"><i></i> Live</span>
+      </div>
       <h1>Siapa paling rakus token</h1>
       <p class="muted">
-        Masuk pakai email dan PIN. Setiap generate di aplikasi atau web app
-        nambah skor. Ada podium 1-2-3, papan sepanjang masa, dan minggu ini.
+        Skor dari generate sungguhan di aplikasi dan web app. Email di-hash,
+        nama tampil publik. Podium 1-2-3, sepanjang masa, dan minggu ini.
       </p>
     </header>
+
+    <section class="stats" id="stats">
+      <article class="card stat"><span class="label">Penulis</span><b id="st-writers">—</b></article>
+      <article class="card stat"><span class="label">Minggu</span><b id="st-week">—</b></article>
+      <article class="card stat"><span class="label">Token kamu</span><b id="st-mine">0</b></article>
+    </section>
 
     <section class="card auth" id="auth-card">
       <div id="auth-in" hidden>
@@ -23,10 +32,16 @@ import { APP } from '../data/app.js';
             <p class="muted small" id="me-mail"></p>
             <p class="rank-line" id="me-rank">Belum ada peringkat</p>
           </div>
-          <button class="chip" id="btn-out" type="button">Keluar</button>
+          <button class="btn sm ghost" id="btn-out" type="button">Keluar</button>
+        </div>
+        <div class="gap" id="me-gap" hidden>
+          <div class="bar"><span id="me-bar"></span></div>
+          <p class="muted small" id="me-gap-text"></p>
         </div>
       </div>
       <div id="auth-out">
+        <h2 class="auth-title" id="auth-title">Ambil tempat di papan</h2>
+        <p class="muted small">Email + PIN 4-6 digit. Nama tampil publik.</p>
         <div class="tabs">
           <button class="chip active" id="tab-reg" type="button">Daftar</button>
           <button class="chip" id="tab-in" type="button">Masuk</button>
@@ -43,21 +58,21 @@ import { APP } from '../data/app.js';
           <span class="label">PIN 4-6 digit</span>
           <input id="pin" inputmode="numeric" maxlength="6" placeholder="••••" />
         </label>
-        <button class="btn" id="btn-go" type="button">Daftar</button>
+        <button class="btn block" id="btn-go" type="button">Daftar</button>
         <p class="muted small" id="auth-status"></p>
       </div>
     </section>
 
-    <section class="card">
-      <div class="tabs">
-        <button class="chip active" id="tab-all" type="button">Sepanjang masa</button>
-        <button class="chip" id="tab-week" type="button">Minggu ini</button>
+    <section class="card arena">
+      <div class="period">
+        <button class="period-btn active" id="tab-all" type="button">Sepanjang masa</button>
+        <button class="period-btn" id="tab-week" type="button">Minggu ini</button>
       </div>
       <div class="podium" id="podium"></div>
       <div class="list" id="list">
         <p class="muted">Memuat papan…</p>
       </div>
-      <p class="muted small" id="meta"></p>
+      <p class="muted small center" id="meta"></p>
     </section>
   </main>
 </Base>
@@ -89,51 +104,105 @@ import { APP } from '../data/app.js';
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
+  function initials(name) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+    return (parts[0].slice(0, 1) + parts[parts.length - 1].slice(0, 1)).toUpperCase();
+  }
 
   function renderAuth() {
     const p = loadProfile();
     $('auth-in').hidden = !p;
     $('auth-out').hidden = !!p;
+    const rows = weekly ? board.weekly : board.all;
+    const mine = weekly ? board.meWeek : board.me;
+    const key = weekly ? 'weekTokens' : 'tokens';
     if (p) {
       $('me-name').textContent = p.name || 'Anonim';
       $('me-mail').textContent = p.email || '';
-      $('me-avatar').textContent = (p.name || '?').slice(0, 1).toUpperCase();
-      const mine = weekly ? board.meWeek : board.me;
-      $('me-rank').textContent = mine
-        ? `Peringkat #${mine.rank} · ${formatTokens(weekly ? mine.weekTokens : mine.tokens)} token`
-        : 'Belum ada peringkat. Generate dulu di aplikasi.';
+      $('me-avatar').textContent = initials(p.name);
+      $('st-mine').textContent = mine ? formatTokens(mine[key]) : '0';
+      if (mine) {
+        $('me-rank').textContent = 'Peringkat #' + mine.rank + ' · ' + formatTokens(mine[key]) + ' token';
+        const above = rows.find((row) => row.rank === mine.rank - 1);
+        if (mine.rank <= 1) {
+          $('me-gap').hidden = false;
+          $('me-bar').style.width = '100%';
+          $('me-gap-text').textContent = 'Kamu di puncak papan ini.';
+        } else if (above) {
+          const gap = Math.max(1, (above[key] || 0) - (mine[key] || 0) + 1);
+          const denom = above[key] || 1;
+          const pct = Math.max(4, Math.min(96, Math.round((mine[key] / denom) * 100)));
+          $('me-gap').hidden = false;
+          $('me-bar').style.width = pct + '%';
+          $('me-gap-text').textContent = formatTokens(gap) + ' token lagi untuk #' + above.rank;
+        } else {
+          $('me-gap').hidden = true;
+        }
+      } else {
+        $('me-rank').textContent = 'Belum ada peringkat. Generate dulu di aplikasi atau web app.';
+        $('me-gap').hidden = true;
+      }
+    } else {
+      $('st-mine').textContent = '0';
     }
     $('name-field').hidden = !register;
     $('btn-go').textContent = register ? 'Daftar' : 'Masuk';
+    $('auth-title').textContent = register ? 'Ambil tempat di papan' : 'Masuk ke papan';
     $('tab-reg').classList.toggle('active', register);
     $('tab-in').classList.toggle('active', !register);
+  }
+
+  function podiumHtml(rows, key) {
+    const slots = [
+      { place: 2, row: rows[1] },
+      { place: 1, row: rows[0] },
+      { place: 3, row: rows[2] },
+    ];
+    return slots.map(({ place, row }) => {
+      const name = row?.name || 'Kosong';
+      const score = row ? formatTokens(row[key]) : '—';
+      return `<article class="pod p${place}">
+        <div class="avatar sm">${escapeHtml(initials(name))}</div>
+        <b>#${place}</b>
+        <strong>${escapeHtml(name)}</strong>
+        <span>${score}</span>
+      </article>`;
+    }).join('');
   }
 
   function renderBoard() {
     const rows = weekly ? board.weekly : board.all;
     const key = weekly ? 'weekTokens' : 'tokens';
-    const podium = [rows[1], rows[0], rows[2]];
-    const places = [2, 1, 3];
-    $('podium').innerHTML = places.map((place, i) => {
-      const row = podium[i];
-      return `<article class="pod p${place}">
-        <b>#${place}</b>
-        <strong>${escapeHtml(row?.name || 'Kosong')}</strong>
-        <span>${row ? formatTokens(row[key]) : '—'}</span>
-      </article>`;
-    }).join('');
+    const top = rows.length ? (rows[0][key] || 0) : 0;
+    $('podium').innerHTML = podiumHtml(rows, key);
+    $('st-writers').textContent = board.total ? String(board.total) : '—';
+    $('st-week').textContent = board.week ? board.week.replace(/^20/, '') : '—';
     if (!rows.length) {
-      $('list').innerHTML = '<p class="muted">Papan masih sepi. Daftar, lalu generate.</p>';
+      $('list').innerHTML = `<div class="empty">
+        <div class="empty-mark"></div>
+        <strong>Papan masih sepi</strong>
+        <p class="muted">Bukan dummy: belum ada yang generate. Daftar, lalu buat sesuatu — posisi #1 masih kosong.</p>
+      </div>`;
     } else {
-      $('list').innerHTML = rows.map((row) => `
-        <div class="row${board.me && board.me.id === row.id ? ' me' : ''}">
+      const meId = board.me && board.me.id;
+      $('list').innerHTML = rows.map((row) => {
+        const score = row[key] || 0;
+        const pct = top ? Math.max(4, Math.round((score / top) * 100)) : 4;
+        const me = meId && meId === row.id ? ' me' : '';
+        return `<div class="row${me}">
           <span class="rk">#${row.rank}</span>
-          <span class="nm">${escapeHtml(row.name)}</span>
-          <span class="gn">${row.generates} generate</span>
-          <span class="tk">${formatTokens(row[key])}</span>
-        </div>`).join('');
+          <span class="avatar xs">${escapeHtml(initials(row.name))}</span>
+          <span class="nm">${escapeHtml(row.name)}<small>${row.generates} generate</small></span>
+          <span class="tk">${formatTokens(score)}</span>
+          <span class="bar"><i style="width:${pct}%"></i></span>
+        </div>`;
+      }).join('');
     }
-    $('meta').textContent = `${board.total || 0} penulis${board.week ? ' · ' + board.week : ''}`;
+    $('meta').textContent = board.total
+      ? `${board.total} penulis terdaftar${board.week ? ' · ' + board.week : ''} · data live`
+      : 'Data live. Belum ada yang generate.';
     renderAuth();
   }
 
@@ -170,8 +239,18 @@ import { APP } from '../data/app.js';
 
   $('tab-reg').onclick = () => { register = true; renderAuth(); };
   $('tab-in').onclick = () => { register = false; renderAuth(); };
-  $('tab-all').onclick = () => { weekly = false; $('tab-all').classList.add('active'); $('tab-week').classList.remove('active'); renderBoard(); };
-  $('tab-week').onclick = () => { weekly = true; $('tab-week').classList.add('active'); $('tab-all').classList.remove('active'); renderBoard(); };
+  $('tab-all').onclick = () => {
+    weekly = false;
+    $('tab-all').classList.add('active');
+    $('tab-week').classList.remove('active');
+    renderBoard();
+  };
+  $('tab-week').onclick = () => {
+    weekly = true;
+    $('tab-week').classList.add('active');
+    $('tab-all').classList.remove('active');
+    renderBoard();
+  };
   $('btn-go').onclick = () => submit(register ? 'register' : 'login');
   $('btn-out').onclick = () => { saveProfile(null); renderAuth(); };
 
@@ -184,33 +263,75 @@ import { APP } from '../data/app.js';
 <style>
   .board { padding: 28px 0 50px; display: grid; gap: 16px; }
   .hero { padding: 28px 24px; }
+  .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   h1 { font-size: 30px; font-weight: 800; letter-spacing: -.6px; margin: 6px 0 8px; }
   .kicker { font-size: 12px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: var(--cyan); }
-  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .live {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 800;
+    color: #34d399; border: 1px solid rgba(52,211,153,.4); background: rgba(52,211,153,.12);
+  }
+  .live i { width: 7px; height: 7px; border-radius: 50%; background: #34d399; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat { padding: 14px 16px; }
+  .stat b { display: block; font-size: 18px; font-weight: 800; margin-top: 2px; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 14px; }
   .field { display: block; margin-bottom: 10px; }
+  .auth-title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
   .me { display: flex; align-items: center; gap: 12px; }
   .me > div { flex: 1; min-width: 0; }
-  .avatar { width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center;
-            font-weight: 800; color: #fff; background: linear-gradient(120deg, var(--violet), var(--cyan)); flex: none; }
+  .avatar {
+    width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center;
+    font-weight: 800; color: #fff; background: linear-gradient(120deg, var(--violet), var(--cyan)); flex: none;
+  }
+  .avatar.sm { width: 40px; height: 40px; border-radius: 14px; font-size: 14px; margin: 0 auto 6px; }
+  .avatar.xs { width: 32px; height: 32px; border-radius: 11px; font-size: 12px; }
   .rank-line { margin: 4px 0 0; font-weight: 800; color: var(--violet); font-size: 13px; }
-  .podium { display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 10px; align-items: end; margin-bottom: 16px; }
-  .pod { border-radius: 18px; padding: 14px 10px; text-align: center; border: 1px solid var(--line);
-         display: flex; flex-direction: column; gap: 4px; min-height: 110px; justify-content: flex-end; }
-  .pod b { font-size: 18px; }
-  .pod.p1 { min-height: 150px; background: linear-gradient(180deg, rgba(251,191,36,.35), rgba(251,191,36,.06)); border-color: rgba(251,191,36,.5); }
-  .pod.p2 { min-height: 124px; background: linear-gradient(180deg, rgba(148,163,184,.28), rgba(148,163,184,.06)); }
-  .pod.p3 { min-height: 108px; background: linear-gradient(180deg, rgba(217,119,6,.28), rgba(217,119,6,.06)); }
+  .gap { margin-top: 12px; }
+  .bar, .row .bar {
+    display: block; height: 6px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden;
+  }
+  .bar span, .row .bar i {
+    display: block; height: 100%; width: 0; border-radius: 99px;
+    background: linear-gradient(90deg, var(--violet), var(--cyan));
+  }
+  .period { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .period-btn {
+    height: 42px; border-radius: 14px; border: 1px solid var(--line);
+    background: rgba(26,26,43,.7); color: var(--text); font-weight: 800; font-size: 13px; cursor: pointer;
+  }
+  .period-btn.active {
+    background: linear-gradient(180deg, #8b70ff, #5b4bff); border-color: transparent; color: #fff;
+  }
+  .podium { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 10px; align-items: end; margin-bottom: 16px; }
+  .pod {
+    border-radius: 20px; padding: 14px 10px; text-align: center; border: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 4px; min-height: 118px; justify-content: flex-end;
+  }
+  .pod b { font-size: 16px; }
+  .pod.p1 { min-height: 168px; background: linear-gradient(180deg, rgba(251,191,36,.38), rgba(251,191,36,.06)); border-color: rgba(251,191,36,.5); }
+  .pod.p2 { min-height: 140px; background: linear-gradient(180deg, rgba(148,163,184,.28), rgba(148,163,184,.06)); }
+  .pod.p3 { min-height: 122px; background: linear-gradient(180deg, rgba(217,119,6,.28), rgba(217,119,6,.06)); }
   .list { display: grid; gap: 6px; }
-  .row { display: grid; grid-template-columns: 48px 1fr auto auto; gap: 10px; align-items: center;
-         padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); }
+  .row {
+    display: grid; grid-template-columns: 42px 32px 1fr auto; grid-template-rows: auto 6px;
+    gap: 6px 10px; align-items: center;
+    padding: 10px 12px 10px; border-radius: 14px; border: 1px solid var(--line);
+  }
+  .row .bar { grid-column: 1 / -1; }
   .row.me { border-color: rgba(124,92,255,.5); background: rgba(124,92,255,.1); }
   .rk { font-weight: 800; }
-  .nm { font-weight: 700; }
-  .gn { font-size: 12px; color: var(--muted); }
+  .nm { font-weight: 700; display: flex; flex-direction: column; min-width: 0; }
+  .nm small { font-weight: 600; color: var(--muted); font-size: 11px; }
   .tk { font-weight: 800; color: var(--violet); }
+  .empty { text-align: center; padding: 18px 8px 8px; }
+  .empty-mark {
+    width: 52px; height: 52px; margin: 0 auto 12px; border-radius: 16px;
+    background: linear-gradient(120deg, var(--violet), var(--cyan));
+  }
+  .empty strong { display: block; margin-bottom: 6px; }
   @media (max-width: 700px) {
-    .row { grid-template-columns: 40px 1fr auto; }
-    .gn { display: none; }
     h1 { font-size: 24px; }
+    .stats { grid-template-columns: 1fr; }
   }
 </style>
