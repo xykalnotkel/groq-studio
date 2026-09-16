@@ -18,7 +18,7 @@ kata demi kata (streaming), bisa disalin, dibagikan, dan tersimpan otomatis di r
 
 | Fitur | Keterangan |
 |---|---|
-| 12 mode generate | Judul, Deskripsi, Artikel, Penjelasan Aplikasi, Play Store, Caption & Hashtag, Ide Nama, Catatan Rilis, Copy Iklan, Email & Pengumuman, Brainstorming, Prompt Bebas |
+| 15 mode generate | Judul, Deskripsi, Artikel, Penjelasan Aplikasi, Play Store, Caption & Hashtag, Ide Nama, Catatan Rilis, Copy Iklan, Email & Pengumuman, Brainstorming, **Script Video**, **Prompt Gambar**, **Kalender Konten**, Prompt Bebas |
 | Streaming real-time | Hasil muncul per kata, ada tombol **Hentikan** |
 | Bahasa bisa diganti | Indonesia, English, Melayu, Jepang, Mandarin, Arab, Spanyol |
 | Gaya & panjang | Profesional / Santai / Persuasif / Lucu / Formal / Inspiratif × Singkat / Sedang / Panjang |
@@ -207,6 +207,20 @@ selesai → otomatis tersimpan ke Riwayat
 | "Kuota/limit Groq sedang penuh" | Ganti ke model kecil (Llama 3.1 8B Instant) atau tunggu sebentar |
 | Hasil kosong / putus di tengah | Matikan **streaming** di Setelan, atau pilih model lain |
 | Tidak ada koneksi | Pastikan HP online; aplikasi butuh internet untuk menghubungi Groq |
+
+---
+
+## 🏪 Materi Play Store
+
+Semua ada di folder `store/`: `store_listing.md` (judul, deskripsi singkat,
+deskripsi lengkap, keyword, checklist submit), `feature_graphic.png` (1024×500),
+dan `screenshots/` (5 screenshot 1080×1920).
+
+Screenshot-nya **bukan editan** — dirender langsung dari UI aplikasi:
+
+```bash
+flutter test --tags=screenshot --update-goldens   # → test/goldens/*.png
+```
 
 ---
 

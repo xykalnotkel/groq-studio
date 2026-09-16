@@ -231,31 +231,24 @@ class _Header extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    'Groq Studio',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  Text(
-                    'Cepat, gratis, dan pinter nulis',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 11.5,
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.55,
-                      ),
-                    ),
-                  ),
-                ],
+              child: Text(
+                'Groq Studio',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                ),
               ),
             ),
-            _ModelChip(controller: controller),
-            const SizedBox(width: 6),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 100),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: _ModelChip(controller: controller),
+              ),
+            ),
+            const SizedBox(width: 2),
             IconButton(
               tooltip: 'Setelan',
               onPressed: onOpenSettings,

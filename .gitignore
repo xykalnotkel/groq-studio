@@ -55,3 +55,6 @@ android/app/keystore.jks
 
 # Hasil build lokal (APK/AAB)
 downloads/
+
+# Golden test (screenshot promosi)
+test/goldens/

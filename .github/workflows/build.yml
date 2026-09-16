@@ -47,7 +47,8 @@ jobs:
         run: flutter analyze
 
       - name: Tes widget
-        run: flutter test
+        # Tag "screenshot" hanya dipakai untuk membuat gambar promosi.
+        run: flutter test --exclude-tags=screenshot
 
   build:
     name: Build APK / AAB

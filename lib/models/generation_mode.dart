@@ -212,6 +212,70 @@ class GenerationMode {
           'Akhiri dengan 3 ide terbaik + alasannya.',
     ),
     GenerationMode(
+      id: 'script',
+      label: 'Script Video',
+      icon: Icons.smart_display_rounded,
+      hint: 'Naskah YouTube/TikTok/Reels siap rekam',
+      placeholder: 'Contoh: video 60 detik tips hemat uang untuk mahasiswa',
+      color: Color(0xFFFF5C5C),
+      temperature: 0.95,
+      maxTokens: 3072,
+      instruction:
+          'Tulis naskah video berdasarkan brief.\n'
+          'Keluarkan dengan struktur berikut:\n'
+          '1. **Hook (0-3 detik)** — 3 opsi kalimat pembuka yang bikin orang '
+          'berhenti scroll\n'
+          '2. **Naskah lengkap** — dipecah per adegan; tiap adegan berisi: '
+          'menit/detik, apa yang diucapkan (tulis persis seperti ngomong), '
+          'dan teks yang tampil di layar\n'
+          '3. **Ide visual** — 5 ide B-roll/gambar pendukung per adegan\n'
+          '4. **CTA penutup** — 2 opsi ajakan (subscribe/follow/komen)\n'
+          '5. **Judul video** — 3 opsi (maks 60 karakter)\n'
+          '6. **Deskripsi video** — 2 paragraf + 10 hashtag\n'
+          'Tulis dengan gaya ngobrol, kalimat pendek, dan mudah diucapkan.',
+    ),
+    GenerationMode(
+      id: 'gambar',
+      label: 'Prompt Gambar',
+      icon: Icons.image_rounded,
+      hint: 'Prompt untuk Midjourney/SDXL/Flux',
+      placeholder: 'Contoh: ilustrasi kopi susu estetik untuk feed Instagram',
+      color: Color(0xFF6EE7B7),
+      temperature: 0.9,
+      instruction:
+          'Ubah brief menjadi prompt untuk AI image generator '
+          '(Midjourney / Stable Diffusion / Flux / DALL·E).\n'
+          'Keluarkan:\n'
+          '1. **Prompt utama (English)** — satu paragraf padat: subjek, '
+          'detail, gaya, komposisi, pencahayaan, lensa, suasana, palet warna\n'
+          '2. **Prompt versi Indonesia** — terjemahan naturalnya\n'
+          '3. **Negative prompt** — hal yang harus dihindari\n'
+          '4. **Variasi** — 3 alternatif prompt dengan gaya berbeda '
+          '(fotorealistik, ilustrasi flat, 3D render, sinematik)\n'
+          '5. **Parameter saran** — aspect ratio, style strength, seed, '
+          'dan model yang cocok\n'
+          'Prompt harus spesifik, deskriptif, dan siap ditempel apa adanya.',
+    ),
+    GenerationMode(
+      id: 'kalender',
+      label: 'Kalender Konten',
+      icon: Icons.calendar_month_rounded,
+      hint: 'Jadwal konten 7/14/30 hari',
+      placeholder: 'Contoh: akun Instagram bisnis laundry di dekat kampus',
+      color: Color(0xFFF0ABFC),
+      temperature: 0.95,
+      maxTokens: 3072,
+      instruction:
+          'Buat kalender konten berdasarkan brief.\n'
+          'Format: tabel dengan kolom Hari | Tema | Ide konten | Format '
+          '(Reels/Carousel/Story/Feed) | Hook/teks pembuka | CTA.\n'
+          'Buat 30 hari bila tidak disebutkan lain.\n'
+          'Setiap ide harus konkret, beragam (edukasi, hiburan, promo, '
+          'testimoni, behind the scene), dan bisa langsung dikerjakan.\n'
+          'Akhiri dengan 5 ide konten terbaik yang paling berpotensi viral '
+          'beserta alasannya.',
+    ),
+    GenerationMode(
       id: 'custom',
       label: 'Prompt Bebas',
       icon: Icons.auto_awesome_rounded,
