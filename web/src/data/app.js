@@ -3,7 +3,7 @@ export const APP = {
   name: 'XyStudio AI',
   brand: 'XyVerse',
   credit: 'Built in XyVerse',
-  version: '3.2.1',
+  version: '3.2.2',
   tagline: 'Tulis apa saja, jadi cepat',
   description:
     'Studio menulis AI: judul, artikel, caption, riset web, prompt video, dan 24 mode lainnya. Ditenagai Groq.',

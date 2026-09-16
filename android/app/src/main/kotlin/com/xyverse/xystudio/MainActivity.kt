@@ -64,7 +64,8 @@ class MainActivity : FlutterActivity() {
                 val title = call.argument<String>("title") ?: getString(R.string.app_name)
                 val snippet = call.argument<String>("snippet")
                     ?: getString(R.string.overlay_default_snippet)
-                startFloating(title, snippet)
+                val apiKey = call.argument<String>("apiKey") ?: ""
+                startFloating(title, snippet, apiKey)
                 result.success(true)
             }
             "stopFloating" -> {
@@ -132,13 +133,13 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun startFloating(title: String, snippet: String) {
+    private fun startFloating(title: String, snippet: String, apiKey: String) {
         if (!hasOverlayPermission()) {
             requestOverlayPermission()
             return
         }
         requestNotificationPermission()
-        FloatingService.start(this, title, snippet)
+        FloatingService.start(this, title, snippet, apiKey)
     }
 
     companion object {

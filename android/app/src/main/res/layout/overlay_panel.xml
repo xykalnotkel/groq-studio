@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/overlay_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="end"
+    android:orientation="vertical"
+    android:padding="4dp">
+
+    <FrameLayout
+        android:id="@+id/overlay_panel"
+        android:layout_width="320dp"
+        android:layout_height="480dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/overlay_card_bg"
+        android:elevation="12dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:id="@+id/overlay_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingBottom="6dp">
+
+                <TextView
+                    android:id="@+id/overlay_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/app_name"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overlay_size_s"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/overlay_chip_bg"
+                    android:paddingLeft="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingRight="8dp"
+                    android:paddingBottom="3dp"
+                    android:text="@string/overlay_size_s"
+                    android:textColor="#C9C9DC"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overlay_size_m"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="4dp"
+                    android:background="@drawable/overlay_chip_bg"
+                    android:paddingLeft="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingRight="8dp"
+                    android:paddingBottom="3dp"
+                    android:text="@string/overlay_size_m"
+                    android:textColor="#C9C9DC"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overlay_size_l"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="4dp"
+                    android:layout_marginRight="6dp"
+                    android:background="@drawable/overlay_chip_bg"
+                    android:paddingLeft="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingRight="8dp"
+                    android:paddingBottom="3dp"
+                    android:text="@string/overlay_size_l"
+                    android:textColor="#C9C9DC"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/overlay_panel_close"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:background="@drawable/overlay_close_bg"
+                    android:contentDescription="@string/overlay_close"
+                    android:padding="3dp"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    android:tint="#FFFFFF" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/overlay_mode"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:background="@drawable/overlay_input_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:textColor="#EDEDF5"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/overlay_engine"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/overlay_input_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:textColor="#EDEDF5"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/overlay_brief"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/overlay_input_bg"
+                android:gravity="top|start"
+                android:hint="@string/overlay_brief_hint"
+                android:inputType="textMultiLine|textCapSentences"
+                android:padding="8dp"
+                android:textColor="#EDEDF5"
+                android:textColorHint="#6E6E8C"
+                android:textSize="12.5sp" />
+
+            <TextView
+                android:id="@+id/overlay_generate"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/overlay_btn_bg"
+                android:gravity="center"
+                android:text="@string/overlay_generate"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <ScrollView
+                android:id="@+id/overlay_result_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/overlay_input_bg"
+                android:fillViewport="true">
+
+                <TextView
+                    android:id="@+id/overlay_result"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="@string/overlay_result_empty"
+                    android:textColor="#C9C9DC"
+                    android:textIsSelectable="true"
+                    android:textSize="12.5sp" />
+            </ScrollView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/overlay_copy"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_marginRight="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/overlay_chip_bg"
+                    android:gravity="center"
+                    android:text="@string/overlay_copy"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overlay_open"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/overlay_chip_bg"
+                    android:gravity="center"
+                    android:text="@string/overlay_open"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:id="@+id/overlay_resize"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="bottom|end"
+            android:background="@drawable/overlay_resize" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end">
+
+        <ImageButton
+            android:id="@+id/overlay_fab"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/overlay_fab_bg"
+            android:contentDescription="@string/app_name"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:src="@mipmap/ic_launcher" />
+
+        <ImageButton
+            android:id="@+id/overlay_close"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="top|end"
+            android:background="@drawable/overlay_close_bg"
+            android:contentDescription="@string/overlay_close"
+            android:padding="3dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="#FFFFFF" />
+    </FrameLayout>
+</LinearLayout>

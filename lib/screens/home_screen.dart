@@ -92,10 +92,11 @@ class _HomeScreenState extends State<HomeScreen>
       }
 
       final snippet = controller.output.trim();
-      await _pipChannel.invokeMethod<bool>('startFloating', <String, String>{
+      await _pipChannel.invokeMethod('startFloating', <String, String>{
         'title': AppInfo.name,
+        'apiKey': controller.apiKey,
         'snippet': snippet.isEmpty
-            ? 'Siap menulis. Buka aplikasi untuk generate.'
+            ? 'Siap menulis di atas aplikasi lain.'
             : (snippet.length > 120
                   ? '${snippet.substring(0, 120)}…'
                   : snippet),
@@ -107,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Gelembung mengambang aktif. Kamu bisa pindah aplikasi — XyStudio tetap terlihat.',
+              'Mengambang aktif. Ketuk gelembung untuk generate, geser untuk pindah, K/S/B atau sudut kanan bawah untuk ukuran.',
             ),
           ),
         );
@@ -364,7 +365,7 @@ class _Header extends StatelessWidget {
             if (defaultTargetPlatform == TargetPlatform.android)
               IconButton(
                 tooltip:
-                    'Mode mengambang (tetap terlihat walau pindah aplikasi)',
+                    'Mengambang: generate di atas aplikasi lain, bisa digeser dan diubah ukurannya',
                 onPressed: onEnterPip,
                 icon: const Icon(Icons.picture_in_picture_alt_rounded),
               ),

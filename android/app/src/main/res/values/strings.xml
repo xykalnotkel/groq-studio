@@ -9,7 +9,18 @@
     <string name="widget_mode_ide">Ide</string>
     <string name="overlay_channel_name">Mode mengambang</string>
     <string name="overlay_notification">XyStudio mengambang di atas aplikasi lain</string>
-    <string name="overlay_default_snippet">Siap menulis. Ketuk untuk membuka aplikasi.</string>
+    <string name="overlay_default_snippet">Siap menulis di atas aplikasi lain.</string>
     <string name="overlay_open">Buka aplikasi</string>
     <string name="overlay_close">Tutup</string>
+    <string name="overlay_generate">Buat</string>
+    <string name="overlay_stop">Hentikan</string>
+    <string name="overlay_copy">Salin</string>
+    <string name="overlay_brief_hint">Ceritakan sebentar…</string>
+    <string name="overlay_result_empty">Hasil muncul di sini. Geser header untuk pindah, tarik sudut kanan bawah untuk ukuran.</string>
+    <string name="overlay_writing">Sedang menulis…</string>
+    <string name="overlay_empty_result">Model tidak mengirim teks. Coba lagi.</string>
+    <string name="overlay_need_key">API key Groq belum ada. Buka aplikasi, isi di Setelan, lalu nyalakan mengambang lagi.</string>
+    <string name="overlay_size_s">K</string>
+    <string name="overlay_size_m">S</string>
+    <string name="overlay_size_l">B</string>
 </resources>
