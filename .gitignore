@@ -52,3 +52,6 @@ key.properties
 **/*.jks
 **/*.keystore
 android/app/keystore.jks
+
+# Hasil build lokal (APK/AAB)
+downloads/
