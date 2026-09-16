@@ -14,9 +14,15 @@ on:
         options: [release, debug]
         default: release
 
+permissions:
+  contents: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.47.4'
 
 jobs:
   check:
@@ -28,7 +34,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: '3.47.4'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Ambil dependency
@@ -58,32 +64,41 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: '3.47.4'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Ambil dependency
         run: flutter pub get
 
-      # Opsional: kalau kamu menyiapkan secret keystore, APK/AAB akan
-      # ditandatangani dengan key milikmu sendiri (siap unggah ke Play Store).
+      # Opsional: kalau secret keystore diisi, APK/AAB ditandatangani dengan
+      # key milikmu sendiri (siap unggah ke Play Store).
       - name: Siapkan keystore
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         working-directory: android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/keystore.jks
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::notice::Tanpa keystore — APK ditandatangani dengan key debug."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > app/keystore.jks
           cat > key.properties <<EOF
           storeFile=keystore.jks
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
           EOF
+          echo "::notice::Keystore siap, build akan ditandatangani."
 
       - name: Build APK + App Bundle
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          MODE: ${{ inputs.mode || 'release' }}
         run: |
           set -e
-          MODE="${{ github.event.inputs.mode || 'release' }}"
           ARGS="--$MODE"
           if [ -n "$GROQ_API_KEY" ]; then
             ARGS="$ARGS --dart-define=GROQ_API_KEY=$GROQ_API_KEY"
@@ -96,7 +111,8 @@ jobs:
           VERSION=$(grep '^version:' pubspec.yaml | head -1 | awk '{print $2}' | cut -d+ -f1)
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-$MODE.apk "dist/GroqStudio-$VERSION-universal.apk"
+          cp "build/app/outputs/flutter-apk/app-$MODE.apk" \
+             "dist/GroqStudio-$VERSION-universal.apk"
           for f in build/app/outputs/flutter-apk/*-$MODE.apk; do
             case "$f" in
               */app-$MODE.apk) continue ;;
@@ -104,7 +120,7 @@ jobs:
             ABI=$(basename "$f" | sed -E "s/app-(.+)-$MODE\.apk/\1/")
             cp "$f" "dist/GroqStudio-$VERSION-$ABI.apk"
           done
-          cp build/app/outputs/bundle/${MODE}/app-$MODE.aab "dist/GroqStudio-$VERSION.aab"
+          cp "build/app/outputs/bundle/$MODE/app-$MODE.aab" "dist/GroqStudio-$VERSION.aab"
           ls -lh dist
 
       - name: Upload artifact
