@@ -12,6 +12,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
     name: Build situs Astro
@@ -35,9 +40,32 @@ jobs:
           PUBLIC_GROQ_API_KEY: ${{ secrets.PUBLIC_GROQ_API_KEY }}
         run: npm run build
 
+      - name: Prefix subpath GitHub Pages
+        working-directory: web
+        env:
+          ASTRO_BASE: /groq-studio/
+        run: node scripts/prefix-base.mjs
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: xystudio-web
           path: web/dist
           retention-days: 30
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    name: Deploy ke GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

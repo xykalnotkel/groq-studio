@@ -1,5 +1,7 @@
 # XyStudio AI — Versi Web
 
+Live: **https://xykalnotkel.github.io/groq-studio/** — deploy otomatis via GitHub Actions ke GitHub Pages.
+
 Astro + vanilla JS, static (SSG). Jalan di browser mana pun, manggil **Groq API
 langsung dari browser** (api.groq.com mengizinkan CORS: `access-control-allow-origin: *`).
 

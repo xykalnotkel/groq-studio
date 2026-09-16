@@ -8,7 +8,8 @@ semuanya ditenagai **Groq API** (GPT-OSS 120B/20B, Qwen3.8, Allam 2).
 **CI:** setiap push ke `main` otomatis menjalankan format-check → analyze → test → build APK + AAB + web.
 
 > Ada dua versi: **aplikasi Android** (folder ini) dan **versi web** (folder
-> [`web/`](web/README.md) — Astro, bisa dibuka langsung di browser).
+> [`web/`](web/README.md) — Astro) yang terdeploy otomatis di
+> **https://xykalnotkel.github.io/groq-studio/**.
 
 > Preview tampilan (statis): buka `preview/ui_preview.html` di browser.
 
