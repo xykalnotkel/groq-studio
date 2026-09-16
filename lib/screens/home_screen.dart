@@ -364,8 +364,7 @@ class _Header extends StatelessWidget {
             const SizedBox(width: 2),
             if (defaultTargetPlatform == TargetPlatform.android)
               IconButton(
-                tooltip:
-                    'Mengambang: generate di atas aplikasi lain, bisa digeser dan diubah ukurannya',
+                tooltip: 'Mengambang: generate di atas aplikasi lain, bisa digeser dan diubah ukurannya',
                 onPressed: onEnterPip,
                 icon: const Icon(Icons.picture_in_picture_alt_rounded),
               ),
