@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">XyStudio AI</string>
+    <string name="widget_label">XyStudio AI</string>
+    <string name="widget_description">Pintasan cepat untuk menulis dengan AI: Judul, Caption, Artikel, dan Ide Konten.</string>
+    <string name="widget_mode_judul">Judul</string>
+    <string name="widget_mode_caption">Caption</string>
+    <string name="widget_mode_artikel">Artikel</string>
+    <string name="widget_mode_ide">Ide</string>
+</resources>

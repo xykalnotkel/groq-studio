@@ -20,7 +20,7 @@ class AppInfo {
 
   static const String name = 'XyStudio AI';
   static const String tagline = 'Tulis apa saja, jadi cepat';
-  static const String version = '3.0.0';
+  static const String version = '3.1.0';
 
   /// Credit pembuat — tampil di splash screen & halaman Tentang.
   static const String brand = 'XyVerse';

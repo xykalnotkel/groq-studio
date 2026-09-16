@@ -1,14 +1,13 @@
 ---
 /**
- * Popup ajakan gabung saluran WhatsApp — versi 3.0.
+ * Popup ajakan gabung saluran WhatsApp — versi 3.1 "quiet".
  *
- * Gambar header dibuat ulang penuh dengan rasio 4:3 dan gaya morphing:
- * gradien yang "meleleh", elemen melayang dengan motion blur, dan teks
- * tebal-lembut. Tanpa emoji.
+ * Header berupa ilustrasi statis 4:3 (`/wa_popup_43.png`) dengan badge
+ * kredit "Built in XyVerse" dan tombol X. Tanpa animasi meleleh/melayang.
  *
  * - Tombol X untuk menutup
  * - Centang "Jangan tampilkan lagi" (disimpan di localStorage)
- * - Tombol "Laporkan bug" → chat WhatsApp
+ * - Tombol "Laporkan bug" membuka formulir laporan (modal)
  * - Credit "Built in XyVerse" memakai logo resmi XyVerse
  */
 import { APP } from '../data/app.js';
@@ -16,22 +15,9 @@ import { APP } from '../data/app.js';
 
 <div class="cp-overlay" id="channel-popup" hidden>
   <div class="cp-card" role="dialog" aria-modal="true" aria-labelledby="cp-title">
-    <!-- Header 4:3: gradien meleleh + elemen melayang + motion blur -->
+    <!-- Header 4:3: ilustrasi statis -->
     <div class="cp-hero">
-      <div class="cp-melt" aria-hidden="true"></div>
-      <span class="cp-orb cp-orb-1" aria-hidden="true"></span>
-      <span class="cp-orb cp-orb-2" aria-hidden="true"></span>
-      <span class="cp-orb cp-orb-3" aria-hidden="true"></span>
-      <span class="cp-orb cp-orb-4" aria-hidden="true"></span>
-
-      <div class="cp-hero-text">
-        <span class="cp-pill">
-          <img src="/xyverse_icon_white.png" alt="" width="16" height="16" />
-          XyVerse
-        </span>
-        <h2>Saluran WhatsApp</h2>
-        <p>Update, template prompt, dan tips menulis — langsung ke WhatsApp kamu</p>
-      </div>
+      <img src="/wa_popup_43.png" alt="Ilustrasi kaca cair XyVerse" class="cp-art" />
 
       <div class="cp-credit-badge">
         <span>Built in</span>
@@ -78,9 +64,7 @@ import { APP } from '../data/app.js';
         <span>Jangan tampilkan lagi</span>
       </label>
 
-      <a class="cp-bug" href={APP.bugReportUrl} target="_blank" rel="noopener">
-        Laporkan bug
-      </a>
+      <button class="cp-bug" data-bug-open type="button">Laporkan bug</button>
     </div>
   </div>
 </div>
@@ -92,11 +76,9 @@ import { APP } from '../data/app.js';
     padding: 18px;
     background: rgba(5, 5, 12, .62);
     backdrop-filter: blur(6px);
-    animation: fade .28s ease both;
     overflow-y: auto;
   }
   .cp-overlay[hidden] { display: none; }
-  @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
 
   .cp-card {
     width: 100%; max-width: 420px;
@@ -105,125 +87,16 @@ import { APP } from '../data/app.js';
     border-radius: 26px;
     overflow: hidden;
     box-shadow: 0 40px 90px rgba(0, 0, 0, .6);
-    animation: pop .42s cubic-bezier(.2,0,0,1) both;
-  }
-  @keyframes pop {
-    from { opacity: 0; transform: translateY(14px) scale(.94) }
-    to   { opacity: 1; transform: none }
   }
 
-  /* ── Header 4:3 ─────────────────────────────────────────────── */
+  /* Header 4:3 statis — hanya gambar, tanpa animasi. */
   .cp-hero {
     position: relative;
     aspect-ratio: 4 / 3;
     overflow: hidden;
-    display: grid;
-    place-items: center;
     background: linear-gradient(135deg, #12122a, #1b1035);
   }
-
-  /* Gradien meleleh: tiga blob besar bergeser pelan ke bawah. */
-  .cp-melt { position: absolute; inset: -40%; filter: blur(2px); }
-  .cp-melt::before, .cp-melt::after, .cp-hero .cp-melt + .cp-orb::before {
-    content: '';
-  }
-  .cp-melt {
-    background:
-      radial-gradient(42% 60% at 24% 22%, rgba(124,92,255,.85), transparent 70%),
-      radial-gradient(38% 55% at 82% 16%, rgba(37,211,102,.5), transparent 70%),
-      radial-gradient(50% 65% at 52% 82%, rgba(244,114,182,.42), transparent 72%);
-    animation: melt 9s ease-in-out infinite alternate;
-    transform-origin: 50% 20%;
-  }
-  @keyframes melt {
-    0%   { transform: translateY(-4%) scaleY(1) rotate(-2deg); }
-    50%  { transform: translateY(5%)  scaleY(1.12) rotate(1.5deg); }
-    100% { transform: translateY(9%)  scaleY(1.2) rotate(-1deg); }
-  }
-
-  /* Elemen melayang + motion blur (blur searah gerak). */
-  .cp-orb {
-    position: absolute;
-    border-radius: 50%;
-    display: grid; place-items: center;
-    filter: blur(1.5px);
-  }
-  .cp-orb-1 {
-    width: 74px; height: 74px; left: 12%; top: 24%;
-    background: rgba(37, 211, 102, .85);
-    box-shadow: 0 0 30px 4px rgba(37, 211, 102, .55);
-    animation: float1 7s ease-in-out infinite;
-  }
-  .cp-orb-1::after {
-    content: ''; width: 26px; height: 26px;
-    background: #fff; border-radius: 50% 50% 50% 4px;
-    transform: rotate(45deg); opacity: .92;
-  }
-  .cp-orb-2 {
-    width: 54px; height: 54px; right: 12%; top: 16%;
-    background: rgba(124, 92, 255, .9);
-    box-shadow: 0 0 26px 4px rgba(124, 92, 255, .55);
-    animation: float2 8s ease-in-out infinite;
-  }
-  .cp-orb-2::after {
-    content: ''; width: 20px; height: 20px; background: #fff;
-    clip-path: polygon(50% 0, 63% 37%, 100% 50%, 63% 63%, 50% 100%, 37% 63%, 0 50%, 37% 37%);
-  }
-  .cp-orb-3 {
-    width: 44px; height: 44px; right: 26%; bottom: 20%;
-    background: rgba(34, 211, 238, .85);
-    box-shadow: 0 0 22px 3px rgba(34, 211, 238, .5);
-    animation: float3 6.4s ease-in-out infinite;
-  }
-  .cp-orb-3::after {
-    content: ''; width: 18px; height: 3.6px; background: #fff; border-radius: 2px;
-    box-shadow: 0 -6px 0 #fff, 0 6px 0 #fff;
-  }
-  .cp-orb-4 {
-    width: 30px; height: 30px; left: 24%; bottom: 16%;
-    background: rgba(244, 114, 182, .8);
-    box-shadow: 0 0 18px 3px rgba(244, 114, 182, .5);
-    animation: float4 7.6s ease-in-out infinite;
-  }
-  @keyframes float1 {
-    0%, 100% { transform: translate(0, 0);      filter: blur(1.5px); }
-    50%      { transform: translate(22px, -18px); filter: blur(4px); }
-  }
-  @keyframes float2 {
-    0%, 100% { transform: translate(0, 0);        filter: blur(1.5px); }
-    50%      { transform: translate(-24px, 20px);  filter: blur(4.5px); }
-  }
-  @keyframes float3 {
-    0%, 100% { transform: translate(0, 0);       filter: blur(1.5px); }
-    50%      { transform: translate(26px, 14px);  filter: blur(4px); }
-  }
-  @keyframes float4 {
-    0%, 100% { transform: translate(0, 0);        filter: blur(1.5px); }
-    50%      { transform: translate(-14px, -22px); filter: blur(3.5px); }
-  }
-
-  /* Teks tebal-lembut di tengah. */
-  .cp-hero-text {
-    position: relative; z-index: 2;
-    text-align: center; padding: 26px 28px 8px;
-  }
-  .cp-pill {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 5px 13px; border-radius: 999px;
-    background: rgba(255,255,255,.13);
-    border: 1px solid rgba(255,255,255,.25);
-    color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .6px;
-  }
-  .cp-hero-text h2 {
-    margin: 14px 0 8px; color: #fff;
-    font-size: 30px; line-height: 1.15; font-weight: 800; letter-spacing: -.6px;
-    text-shadow: 0 4px 18px rgba(0,0,0,.35);
-  }
-  .cp-hero-text p {
-    margin: 0 auto; max-width: 300px;
-    color: rgba(255,255,255,.88);
-    font-size: 13.5px; font-weight: 500; line-height: 1.45;
-  }
+  .cp-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
   .cp-credit-badge {
     position: absolute; z-index: 2; bottom: 12px; left: 50%;
@@ -242,11 +115,10 @@ import { APP } from '../data/app.js';
     background: rgba(0, 0, 0, .45); color: #fff;
     cursor: pointer;
     display: grid; place-items: center;
-    transition: background .2s, transform .2s;
+    transition: background .2s;
   }
-  .cp-close:hover { background: rgba(0, 0, 0, .7); transform: rotate(90deg); }
+  .cp-close:hover { background: rgba(0, 0, 0, .7); }
 
-  /* ── Isi ────────────────────────────────────────────────────── */
   .cp-body { padding: 18px 24px 20px; }
   .cp-body h3 {
     font-size: 20px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 8px;
@@ -289,8 +161,9 @@ import { APP } from '../data/app.js';
   }
 
   .cp-bug {
-    display: block; text-align: center; margin-top: 8px;
+    display: block; width: 100%; text-align: center; margin-top: 8px;
     font-size: 12.8px; font-weight: 600; color: #7f7f9c;
+    background: none; border: 0; cursor: pointer; font-family: inherit;
   }
   .cp-bug:hover { color: var(--pink); }
 </style>

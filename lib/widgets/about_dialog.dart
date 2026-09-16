@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/constants.dart';
 import '../theme/app_theme.dart';
+import 'bug_report_dialog.dart';
 
 /// Dialog Tentang aplikasi, lengkap dengan credit **Built in XyVerse**.
 Future<void> showAboutAppDialog(BuildContext context) {
@@ -137,7 +138,8 @@ class _AboutDialog extends StatelessWidget {
             _AboutTile(
               icon: Icons.bug_report_rounded,
               label: 'Laporkan bug',
-              onTap: () => _open(context, AppInfo.bugReportUrl),
+              // v3.1: formulir dulu, baru kirim ke WhatsApp.
+              onTap: () => showBugReportDialog(context),
             ),
             _AboutTile(
               icon: Icons.code_rounded,

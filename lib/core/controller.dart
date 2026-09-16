@@ -59,6 +59,7 @@ class AppController extends ChangeNotifier {
   Timer? _ticker;
   int _genToken = 0;
   int _autoIndex = 0;
+  String? _lastSavedHistoryId;
 
   static const int _historyLimit = 200;
 
@@ -482,6 +483,7 @@ class AppController extends ChangeNotifier {
       model: _answeredBy ?? _settings.model,
       createdAt: DateTime.now(),
     );
+    _lastSavedHistoryId = item.id;
     _history = <HistoryItem>[item, ..._history];
     if (_history.length > _historyLimit) {
       _history = _history.sublist(0, _historyLimit);
@@ -490,6 +492,39 @@ class AppController extends ChangeNotifier {
   }
 
   // ── Riwayat ───────────────────────────────────────────────────────────
+  /// Apakah hasil yang sedang ditampilkan sudah disukai (favorit).
+  bool get outputIsFavorite {
+    final id = _lastSavedHistoryId;
+    if (id == null) return false;
+    return _history.any((item) => item.id == id && item.favorite);
+  }
+
+  /// Suka / batal suka hasil yang sedang ditampilkan.
+  Future<void> toggleOutputFavorite() async {
+    final id = _lastSavedHistoryId;
+    if (id == null) return;
+    await toggleFavorite(id);
+  }
+
+  /// Simpan hasil suntingan pengguna untuk keluaran saat ini
+  /// (layar dan riwayat ikut diperbarui).
+  Future<void> editOutput(String newText) async {
+    final trimmed = newText.trim();
+    if (trimmed.isEmpty || trimmed == output) {
+      notifyListeners();
+      return;
+    }
+    _rawOutput = trimmed;
+    final id = _lastSavedHistoryId;
+    if (id != null) {
+      _history = _history
+          .map((item) => item.id == id ? item.copyWith(output: trimmed) : item)
+          .toList(growable: true);
+      unawaited(_storage.saveHistory(_history));
+    }
+    notifyListeners();
+  }
+
   Future<void> toggleFavorite(String id) async {
     _history = _history
         .map(

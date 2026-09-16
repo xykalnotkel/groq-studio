@@ -321,7 +321,6 @@ class _ResultPreview extends StatelessWidget {
       mode: GenerationMode.fromId('artikel'),
       model: 'GPT-OSS 120B',
       elapsed: const Duration(milliseconds: 4200),
-      typewriter: false,
     );
   }
 }

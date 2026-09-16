@@ -1,0 +1,199 @@
+---
+/**
+ * Formulir laporan bug (modal) — versi 3.1.
+ *
+ * Pengguna menyusun laporan di dalam halaman dulu, lalu tombol
+ * "Kirim via WhatsApp" membuka wa.me dengan pesan rapi.
+ *
+ * Dibuka lewat elemen mana pun ber-atribut `data-bug-open`.
+ */
+import { APP } from '../data/app.js';
+---
+
+<div class="bug-overlay" id="bug-modal" hidden>
+  <form class="bug-card" id="bug-form" role="dialog" aria-modal="true" aria-labelledby="bug-title">
+    <div class="bug-head">
+      <span class="bug-ico" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#7C5CFF"><path d="M20 8h-2.2a6 6 0 0 0-4.3-3.9l1.2-1.2-1.4-1.4-2 2a1.5 1.5 0 0 1-2.6 0l-2-2L5.3 2.9l1.2 1.2A6 6 0 0 0 2.2 8H0v2h2v2H0v2h2a6 6 0 0 0 4.5 5.8l-1.2 1.2 1.4 1.4 2.1-2.1c.7.2 1.4.3 2.2.3s1.5-.1 2.2-.3l2.1 2.1 1.4-1.4-1.2-1.2A6 6 0 0 0 22 14h2v-2h-2v-2h2V8h-4Z" transform="scale(.92) translate(1,1)"/></svg>
+      </span>
+      <div>
+        <h3 id="bug-title">Laporkan bug</h3>
+        <p>Isi dulu di sini, lalu kirim via WhatsApp</p>
+      </div>
+      <button type="button" class="bug-x" id="bug-close" aria-label="Tutup" title="Tutup">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <label class="bug-field">
+      <span>Perangkat / HP</span>
+      <input id="bug-device" required placeholder="cth. Samsung Galaxy A54, Windows 11" />
+    </label>
+
+    <div class="bug-row">
+      <label class="bug-field">
+        <span>Versi aplikasi</span>
+        <input id="bug-version" required value={APP.version} />
+      </label>
+      <label class="bug-field">
+        <span>Mode yang dipakai</span>
+        <select id="bug-mode">
+          <option>Tidak spesifik</option>
+          <option>Judul</option>
+          <option>Caption</option>
+          <option>Artikel</option>
+          <option>Ide Konten</option>
+          <option>Pengaturan / Riwayat</option>
+          <option>Suara (Dengarkan)</option>
+        </select>
+      </label>
+    </div>
+
+    <label class="bug-field">
+      <span>Ceritakan bugnya</span>
+      <textarea id="bug-story" rows="4" required
+        placeholder="Apa yang kamu lakukan, apa yang terjadi, dan apa yang seharusnya terjadi..."></textarea>
+    </label>
+
+    <p class="bug-note">
+      Laporan dikirim ke WhatsApp {APP.bugReportPhone}.
+      Kamu boleh lampirkan screenshot di chat.
+    </p>
+
+    <div class="bug-actions">
+      <button type="button" class="btn ghost" id="bug-cancel">Batal</button>
+      <button type="submit" class="btn green">Kirim via WhatsApp</button>
+    </div>
+  </form>
+</div>
+
+<style>
+  .bug-overlay {
+    position: fixed; inset: 0; z-index: 120;
+    display: grid; place-items: center;
+    padding: 18px;
+    background: rgba(5, 5, 12, .66);
+    backdrop-filter: blur(6px);
+    overflow-y: auto;
+  }
+  .bug-overlay[hidden] { display: none; }
+
+  .bug-card {
+    width: 100%; max-width: 470px;
+    background: #12121f;
+    border: 1px solid #262640;
+    border-radius: 22px;
+    padding: 20px 22px;
+    box-shadow: 0 40px 90px rgba(0, 0, 0, .6);
+  }
+
+  .bug-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .bug-ico {
+    width: 38px; height: 38px; flex: none;
+    display: grid; place-items: center;
+    border-radius: 12px;
+    background: rgba(124, 92, 255, .14);
+  }
+  .bug-head h3 { font-size: 16px; font-weight: 800; margin: 0; }
+  .bug-head p { font-size: 11.5px; color: #7f7f9c; margin: 2px 0 0; }
+  .bug-x {
+    margin-left: auto; width: 32px; height: 32px;
+    border: 0; border-radius: 50%;
+    background: rgba(255,255,255,.06); color: #a9a9c4;
+    cursor: pointer; display: grid; place-items: center;
+  }
+  .bug-x:hover { background: rgba(255,255,255,.12); }
+
+  .bug-field { display: block; margin-bottom: 12px; }
+  .bug-field > span {
+    display: block; font-size: 12px; font-weight: 600; color: #a9a9c4;
+    margin-bottom: 5px;
+  }
+  .bug-field input, .bug-field select, .bug-field textarea {
+    width: 100%;
+    background: #1a1a2e;
+    border: 1px solid #2c2c48;
+    border-radius: 12px;
+    color: #eeeef8;
+    font: inherit; font-size: 13.5px;
+    padding: 10px 12px;
+    resize: vertical;
+  }
+  .bug-field input:focus, .bug-field select:focus, .bug-field textarea:focus {
+    outline: 2px solid rgba(124, 92, 255, .55);
+    border-color: transparent;
+  }
+
+  .bug-row { display: flex; gap: 12px; }
+  .bug-row .bug-field { flex: 1; }
+
+  .bug-note { font-size: 11px; color: #55556e; margin: 2px 0 14px; }
+
+  .bug-actions { display: flex; gap: 10px; }
+  .bug-actions .btn.ghost { flex: 1; }
+  .bug-actions .btn.green { flex: 2; }
+  .btn.ghost {
+    background: transparent; border: 1px solid #2c2c48; color: #d6d6e6;
+  }
+</style>
+
+<script>
+  const overlay = document.getElementById('bug-modal');
+  const form = document.getElementById('bug-form');
+
+  function openBug() {
+    if (overlay) {
+      overlay.hidden = false;
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  function closeBug() {
+    if (overlay) {
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Delegasi: tombol apa pun ber-atribut data-bug-open membuka modal.
+  document.addEventListener('click', (e) => {
+    const trigger = (e.target as Element).closest?.('[data-bug-open]');
+    if (trigger) {
+      e.preventDefault();
+      openBug();
+    }
+  });
+
+  document.getElementById('bug-close')?.addEventListener('click', closeBug);
+  document.getElementById('bug-cancel')?.addEventListener('click', closeBug);
+  overlay?.addEventListener('click', (e) => {
+    if (e.target === overlay) closeBug();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay && !overlay.hidden) closeBug();
+  });
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const device = (document.getElementById('bug-device') as HTMLInputElement).value.trim();
+    const version = (document.getElementById('bug-version') as HTMLInputElement).value.trim();
+    const mode = (document.getElementById('bug-mode') as HTMLSelectElement).value;
+    const story = (document.getElementById('bug-story') as HTMLTextAreaElement).value.trim();
+    if (!device || !version || !story) return;
+
+    const lines = [
+      'Halo XyVerse! Saya mau lapor bug di XyStudio AI:',
+      '',
+      `• Perangkat / HP: ${device}`,
+      `• Versi aplikasi: ${version} (web)`,
+      `• Mode yang dipakai: ${mode}`,
+      '• Sistem: browser web',
+      '• Cerita singkat:',
+      story,
+    ];
+    const url = `https://wa.me/${'6283116632566'}?text=${encodeURIComponent(lines.join('\n'))}`;
+    window.open(url, '_blank', 'noopener');
+    closeBug();
+  });
+</script>

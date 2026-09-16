@@ -241,17 +241,15 @@ class _HistoryTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Hero(
-            tag: 'mode-icon-${item.id}',
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: mode.color.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(mode.icon, size: 20, color: mode.color),
+          // v3.1 "quiet": tanpa Hero — ikon mode tampil statis.
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: mode.color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Icon(mode.icon, size: 20, color: mode.color),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -423,17 +421,14 @@ class HistoryDetailScreen extends StatelessWidget {
           children: <Widget>[
             Row(
               children: <Widget>[
-                Hero(
-                  tag: 'mode-icon-${item.id}',
-                  child: Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: mode.color.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(mode.icon, size: 24, color: mode.color),
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: mode.color.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  child: Icon(mode.icon, size: 24, color: mode.color),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

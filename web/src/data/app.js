@@ -3,7 +3,7 @@ export const APP = {
   name: 'XyStudio AI',
   brand: 'XyVerse',
   credit: 'Built in XyVerse',
-  version: '3.0.0',
+  version: '3.1.0',
   tagline: 'Tulis apa saja, jadi cepat',
   description:
     'Studio menulis AI: judul, artikel, caption, riset web, prompt video, dan 24 mode lainnya. Ditenagai Groq.',
@@ -14,7 +14,7 @@ export const APP = {
   githubUrl: 'https://github.com/xykalnotkel/groq-studio',
   keysUrl: 'https://console.groq.com/keys',
   apkUrl:
-    'https://github.com/xykalnotkel/groq-studio/releases/download/v3.0.0/XyStudio-3.0.0-arm64-v8a.apk',
+    'https://github.com/xykalnotkel/groq-studio/releases/download/v3.1.0/XyStudio-3.1.0-arm64-v8a.apk',
   releasesUrl: 'https://github.com/xykalnotkel/groq-studio/releases/latest',
 };
 

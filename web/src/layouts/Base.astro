@@ -1,5 +1,6 @@
 ---
 import { APP } from '../data/app.js';
+import BugReportModal from '../components/BugReportModal.astro';
 import ChannelPopup from '../components/ChannelPopup.astro';
 
 interface Props {
@@ -53,7 +54,7 @@ const { title = `${APP.name} — ${APP.tagline}`, description = APP.description 
             <a href="/app">Web App</a>
             <a href="/about">Tentang</a>
             <a href={APP.waChannelUrl} target="_blank" rel="noopener">Saluran WA</a>
-            <a href={APP.bugReportUrl} target="_blank" rel="noopener">Lapor Bug</a>
+            <a href="#" data-bug-open>Lapor Bug</a>
             <a href={APP.githubUrl} target="_blank" rel="noopener">GitHub</a>
           </nav>
         </div>
@@ -67,6 +68,7 @@ const { title = `${APP.name} — ${APP.tagline}`, description = APP.description 
     </footer>
 
     <ChannelPopup />
+    <BugReportModal />
 
     <style>
       .site-footer {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../core/constants.dart';
 import '../widgets/about_dialog.dart';
+import '../widgets/bug_report_dialog.dart';
 import '../core/controller.dart';
 import '../models/settings.dart';
 import '../theme/app_theme.dart';
@@ -372,57 +373,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                             ],
                           ),
                         ),
-                        ListTile(
-                          leading: const Icon(Icons.animation_rounded),
-                          title: const Text('Animasi huruf demi huruf'),
-                          subtitle: const Text(
-                            'Hasil mengetik sendiri dengan halus',
-                            style: TextStyle(fontSize: 11),
-                          ),
-                          trailing: Switch(
-                            value: settings.typewriter,
-                            onChanged: (value) =>
-                                widget.controller.updateSettings(
-                                  settings.copyWith(typewriter: value),
-                                ),
-                          ),
-                        ),
-                        if (settings.typewriter)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Row(
-                                  children: <Widget>[
-                                    const Icon(Icons.speed_rounded, size: 20),
-                                    const SizedBox(width: 12),
-                                    const Expanded(
-                                      child: Text('Kecepatan animasi'),
-                                    ),
-                                    Text(
-                                      '${settings.typewriterSpeed}/10',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Slider(
-                                  value: settings.typewriterSpeed.toDouble(),
-                                  min: 1,
-                                  max: 10,
-                                  divisions: 9,
-                                  onChanged: (value) =>
-                                      widget.controller.updateSettings(
-                                        settings.copyWith(
-                                          typewriterSpeed: value.round(),
-                                        ),
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
                         _PickerTile<ReasoningOption>(
                           icon: Icons.psychology_alt_rounded,
                           title: 'Penalaran GPT-OSS',
@@ -634,7 +584,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             Icons.open_in_new_rounded,
                             size: 16,
                           ),
-                          onTap: () => _openUrl(context, AppInfo.bugReportUrl),
+                          onTap: () => showBugReportDialog(context),
                         ),
                         ListTile(
                           leading: const Icon(Icons.info_outline_rounded),

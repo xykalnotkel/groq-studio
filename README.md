@@ -13,8 +13,9 @@ semuanya ditenagai **Groq API** (GPT-OSS 120B/20B, Qwen3.8, Allam 2).
 > Preview tampilan (statis): buka `preview/ui_preview.html` di browser.
 
 Cukup tulis satu kalimat tentang idemu, pilih dari 24 mode, tekan tombol. Hasilnya
-muncul huruf demi huruf dengan animasi halus (kecepatan bisa diatur / dimatikan),
-bisa **didengarkan** (TTS), disalin, dibagikan, dan tersimpan otomatis di riwayat.
+muncul utuh dalam hitungan detik di permukaan kaca yang tenang — bisa langsung
+**disunting**, **disukai**, **didengarkan** (TTS), disalin, dibagikan, dan
+tersimpan otomatis di riwayat.
 
 ---
 
@@ -26,10 +27,14 @@ bisa **didengarkan** (TTS), disalin, dibagikan, dan tersimpan otomatis di riwaya
 | Model Auto (muter) | Rotasi model tiap generate + **pindah otomatis** saat 429/5xx/error; badge "dijawab oleh model" di setiap hasil; pilihan manual tetap ada |
 | Daftar model live | Diambil dari `GET /models`, filter otomatis: whisper/orpheus/guard/safeguard/compound tidak muncul |
 | 12 gaya menulis | Natural, Profesional, Padat & Tajam, Bercerita, Elegan, Santai, Persuasif, Informatif, Puitis, Lucu, Formal, Inspiratif — **nol emoji**: dilarang di prompt & disaring di kode |
-| Animasi output | Huruf demi huruf yang halus; kecepatan 1-10, bisa dimatikan |
+| Sunting & Suka hasil | Hasil bisa diedit langsung di aplikasi (tersimpan ke riwayat) dan diberi suka/batal suka |
+| Mode mengambang (PiP) | Tombol Picture-in-Picture: aplikasi tetap terlihat walau pindah aplikasi; auto-melayang saat minimize (Android 12+) |
+| Widget beranda | Pintasan 4 mode (Judul, Caption, Artikel, Ide) yang membuka aplikasi langsung ke mode tersebut |
+| Ikon adaptif | Glyph XyVerse tanpa background (transparan) |
+| Laporan bug | Formulir dalam aplikasi (perangkat, versi, mode, cerita) → terkirim rapi via WhatsApp |
 | Dengarkan (TTS) | Tombol play/pause/stop + slider nada & kecepatan. Bahasa Indonesia memakai suara perangkat (flutter_tts); keluaran bahasa Inggris memakai **Groq Orpheus** |
 | Statistik | Total generate, kata, karakter, mode favorit, streak harian, grafik 7 hari, tombol reset |
-| Popup komunitas | Ajakan gabung **Saluran WA XyVerse** dalam rasio 4:3 bergaya morphing (gradien meleleh, elemen melayang + motion blur, teks tebal-lembut): tombol X, centang "Jangan tampilkan lagi", tombol **Laporkan bug** (WA 6283116632566), credit **Built in XyVerse** dengan logo resmi |
+| Popup komunitas | Ajakan gabung **Saluran WA XyVerse**: header ilustrasi kaca statis 4:3, tombol X, centang "Jangan tampilkan lagi", tombol **Laporkan bug** (formulir → WA 6283116632566), credit **Built in XyVerse** dengan logo resmi |
 | Streaming real-time | Hasil muncul per kata, ada tombol **Hentikan** |
 | Bahasa bisa diganti | Indonesia, English, Melayu, Jepang, Mandarin, Arab, Spanyol |
 | Kreativitas & penalaran | Slider temperature 0.0 – 1.5; reasoning effort GPT-OSS (low/medium/high) |
@@ -38,23 +43,18 @@ bisa **didengarkan** (TTS), disalin, dibagikan, dan tersimpan otomatis di riwaya
 | Tema | Gelap / Terang / ikut sistem, font Plus Jakarta Sans |
 | Tanpa backend | Aplikasi ngobrol langsung ke `api.groq.com` |
 
-## UI/UX: modern, clean, morphing
+## UI/UX: quiet surface — kaca cair yang tenang
 
-Semua gerakan memakai satu bahasa animasi (`lib/theme/motion.dart` — kurva *emphasized*
-ala Material 3), jadi transisi terasa menyatu, bukan potongan-potongan:
+Sejak v3.1 semua animasi output/feedback dihapus atas permintaan pengguna: tidak ada
+typewriter, shimmer, blob bergerak, maupun hero flight. Yang tersisa hanya fade halus
+untuk perpindahan halaman (`lib/theme/motion.dart`), sehingga permukaan terasa seperti
+kaca cair yang tenang:
 
-- **Morphing background** — blob gradien yang bentuknya berubah terus (`CustomPainter`
-  + path kuadratik, tanpa blur sehingga tetap ringan di HP kentang).
-- **Morphing action button** — tombol utama menyusut dari bar lebar → pil "Sedang menulis…"
-  → **lingkaran tombol stop** saat streaming, lengkap dengan denyut halus.
-- **Morphing state** — perpindahan kosong → loading → hasil → error memakai
-  `AnimatedSwitcher` (fade + scale), tidak pernah "kedip".
-- **Morphing mode card** — kartu yang dipilih membesar, radiusnya membulat,
-  ikonnya memantul, kartu lain mengecil.
-- **Transisi halaman** — fade + slide + scale (`MorphPageTransitionsBuilder`),
-  plus **Hero** yang menerbangkan ikon mode dari daftar Riwayat ke layar detail.
-- **Morphing progress line** — garis gradien berjalan saat teks sedang ditulis.
-- Material 3, `InkSparkle` ripple, sudut membulat konsisten, tipografi Plus Jakarta Sans.
+- **Latar kaca statis** — gradien radial lembut, deterministik per halaman, tanpa repaint berkala.
+- **Hasil utuh seketika** — streaming tetap ada (teks bertambah), tetapi tanpa animasi ketik.
+- **Loading tenang** — kerangka garis statis, tanpa shimmer.
+- **Transisi halaman** — fade pendek ala Material, tanpa bounce/scale.
+- Material 3, sudut membulat konsisten, tipografi Plus Jakarta Sans.
 
 ---
 
@@ -64,10 +64,10 @@ Rilis terbaru: <https://github.com/xykalnotkel/groq-studio/releases/latest>
 
 | File | Untuk |
 |---|---|
-| `XyStudio-3.0.0-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
-| `XyStudio-3.0.0-armeabi-v7a.apk` | HP Android lama / 32-bit |
-| `XyStudio-3.0.0-universal.apk` | Semua arsitektur (ukuran paling besar) |
-| `XyStudio-3.0.0.aab` | Untuk diunggah ke Play Store |
+| `XyStudio-3.1.0-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
+| `XyStudio-3.1.0-armeabi-v7a.apk` | HP Android lama / 32-bit |
+| `XyStudio-3.1.0-universal.apk` | Semua arsitektur (ukuran paling besar) |
+| `XyStudio-3.1.0.aab` | Untuk diunggah ke Play Store |
 
 APK-nya **aman dipasang** (Unknown Sources), tapi karena ditandatangani dengan key debug,
 Android bisa meminta konfirmasi. Isi API key Groq kamu sendiri di tab **Setelan**.
@@ -170,9 +170,9 @@ base64 -w0 ~/groqstudio.jks > keystore.txt   # isi keystore.txt → secret KEYST
 ### Merilis versi baru
 
 ```bash
-# 1. naikkan version di pubspec.yaml, misal 3.0.0+4
-git add . && git commit -m "rilis 3.0.0"
-git tag v3.0.0
+# 1. naikkan version di pubspec.yaml, misal 3.1.0+5
+git add . && git commit -m "rilis 3.1.0"
+git tag v3.1.0
 git push origin main --tags
 # 2. GitHub Actions akan membuat Release berisi APK-nya
 ```

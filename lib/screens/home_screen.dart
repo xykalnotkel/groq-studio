@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/constants.dart';
 import '../core/controller.dart';
@@ -35,8 +37,58 @@ class _HomeScreenState extends State<HomeScreen>
   final TextEditingController _brief = TextEditingController();
   final TextEditingController _extra = TextEditingController();
 
+  static const MethodChannel _pipChannel = MethodChannel('xystudio/pip');
+  static const MethodChannel _launchChannel = MethodChannel('xystudio/launch');
+
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    // v3.1: buka aplikasi dari widget beranda → langsung ke mode terkait.
+    _launchChannel.setMethodCallHandler(_handleLaunchCall);
+    _launchChannel
+        .invokeMethod<String>('getLaunchMode')
+        .then(_applyWidgetMode)
+        .catchError((Object _) {}); // tanpa implementasi native (web/test).
+  }
+
+  Future<dynamic> _handleLaunchCall(MethodCall call) async {
+    if (call.method == 'onLaunchMode') {
+      _applyWidgetMode(call.arguments as String?);
+    }
+    return null;
+  }
+
+  void _applyWidgetMode(String? id) {
+    if (id == null || id.isEmpty) return;
+    final mode = GenerationMode.fromId(id);
+    if (mode.id != id) return; // id tidak dikenal — abaikan.
+    if (!mounted) return;
+    setState(() => _mode = mode);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Dibuka dari widget: ${mode.label}')),
+    );
+  }
+
+  /// Masuk mode mengambang (Picture-in-Picture) — aplikasi tetap terlihat
+  /// walau pengguna membuka aplikasi lain.
+  Future<void> _enterPip() async {
+    try {
+      final ok = await _pipChannel.invokeMethod<bool>('enterPip') ?? false;
+      if (!mounted) return;
+      if (!ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Mode mengambang tidak didukung perangkat ini'),
+          ),
+        );
+      }
+    } catch (_) {
+      // Platform non-Android — abaikan diam-diam.
+    }
+  }
 
   @override
   void dispose() {
@@ -87,6 +139,7 @@ class _HomeScreenState extends State<HomeScreen>
                   _Header(
                     controller: controller,
                     onOpenSettings: widget.onOpenSettings,
+                    onEnterPip: _enterPip,
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(18, 4, 18, 150),
@@ -182,23 +235,11 @@ class _HomeScreenState extends State<HomeScreen>
         onRegenerate: controller.regenerate,
         onStop: controller.stop,
         controller: controller,
-        typewriter: controller.settings.typewriter,
-        typewriterSpeed: controller.settings.typewriterSpeed,
       );
     }
 
-    // Morph halus antar keadaan (kosong → loading → hasil → error).
-    return AnimatedSwitcher(
-      duration: AppMotion.normal,
-      switchInCurve: AppMotion.emphasized,
-      switchOutCurve: AppMotion.standard,
-      transitionBuilder: morphTransition,
-      layoutBuilder: (currentChild, previousChildren) => Stack(
-        alignment: Alignment.topCenter,
-        children: <Widget>[...previousChildren, ?currentChild],
-      ),
-      child: KeyedSubtree(key: ValueKey<String>(key), child: child),
-    );
+    // v3.1 "quiet": pergantian keadaan langsung, tanpa morph/transisi.
+    return KeyedSubtree(key: ValueKey<String>(key), child: child);
   }
 }
 
@@ -206,10 +247,15 @@ class _HomeScreenState extends State<HomeScreen>
 // Header
 // ─────────────────────────────────────────────────────────────────────────────
 class _Header extends StatelessWidget {
-  const _Header({required this.controller, required this.onOpenSettings});
+  const _Header({
+    required this.controller,
+    required this.onOpenSettings,
+    required this.onEnterPip,
+  });
 
   final AppController controller;
   final VoidCallback onOpenSettings;
+  final VoidCallback onEnterPip;
 
   @override
   Widget build(BuildContext context) {
@@ -274,6 +320,13 @@ class _Header extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 2),
+            if (defaultTargetPlatform == TargetPlatform.android)
+              IconButton(
+                tooltip:
+                    'Mode mengambang (tetap terlihat walau pindah aplikasi)',
+                onPressed: onEnterPip,
+                icon: const Icon(Icons.picture_in_picture_alt_rounded),
+              ),
             IconButton(
               tooltip: 'Setelan',
               onPressed: onOpenSettings,
@@ -751,64 +804,20 @@ class _LoadingCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ...List<Widget>.generate(
-            4,
-            (index) => _ShimmerBar(delay: index * 120, color: mode.color),
-          ),
+          ...List<Widget>.generate(4, (index) {
+            // Garis kerangka statis yang tenang — tanpa shimmer.
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              height: 12,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: mode.color.withValues(alpha: index.isEven ? 0.16 : 0.10),
+              ),
+            );
+          }),
         ],
       ),
-    );
-  }
-}
-
-class _ShimmerBar extends StatefulWidget {
-  const _ShimmerBar({required this.delay, required this.color});
-
-  final int delay;
-  final Color color;
-
-  @override
-  State<_ShimmerBar> createState() => _ShimmerBarState();
-}
-
-class _ShimmerBarState extends State<_ShimmerBar>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1400),
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    Future<void>.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.repeat(reverse: true);
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          height: 12,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: widget.color.withValues(
-              alpha: 0.10 + 0.18 * _controller.value,
-            ),
-          ),
-        );
-      },
     );
   }
 }

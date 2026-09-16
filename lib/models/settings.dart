@@ -212,8 +212,6 @@ class Settings {
     this.temperature = 0.8,
     this.streaming = true,
     this.themeMode = ThemeMode.dark,
-    this.typewriter = true,
-    this.typewriterSpeed = 5,
     this.reasoning = 'medium',
     this.ttsPitch = 1.0,
     this.ttsRate = 1.0,
@@ -230,12 +228,6 @@ class Settings {
   final double temperature;
   final bool streaming;
   final ThemeMode themeMode;
-
-  /// Animasi output huruf demi huruf.
-  final bool typewriter;
-
-  /// Kecepatan animasi 1 (pelan) – 10 (ngebut).
-  final int typewriterSpeed;
 
   /// reasoning_effort untuk GPT-OSS.
   final String reasoning;
@@ -255,8 +247,6 @@ class Settings {
     double? temperature,
     bool? streaming,
     ThemeMode? themeMode,
-    bool? typewriter,
-    int? typewriterSpeed,
     String? reasoning,
     double? ttsPitch,
     double? ttsRate,
@@ -270,8 +260,6 @@ class Settings {
       temperature: temperature ?? this.temperature,
       streaming: streaming ?? this.streaming,
       themeMode: themeMode ?? this.themeMode,
-      typewriter: typewriter ?? this.typewriter,
-      typewriterSpeed: typewriterSpeed ?? this.typewriterSpeed,
       reasoning: reasoning ?? this.reasoning,
       ttsPitch: ttsPitch ?? this.ttsPitch,
       ttsRate: ttsRate ?? this.ttsRate,
@@ -287,8 +275,6 @@ class Settings {
     'temperature': temperature,
     'streaming': streaming,
     'themeMode': themeMode.name,
-    'typewriter': typewriter,
-    'typewriterSpeed': typewriterSpeed,
     'reasoning': reasoning,
     'ttsPitch': ttsPitch,
     'ttsRate': ttsRate,
@@ -305,11 +291,6 @@ class Settings {
     themeMode: ThemeMode.values.firstWhere(
       (m) => m.name == json['themeMode'],
       orElse: () => ThemeMode.dark,
-    ),
-    typewriter: (json['typewriter'] as bool?) ?? true,
-    typewriterSpeed: ((json['typewriterSpeed'] as num?)?.toInt() ?? 5).clamp(
-      1,
-      10,
     ),
     reasoning: (json['reasoning'] as String?) ?? 'medium',
     ttsPitch: ((json['ttsPitch'] as num?)?.toDouble() ?? 1.0).clamp(0.5, 2.0),

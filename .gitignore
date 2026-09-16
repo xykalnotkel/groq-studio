@@ -62,3 +62,6 @@ test/goldens/
 # Web build artifacts
 web/node_modules/
 web/dist/
+
+# Golden-test failure artifacts
+test/failures/

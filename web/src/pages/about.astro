@@ -40,11 +40,24 @@ const stack = [
         kalimat ide menjadi tulisan jadi — artikel, deskripsi produk, caption,
         naskah video, prompt gambar &amp; video, riset web, sampai balasan chat
         pembeli. Semua ditenagai Groq, salah satu layanan inferensi AI tercepat
-        saat ini, sehingga hasilnya muncul huruf demi huruf dalam hitungan detik.
+        saat ini — hasilnya muncul utuh dalam hitungan detik di permukaan kaca
+        yang tenang, lalu bisa langsung disunting atau disukai.
       </p>
       <div class="cta">
         <a class="btn" href="/app">Buka Web App</a>
         <a class="btn ghost" href={APP.releasesUrl} target="_blank" rel="noopener">Download APK</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Baru di versi 3.1</h2>
+      <div class="modes">
+        <span class="mode">Permukaan kaca tenang — tanpa animasi output</span>
+        <span class="mode">Hasil bisa disunting &amp; disukai</span>
+        <span class="mode">Formulir laporan bug lalu kirim via WhatsApp</span>
+        <span class="mode">Mode mengambang (Picture-in-Picture)</span>
+        <span class="mode">Widget beranda: Judul, Caption, Artikel, Ide</span>
+        <span class="mode">Ikon adaptif tanpa background</span>
       </div>
     </section>
 
@@ -71,7 +84,7 @@ const stack = [
       <h2>Tautan</h2>
       <div class="link-grid">
         <a href={APP.waChannelUrl} target="_blank" rel="noopener">Gabung {APP.waChannelName}</a>
-        <a href={APP.bugReportUrl} target="_blank" rel="noopener">Laporkan bug</a>
+        <a href="#" data-bug-open>Laporkan bug</a>
         <a href={APP.githubUrl} target="_blank" rel="noopener">Source code</a>
         <a href={APP.keysUrl} target="_blank" rel="noopener">Ambil API key Groq</a>
       </div>

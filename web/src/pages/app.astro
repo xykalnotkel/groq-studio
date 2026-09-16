@@ -77,14 +77,6 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
           <span class="label">Kreativitas: <b id="temp-val">0.8</b></span>
           <input type="range" id="temp" min="0" max="1.5" step="0.1" value="0.8" />
         </label>
-        <label>
-          <span class="label">Animasi output</span>
-          <span class="switch-line">
-            <input type="checkbox" id="typewriter" checked />
-            <label for="typewriter">Huruf demi huruf</label>
-            <input type="range" id="tw-speed" min="1" max="10" step="1" value="5" title="Kecepatan animasi" />
-          </span>
-        </label>
       </div>
 
       <button class="btn" id="btn-generate" style="width:100%;margin-top:18px">
@@ -101,6 +93,8 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
           <span class="model-badge" id="model-badge" hidden></span>
         </div>
         <div class="result-actions">
+          <button class="chip" id="btn-edit" disabled>Sunting</button>
+          <button class="chip" id="btn-like" disabled>Suka</button>
           <button class="chip" id="btn-listen" disabled>Dengarkan</button>
           <button class="chip" id="btn-copy" disabled>Salin</button>
           <button class="chip" id="btn-clear">Bersihkan</button>
@@ -121,6 +115,14 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
           Belum ada hasil. Pilih mode di kiri, tulis idemu, lalu tekan tombolnya.
           {BUILD_KEY ? 'Key Groq bawaan sudah terpasang.' : 'Kalau belum punya API key Groq, buka Setelan dulu ya — gratis.'}
         </p>
+      </div>
+      <div id="edit-box" class="edit-box" hidden>
+        <p class="label">Sunting hasil</p>
+        <textarea id="edit-text" rows="10"></textarea>
+        <div class="edit-actions">
+          <button class="btn sm" id="edit-save">Simpan</button>
+          <button class="chip" id="edit-cancel">Batal</button>
+        </div>
       </div>
       <div class="history">
         <p class="label">Riwayat (tersimpan di browser ini)</p>
@@ -182,7 +184,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
       <hr style="margin:18px 0;border:0;border-top:1px solid var(--line)" />
       <p class="muted small">
         Butuh bantuan?
-        <a href={APP.bugReportUrl} target="_blank" rel="noopener" style="color:var(--pink)">Laporkan bug</a>
+        <a href="#" data-bug-open style="color:var(--pink)">Laporkan bug</a>
         ·
         <a href={APP.waChannelUrl} target="_blank" rel="noopener" style="color:var(--green)">Gabung saluran WA</a>
       </p>
@@ -200,9 +202,10 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     brief: $('brief'), extra: $('extra'), inputLabel: $('input-label'),
     lang: $('lang'), tone: $('tone'), length: $('length'), model: $('model'),
     temp: $('temp'), tempVal: $('temp-val'),
-    typewriter: $('typewriter'), twSpeed: $('tw-speed'),
     generate: $('btn-generate'), status: $('status'), result: $('result'),
     badge: $('model-badge'), listen: $('btn-listen'), copy: $('btn-copy'), clear: $('btn-clear'),
+    edit: $('btn-edit'), like: $('btn-like'),
+    editBox: $('edit-box'), editText: $('edit-text'), editSave: $('edit-save'), editCancel: $('edit-cancel'),
     ttsPanel: $('tts-panel'), ttsStatus: $('tts-status'),
     ttsPlay: $('tts-play'), ttsPause: $('tts-pause'), ttsStop: $('tts-stop'),
     ttsPitch: $('tts-pitch'), ttsRate: $('tts-rate'),
@@ -226,8 +229,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   let busy = false;
   let fullText = '';
   let answeredBy = null;
-  let twTimer = null;
-  let twShown = 0;
+  let currentId = null; // id riwayat dari hasil yang sedang tampil
 
   // ── util ──────────────────────────────────────────────────────────
   const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{1F1E6}-\u{1F1FF}\u2600-\u27BF\u2300-\u23FF\u2B00-\u2BFF\uFE00-\uFE0F\u200D\u20E3\u2190-\u21FF\u2900-\u297F\u00A9\u00AE\u2122]/gu;
@@ -265,8 +267,6 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   if (prefs.length) els.length.value = prefs.length;
   if (prefs.model) els.model.value = prefs.model;
   if (prefs.temp) { els.temp.value = prefs.temp; els.tempVal.textContent = prefs.temp; }
-  if (prefs.tw === false) els.typewriter.checked = false;
-  if (prefs.twSpeed) els.twSpeed.value = prefs.twSpeed;
   if (prefs.mode) { const m = MODES.find((x) => x.id === prefs.mode); if (m) { mode = m; engine = (m.engines || [null])[0] || null; } }
   try { const savedKey = localStorage.getItem(KEY_STORE); if (savedKey) els.apikey.value = savedKey; } catch {}
 
@@ -274,13 +274,10 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     savePrefs({
       lang: els.lang.value, tone: els.tone.value, length: els.length.value,
       model: els.model.value, temp: els.temp.value, mode: mode.id,
-      tw: els.typewriter.checked, twSpeed: els.twSpeed.value,
     });
   }
   ['lang', 'tone', 'length', 'model'].forEach((k) => els[k].addEventListener('change', syncPrefs));
   els.temp.addEventListener('input', () => { els.tempVal.textContent = els.temp.value; syncPrefs(); });
-  els.typewriter.addEventListener('change', syncPrefs);
-  els.twSpeed.addEventListener('input', syncPrefs);
 
   function syncModeUI() {
     els.modes.querySelectorAll('.mode-chip').forEach((c) => {
@@ -555,17 +552,9 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
 
   function setBusy(v) { busy = v; syncModeUI(); els.generate.classList.toggle('stop', v); }
 
-  function startTypewriter() {
-    clearInterval(twTimer);
-    if (!els.typewriter.checked) { twShown = fullText.length; els.result.innerHTML = renderMd(fullText); return; }
-    twTimer = setInterval(() => {
-      const target = fullText.length;
-      if (twShown >= target) { clearInterval(twTimer); twTimer = null; return; }
-      let step = Math.max(1, Math.ceil(parseInt(els.twSpeed.value, 10) * 30 * 0.033));
-      if (target - twShown > 260) step = target - twShown;
-      twShown = Math.min(target, twShown + step);
-      els.result.innerHTML = renderMd(fullText.slice(0, twShown));
-    }, 33);
+  // v3.1 "quiet": hasil dirender utuh apa adanya, tanpa animasi ketik.
+  function renderResult() {
+    els.result.innerHTML = renderMd(fullText);
   }
 
   function showBadge(label) {
@@ -660,19 +649,20 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
               try {
                 const json = JSON.parse(data);
                 const delta = json?.choices?.[0]?.delta?.content;
-                if (delta) { fullText += delta; startTypewriterCatchUp(); }
+                if (delta) { fullText += delta; renderResult(); }
               } catch {}
             }
           }
 
           fullText = stripEmoji(fullText);
-          clearInterval(twTimer); twTimer = null;
-          startTypewriter();
+          renderResult();
 
           const secs = ((performance.now() - started) / 1000).toFixed(1);
           els.status.textContent = `Selesai dalam ${secs}s · ${countWords(fullText)} kata · ${target.label}`;
           els.listen.disabled = false; els.copy.disabled = false;
-          saveHistory(fullText, target.label);
+          els.edit.disabled = false; els.like.disabled = false;
+          currentId = saveHistory(fullText, target.label);
+          syncLikeButton();
           recordStats(fullText);
           return; // sukses
         } catch (err) {
@@ -696,7 +686,9 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
           fullText = stripEmoji(fullText);
           els.result.innerHTML = renderMd(fullText);
           els.listen.disabled = false; els.copy.disabled = false;
-          saveHistory(fullText, answeredBy || '—');
+          els.edit.disabled = false; els.like.disabled = false;
+          currentId = saveHistory(fullText, answeredBy || '—');
+          syncLikeButton();
           recordStats(fullText);
         }
       } else {
@@ -707,13 +699,6 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
       setBusy(false);
       controller = null;
     }
-  }
-
-  function startTypewriterCatchUp() {
-    if (twTimer) return; // typewriter aktif mengikuti teks
-    if (!els.typewriter.checked) { els.result.innerHTML = renderMd(fullText); return; }
-    twShown = fullText.length; // saat streaming deras, tampilkan langsung
-    els.result.innerHTML = renderMd(fullText);
   }
 
   els.generate.addEventListener('click', generate);
@@ -731,12 +716,59 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   });
 
   els.clear.addEventListener('click', () => {
-    fullText = ''; clearInterval(twTimer); twTimer = null;
+    fullText = '';
+    currentId = null;
     els.result.innerHTML = '<p class="muted">Hasil dibersihkan.</p>';
     els.status.textContent = '';
     els.badge.hidden = true;
     els.listen.disabled = true; els.copy.disabled = true;
+    els.edit.disabled = true; els.like.disabled = true;
+    els.editBox.hidden = true;
     els.ttsPanel.hidden = true;
+  });
+
+  // ── Sunting & Suka (v3.1) ────────────────────────────────────────
+  function persistHistory(list) {
+    try { localStorage.setItem(HIST_STORE, JSON.stringify(list.slice(0, 50))); } catch {}
+  }
+  function findCurrent() {
+    return loadHistory().find((h) => h.id === currentId) || null;
+  }
+  function syncLikeButton() {
+    const liked = !!findCurrent()?.favorite;
+    els.like.textContent = liked ? 'Disukai' : 'Suka';
+    els.like.classList.toggle('active', liked);
+  }
+  els.like.addEventListener('click', () => {
+    if (!currentId) return;
+    const list = loadHistory();
+    const item = list.find((h) => h.id === currentId);
+    if (!item) return;
+    item.favorite = !item.favorite;
+    persistHistory(list);
+    renderHistory();
+    syncLikeButton();
+  });
+  els.edit.addEventListener('click', () => {
+    if (!fullText.trim()) return;
+    els.editText.value = fullText;
+    els.editBox.hidden = false;
+  });
+  els.editCancel.addEventListener('click', () => { els.editBox.hidden = true; });
+  els.editSave.addEventListener('click', () => {
+    const next = els.editText.value.trim();
+    if (!next) return;
+    fullText = next;
+    renderResult();
+    const list = loadHistory();
+    const item = list.find((h) => h.id === currentId);
+    if (item) {
+      item.output = next;
+      persistHistory(list);
+      renderHistory();
+    }
+    els.editBox.hidden = true;
+    els.status.textContent = 'Hasil suntingan disimpan';
   });
 
   // ── Dengarkan (TTS) ─────────────────────────────────────────────
@@ -847,23 +879,25 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   // ── riwayat ─────────────────────────────────────────────────────
   function loadHistory() { try { return JSON.parse(localStorage.getItem(HIST_STORE) || '[]'); } catch { return []; } }
   function saveHistory(text, modelLabel) {
-    if (!text.trim()) return;
+    if (!text.trim()) return null;
     const list = loadHistory();
-    list.unshift({
+    const item = {
       id: String(Date.now()), mode: mode.label, brief: els.brief.value.trim(),
-      output: text, model: modelLabel, at: new Date().toISOString(),
-    });
-    try { localStorage.setItem(HIST_STORE, JSON.stringify(list.slice(0, 50))); } catch {}
+      output: text, model: modelLabel, at: new Date().toISOString(), favorite: false,
+    };
+    list.unshift(item);
+    persistHistory(list);
     renderHistory();
+    return item.id;
   }
   function renderHistory() {
     const list = loadHistory();
     if (!list.length) { els.history.innerHTML = '<p class="muted small">Belum ada riwayat.</p>'; return; }
     els.history.innerHTML = list.slice(0, 12).map((h) => `
-      <div class="hist" data-id="${h.id}">
+      <div class="hist${h.favorite ? ' fav' : ''}" data-id="${h.id}">
         <div class="hist-top">
           <span class="hist-mode">${escapeHtml(h.mode)}</span>
-          <span class="muted small">${new Date(h.at).toLocaleDateString('id-ID')} · ${escapeHtml(h.model || '')}</span>
+          <span class="muted small">${h.favorite ? '<span class="hist-heart">Disukai</span> · ' : ''}${new Date(h.at).toLocaleDateString('id-ID')} · ${escapeHtml(h.model || '')}</span>
         </div>
         <p class="hist-brief">${escapeHtml((h.brief || '').slice(0, 90))}</p>
       </div>`).join('');
@@ -871,11 +905,14 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
       el.addEventListener('click', () => {
         const item = list.find((x) => x.id === el.dataset.id);
         if (!item) return;
-        fullText = item.output; twShown = fullText.length;
+        fullText = item.output;
+        currentId = item.id;
         els.result.innerHTML = renderMd(fullText);
         els.brief.value = item.brief;
         showBadge(item.model || '—');
         els.listen.disabled = false; els.copy.disabled = false;
+        els.edit.disabled = false; els.like.disabled = false;
+        syncLikeButton();
         els.status.textContent = `Dibuka dari riwayat · ${item.mode}`;
       });
     });
@@ -935,6 +972,13 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   .hist-top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
   .hist-mode { font-size: 11px; font-weight: 800; color: var(--violet); }
   .hist-brief { font-size: 12.8px; color: #c6c6d8; margin: 0; }
+  .hist.fav { border-color: rgba(255, 77, 157, .45); }
+  .hist-heart { color: var(--pink); font-weight: 800; }
+
+  .edit-box { margin-top: 12px; padding: 14px; border-radius: 16px;
+              border: 1px solid rgba(124,92,255,.4); background: rgba(124,92,255,.07); }
+  .edit-box textarea { min-height: 180px; }
+  .edit-actions { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
 
   .sheet { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center;
            background: rgba(5,5,12,.66); backdrop-filter: blur(6px); padding: 18px; overflow-y: auto; }

@@ -34,7 +34,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 22px; }
 
-/* ── Latar morphing ─────────────────────────────────────────────── */
+/* ── Latar kaca statis ("quiet surface", tanpa morph) ───────────── */
 .morph-backdrop {
   position: fixed;
   inset: 0;
@@ -47,7 +47,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
   position: absolute;
   filter: blur(46px);
   opacity: 0.5;
-  animation: morph 22s ease-in-out infinite;
+  border-radius: 50%;
 }
 .morph-backdrop span:nth-child(1) {
   width: 46vw; height: 46vw; top: -12vw; right: -8vw;
@@ -56,18 +56,12 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .morph-backdrop span:nth-child(2) {
   width: 38vw; height: 38vw; top: 38vh; left: -14vw;
   background: linear-gradient(135deg, var(--pink), var(--violet));
-  animation-duration: 28s; animation-direction: reverse; opacity: 0.38;
+  opacity: 0.38;
 }
 .morph-backdrop span:nth-child(3) {
   width: 42vw; height: 42vw; bottom: -14vw; right: 8vw;
   background: linear-gradient(135deg, var(--cyan), var(--violet));
-  animation-duration: 34s; opacity: 0.3;
-}
-@keyframes morph {
-  0%   { border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%; transform: translate(0,0) rotate(0deg) scale(1); }
-  33%  { border-radius: 45% 55% 40% 60% / 55% 45% 60% 40%; transform: translate(-3vw,2vh) rotate(24deg) scale(1.08); }
-  66%  { border-radius: 55% 45% 60% 40% / 45% 55% 40% 60%; transform: translate(3vw,-2vh) rotate(-18deg) scale(0.94); }
-  100% { border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%; transform: translate(0,0) rotate(0deg) scale(1); }
+  opacity: 0.3;
 }
 
 /* ── Komponen ───────────────────────────────────────────────────── */

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -11,10 +9,11 @@ import 'markdown_lite.dart';
 import 'morphing_action_button.dart';
 import 'option_sheets.dart';
 
-/// Menampilkan hasil generate + aksi salin/bagikan/ulangi/dengarkan.
+/// Menampilkan hasil generate + aksi salin/bagikan/ulangi/sunting/
+/// suka/dengarkan.
 ///
-/// Teks ditampilkan dengan animasi huruf demi huruf yang halus
-/// (kecepatan bisa diatur, bisa dimatikan dari Setelan).
+/// v3.1: tanpa animasi ketik — teks tampil utuh dan tenang; pengguna bisa
+/// menyunting hasil langsung di layar dan memberi suka/batal suka.
 class ResultView extends StatefulWidget {
   const ResultView({
     super.key,
@@ -27,8 +26,6 @@ class ResultView extends StatefulWidget {
     this.onStop,
     this.padding = const EdgeInsets.all(18),
     this.controller,
-    this.typewriter = true,
-    this.typewriterSpeed = 5,
   });
 
   final String text;
@@ -42,12 +39,10 @@ class ResultView extends StatefulWidget {
   final VoidCallback? onStop;
   final EdgeInsetsGeometry padding;
 
-  /// Controller aplikasi — dibutuhkan untuk tombol Dengarkan.
+  /// Controller aplikasi — dibutuhkan untuk Sunting, Suka, & Dengarkan.
   final AppController? controller;
-  final bool typewriter;
-  final int typewriterSpeed;
 
-  int wordCountOf(String value) =>
+  static int wordCountOf(String value) =>
       value.trim().isEmpty ? 0 : value.trim().split(RegExp(r'\s+')).length;
 
   @override
@@ -55,63 +50,34 @@ class ResultView extends StatefulWidget {
 }
 
 class _ResultViewState extends State<ResultView> {
-  int _shown = 0;
-  Timer? _ticker;
   bool _ttsPanelOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _maybeStartTicker();
-  }
-
-  @override
-  void didUpdateWidget(ResultView old) {
-    super.didUpdateWidget(old);
-    if (old.typewriter != widget.typewriter ||
-        old.typewriterSpeed != widget.typewriterSpeed) {
-      _maybeStartTicker();
-    }
-  }
+  bool _editing = false;
+  final TextEditingController _editor = TextEditingController();
 
   @override
   void dispose() {
-    _ticker?.cancel();
+    _editor.dispose();
     super.dispose();
   }
 
-  void _maybeStartTicker() {
-    _ticker?.cancel();
-    if (!widget.typewriter) {
-      _shown = widget.text.length;
-      return;
-    }
-    _ticker = Timer.periodic(const Duration(milliseconds: 33), (_) {
-      final target = widget.text.length;
-      if (_shown >= target) return;
+  void _startEdit() {
+    _editor.text = widget.text;
+    setState(() => _editing = true);
+  }
 
-      // Kecepatan dasar dari setelan (1 = pelan, 10 = ngebut).
-      var step = (widget.typewriterSpeed * 30 * 0.033).ceil();
-      final behind = target - _shown;
-      // Kalau tertinggal jauh (streaming deras), percepat supaya tidak
-      // terasa "ngos-ngosan" mengejar teks.
-      if (behind > 260) step = behind;
-      setState(() {
-        _shown = (_shown + step).clamp(0, target);
-      });
-    });
+  Future<void> _saveEdit() async {
+    await widget.controller?.editOutput(_editor.text);
+    if (!mounted) return;
+    setState(() => _editing = false);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Hasil suntingan disimpan')));
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-
-    if (!widget.typewriter && _shown != widget.text.length) {
-      _shown = widget.text.length;
-    }
-    final visible = widget.text.substring(_shown.clamp(0, widget.text.length));
-    final typing = widget.typewriter && _shown < widget.text.length;
 
     return Container(
       width: double.infinity,
@@ -120,7 +86,7 @@ class _ResultViewState extends State<ResultView> {
         borderRadius: BorderRadius.circular(AppTheme.radius),
         gradient: LinearGradient(
           colors: <Color>[
-            widget.mode.color.withValues(alpha: dark ? 0.16 : 0.10),
+            widget.mode.color.withValues(alpha: dark ? 0.14 : 0.08),
             (dark ? const Color(0xFF141424) : Colors.white).withValues(
               alpha: 0.95,
             ),
@@ -128,157 +94,217 @@ class _ResultViewState extends State<ResultView> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: widget.mode.color.withValues(alpha: 0.35)),
+        border: Border.all(color: widget.mode.color.withValues(alpha: 0.3)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: widget.mode.color.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  widget.mode.icon,
-                  size: 18,
-                  color: widget.mode.color,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      widget.mode.label,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      _metaLine(visible),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 11,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (widget.streaming)
-                IconButton(
-                  tooltip: 'Hentikan',
-                  onPressed: widget.onStop,
-                  icon: const Icon(Icons.stop_circle_rounded),
-                ),
-            ],
-          ),
-
-          // Badge model yang menjawab.
-          if (widget.model != null && widget.model!.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: widget.mode.color.withValues(alpha: 0.12),
-                  border: Border.all(
-                    color: widget.mode.color.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Icon(
-                      Icons.memory_rounded,
-                      size: 12,
-                      color: widget.mode.color,
-                    ),
-                    const SizedBox(width: 5),
-                    Flexible(
-                      child: Text(
-                        'dijawab oleh ${widget.model}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: widget.mode.color,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-
-          if (widget.streaming) ...<Widget>[
-            const SizedBox(height: 12),
-            MorphingProgressLine(color: widget.mode.color),
-          ],
-          const Divider(height: 24),
-          MarkdownLite(visible, textStyle: theme.textTheme.bodyMedium),
-          if (typing || widget.streaming)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: _TypingDots(color: theme.colorScheme.primary),
-            ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: <Widget>[
-              _ActionChipButton(
-                icon: Icons.copy_all_rounded,
-                label: 'Salin',
-                onTap: () async {
-                  await Clipboard.setData(ClipboardData(text: widget.text));
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Teks berhasil disalin')),
-                  );
-                },
-              ),
-              _ActionChipButton(
-                icon: Icons.share_rounded,
-                label: 'Bagikan',
-                onTap: () => shareText(widget.text, subject: widget.mode.label),
-              ),
-              if (widget.onRegenerate != null)
-                _ActionChipButton(
-                  icon: Icons.refresh_rounded,
-                  label: 'Ulangi',
-                  onTap: widget.streaming ? null : widget.onRegenerate,
-                ),
-              if (widget.controller != null)
-                _ActionChipButton(
-                  icon: Icons.record_voice_over_rounded,
-                  label: 'Dengarkan',
-                  onTap: widget.text.trim().isEmpty || widget.streaming
-                      ? null
-                      : () => setState(() => _ttsPanelOpen = !_ttsPanelOpen),
-                ),
-            ],
-          ),
-          if (_ttsPanelOpen && widget.controller != null)
-            _ListenPanel(controller: widget.controller!),
-        ],
-      ),
+      child: _editing ? _buildEditor(theme) : _buildViewer(theme, dark),
     );
   }
 
-  String _metaLine(String visible) {
-    final parts = <String>['${widget.wordCountOf(visible)} kata'];
+  Widget _buildEditor(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Icon(Icons.edit_rounded, size: 18, color: widget.mode.color),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Sunting hasil',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _editor,
+          maxLines: null,
+          minLines: 8,
+          style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
+          decoration: InputDecoration(
+            fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
+            alignLabelWithHint: true,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            FilledButton.icon(
+              onPressed: _saveEdit,
+              icon: const Icon(Icons.check_rounded, size: 18),
+              label: const Text('Simpan'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => setState(() => _editing = false),
+              icon: const Icon(Icons.close_rounded, size: 18),
+              label: const Text('Batal'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildViewer(ThemeData theme, bool dark) {
+    final liked = widget.controller?.outputIsFavorite ?? false;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: widget.mode.color.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(widget.mode.icon, size: 18, color: widget.mode.color),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    widget.mode.label,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    _metaLine(),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (widget.streaming)
+              IconButton(
+                tooltip: 'Hentikan',
+                onPressed: widget.onStop,
+                icon: const Icon(Icons.stop_circle_rounded),
+              ),
+          ],
+        ),
+
+        // Badge model yang menjawab.
+        if (widget.model != null && widget.model!.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: widget.mode.color.withValues(alpha: 0.12),
+                border: Border.all(
+                  color: widget.mode.color.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(
+                    Icons.memory_rounded,
+                    size: 12,
+                    color: widget.mode.color,
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      'dijawab oleh ${widget.model}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: widget.mode.color,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+
+        if (widget.streaming) ...<Widget>[
+          const SizedBox(height: 12),
+          MorphingProgressLine(color: widget.mode.color),
+        ],
+        const Divider(height: 24),
+        MarkdownLite(widget.text, textStyle: theme.textTheme.bodyMedium),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            _ActionChipButton(
+              icon: Icons.copy_all_rounded,
+              label: 'Salin',
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: widget.text));
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Teks berhasil disalin')),
+                );
+              },
+            ),
+            _ActionChipButton(
+              icon: Icons.share_rounded,
+              label: 'Bagikan',
+              onTap: () => shareText(widget.text, subject: widget.mode.label),
+            ),
+            if (widget.controller != null)
+              _ActionChipButton(
+                icon: Icons.edit_rounded,
+                label: 'Sunting',
+                onTap: widget.streaming ? null : _startEdit,
+              ),
+            if (widget.controller != null)
+              _ActionChipButton(
+                icon: liked
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_outline_rounded,
+                label: liked ? 'Disukai' : 'Suka',
+                active: liked,
+                onTap: widget.streaming
+                    ? null
+                    : () => widget.controller!.toggleOutputFavorite(),
+              ),
+            if (widget.onRegenerate != null)
+              _ActionChipButton(
+                icon: Icons.refresh_rounded,
+                label: 'Ulangi',
+                onTap: widget.streaming ? null : widget.onRegenerate,
+              ),
+            if (widget.controller != null)
+              _ActionChipButton(
+                icon: Icons.record_voice_over_rounded,
+                label: 'Dengarkan',
+                onTap: widget.text.trim().isEmpty || widget.streaming
+                    ? null
+                    : () => setState(() => _ttsPanelOpen = !_ttsPanelOpen),
+              ),
+          ],
+        ),
+        if (_ttsPanelOpen && widget.controller != null)
+          _ListenPanel(controller: widget.controller!),
+      ],
+    );
+  }
+
+  String _metaLine() {
+    final parts = <String>['${ResultView.wordCountOf(widget.text)} kata'];
     if (widget.elapsed != null && widget.elapsed!.inMilliseconds > 0) {
       parts.add(
         '${(widget.elapsed!.inMilliseconds / 1000).toStringAsFixed(1)}s',
@@ -491,18 +517,12 @@ class _SliderRow extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-            ),
-            child: Slider(
-              value: value,
-              min: 0.5,
-              max: 2.0,
-              divisions: 15,
-              onChanged: enabled ? onChanged : null,
-            ),
+          child: Slider(
+            value: value,
+            min: 0.5,
+            max: 2.0,
+            divisions: 15,
+            onChanged: enabled ? onChanged : null,
           ),
         ),
       ],
@@ -515,82 +535,38 @@ class _ActionChipButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.active = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final enabled = onTap != null;
+    final accent = active ? const Color(0xFFF43F5E) : null;
     return OutlinedButton.icon(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         side: BorderSide(
           color: enabled
-              ? theme.colorScheme.outline
+              ? (accent ?? theme.colorScheme.outline)
               : theme.colorScheme.outline.withValues(alpha: 0.4),
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: active
+            ? const Color(0xFFF43F5E).withValues(alpha: 0.12)
+            : null,
         foregroundColor: enabled
-            ? theme.colorScheme.onSurface
+            ? (accent ?? theme.colorScheme.onSurface)
             : theme.colorScheme.onSurface.withValues(alpha: 0.35),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       icon: Icon(icon, size: 17),
       label: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-    );
-  }
-}
-
-class _TypingDots extends StatefulWidget {
-  const _TypingDots({required this.color});
-
-  final Color color;
-
-  @override
-  State<_TypingDots> createState() => _TypingDotsState();
-}
-
-class _TypingDotsState extends State<_TypingDots>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  )..repeat();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List<Widget>.generate(3, (index) {
-            final t = (_controller.value * 3 - index).clamp(0.0, 1.0);
-            return Opacity(
-              opacity: 0.25 + 0.75 * (1 - (t * 2 - 1).abs()),
-              child: Container(
-                margin: const EdgeInsets.only(right: 5),
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: widget.color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            );
-          }),
-        );
-      },
     );
   }
 }
