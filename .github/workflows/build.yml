@@ -81,18 +81,24 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64:-}" ] || [ -z "${KEYSTORE_PASSWORD:-}" ] \
+             || [ -z "${KEY_ALIAS:-}" ] || [ -z "${KEY_PASSWORD:-}" ]; then
+            if [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+              echo "::error::Rilis tag butuh KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD."
+              exit 1
+            fi
             echo "::notice::Tanpa keystore — APK ditandatangani dengan key debug."
             exit 0
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > app/keystore.jks
-          cat > key.properties <<EOF
-          storeFile=keystore.jks
-          storePassword=$KEYSTORE_PASSWORD
-          keyAlias=$KEY_ALIAS
-          keyPassword=$KEY_PASSWORD
-          EOF
-          echo "::notice::Keystore siap, build akan ditandatangani."
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > app/keystore.jks
+          {
+            printf 'storeFile=keystore.jks\n'
+            printf 'storePassword=%s\n' "$KEYSTORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$KEY_PASSWORD"
+          } > key.properties
+          echo "::notice::Keystore resmi siap, APK akan ditandatangani."
 
       - name: Build APK + App Bundle
         env:
@@ -150,3 +156,11 @@ jobs:
         with:
           files: dist/*
           generate_release_notes: true
+          body: |
+            APK ini ditandatangani keystore resmi XyVerse (bukan debug) dan kode native di-minify R8.
+
+            Belum di Google Play Store karena biaya daftar developer (sekitar 25 USD sekali) belum ada. Bukan karena malware.
+
+            Kalau HP sudah terpasang 3.2.1 atau lebih lama, uninstall dulu lalu pasang 3.2.2 (tanda tangan berubah).
+
+            Unduh lewat https://dl.xystudio.my.id — bukan tautan github.com.

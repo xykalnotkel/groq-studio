@@ -9,17 +9,17 @@
     },
     {
       "source": "/android",
-      "destination": "https://github.com/xykalnotkel/groq-studio/releases/download/v3.2.0/XyStudio-3.2.0-arm64-v8a.apk",
+      "destination": "https://github.com/xykalnotkel/groq-studio/releases/download/v3.2.2/XyStudio-3.2.2-arm64-v8a.apk",
       "statusCode": 302
     },
     {
       "source": "/android-32",
-      "destination": "https://github.com/xykalnotkel/groq-studio/releases/download/v3.2.0/XyStudio-3.2.0-armeabi-v7a.apk",
+      "destination": "https://github.com/xykalnotkel/groq-studio/releases/download/v3.2.2/XyStudio-3.2.2-armeabi-v7a.apk",
       "statusCode": 302
     },
     {
       "source": "/universal",
-      "destination": "https://github.com/xykalnotkel/groq-studio/releases/download/v3.2.0/XyStudio-3.2.0-universal.apk",
+      "destination": "https://github.com/xykalnotkel/groq-studio/releases/download/v3.2.2/XyStudio-3.2.2-universal.apk",
       "statusCode": 302
     }
   ]

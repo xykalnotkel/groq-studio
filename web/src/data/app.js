@@ -26,7 +26,7 @@ export const DOWNLOADS = [
   {
     id: 'android',
     href: 'https://dl.xystudio.my.id/android',
-    file: 'XyStudio-3.2.0-arm64-v8a.apk',
+    file: 'XyStudio-3.2.2-arm64-v8a.apk',
     label: 'Android 64-bit',
     note: 'Pilihan utama. Hampir semua HP Android modern.',
     primary: true,
@@ -34,14 +34,14 @@ export const DOWNLOADS = [
   {
     id: 'android-32',
     href: 'https://dl.xystudio.my.id/android-32',
-    file: 'XyStudio-3.2.0-armeabi-v7a.apk',
+    file: 'XyStudio-3.2.2-armeabi-v7a.apk',
     label: 'Android 32-bit',
     note: 'HP Android lama.',
   },
   {
     id: 'universal',
     href: 'https://dl.xystudio.my.id/universal',
-    file: 'XyStudio-3.2.0-universal.apk',
+    file: 'XyStudio-3.2.2-universal.apk',
     label: 'Universal',
     note: 'Semua arsitektur. Ukuran paling besar.',
   },

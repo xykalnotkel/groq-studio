@@ -8,6 +8,18 @@ const faqs = [
     a: `${APP.name} adalah studio menulis. Kamu kasih satu kalimat, aplikasi yang nulis judul, artikel, caption, prompt gambar/video, riset, dan 20 mode lain. Jalan di Android dan di browser.`,
   },
   {
+    q: 'Kenapa tidak ada di Google Play Store?',
+    a: 'Belum. Daftar sebagai developer Google Play berbayar sekitar 25 USD sekali. Modal itu belum ada, jadi APK diedarkan dari situs resmi. Bukan karena aplikasi ini virus, ditolak, atau diblokir Play Protect. Materi listing sudah disiapkan untuk nanti.',
+  },
+  {
+    q: 'APK ini virus / malware?',
+    a: `Bukan. Kode sumber terbuka di GitHub, APK ${APP.version} ditandatangani keystore resmi XyVerse, dan kode Java/Kotlin di-minify R8. Peringatan Android "sumber tidak dikenal" muncul untuk semua aplikasi di luar Play Store — itu pengingat sideload, bukan vonis berbahaya. Unduh hanya dari <a href="/download">${APP.downloadUrl.replace('https://', '')}</a>.`,
+  },
+  {
+    q: 'Sudah pasang versi lama, gagal update?',
+    a: 'Mulai 3.2.2 tanda tangan APK ganti dari debug ke keystore resmi. Android menolak menimpa aplikasi yang beda tanda tangan. Uninstall versi lama, lalu pasang 3.2.2.',
+  },
+  {
     q: 'API key Groq dari mana? Berbayar?',
     a: `Gratis. Buka <a href="${APP.keysUrl}" target="_blank" rel="noopener">console.groq.com/keys</a>, buat key (awalan gsk_), tempel di Setelan. Key hanya tersimpan di HP atau browser kamu — tidak dikirim ke server XyVerse.`,
   },

@@ -1,5 +1,9 @@
 # Play Store Listing — XyStudio AI
 
+Status: BELUM dikirim ke Google Play.
+Alasan: biaya daftar developer (~25 USD sekali) belum ada. Bukan karena
+aplikasi malware/virus. Materi di bawah siap disalin nanti.
+
 Salin-tempel materi di bawah ini ke Google Play Console.
 Semua teks sudah disesuaikan dengan batas karakter Play Store.
 

@@ -65,13 +65,21 @@ Rilis terbaru: <https://github.com/xykalnotkel/groq-studio/releases/latest>
 
 | File | Untuk |
 |---|---|
-| `XyStudio-3.2.0-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
-| `XyStudio-3.2.0-armeabi-v7a.apk` | HP Android lama / 32-bit |
-| `XyStudio-3.2.0-universal.apk` | Semua arsitektur (ukuran paling besar) |
-| `XyStudio-3.2.0.aab` | Untuk diunggah ke Play Store |
+| `XyStudio-3.2.2-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
+| `XyStudio-3.2.2-armeabi-v7a.apk` | HP Android lama / 32-bit |
+| `XyStudio-3.2.2-universal.apk` | Semua arsitektur (ukuran paling besar) |
+| `XyStudio-3.2.2.aab` | Siap untuk Play Store nanti |
 
-APK-nya **aman dipasang** (Unknown Sources), tapi karena ditandatangani dengan key debug,
-Android bisa meminta konfirmasi. Isi API key Groq kamu sendiri di tab **Setelan**.
+Unduh resmi: **https://dl.xystudio.my.id** (bukan tautan github.com).
+Mulai 3.2.2 APK ditandatangani **keystore resmi XyVerse** (bukan debug) dan
+kode Java/Kotlin di-minify R8. Android tetap bisa memperingatkan "sumber tidak
+dikenal" karena aplikasi belum di Play Store — itu pengingat sideload, bukan
+vonis malware.
+
+Belum di Play Store karena biaya daftar developer (~25 USD sekali) belum ada.
+
+Kalau HP sudah terpasang 3.2.1 atau lebih lama, **uninstall dulu** lalu pasang
+3.2.2 (tanda tangan berubah).
 
 ## Ambil API key Groq (gratis)
 
@@ -153,12 +161,13 @@ Hasil build bisa diunduh di bagian **Artifacts** pada halaman workflow run.
 | Secret | Wajib? | Isi |
 |---|---|---|
 | `GROQ_API_KEY` | opsional | `gsk_...` — disuntikkan ke APK lewat `--dart-define`. Kalau kosong, pengguna mengisi sendiri di aplikasi |
-| `KEYSTORE_BASE64` | opsional | `base64 -w0 namafile.jks` (hasilnya tempel di sini) |
-| `KEYSTORE_PASSWORD` | opsional | password keystore |
-| `KEY_ALIAS` | opsional | alias key |
-| `KEY_PASSWORD` | opsional | password key |
+| `KEYSTORE_BASE64` | wajib untuk tag `v*` | `base64 -w0 namafile.jks` |
+| `KEYSTORE_PASSWORD` | wajib untuk tag `v*` | password keystore |
+| `KEY_ALIAS` | wajib untuk tag `v*` | alias key (`xystudio`) |
+| `KEY_PASSWORD` | wajib untuk tag `v*` | password key |
 
-Tanpa secret keystore, APK tetap jadi (ditandatangani key debug).
+Tanpa secret keystore, push ke `main` masih membangun APK debug-signed.
+Tag rilis `v*` **gagal** jika keystore belum diisi.
 
 Membuat keystore:
 
