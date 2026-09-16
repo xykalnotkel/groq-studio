@@ -89,23 +89,30 @@ class _AboutDialog extends StatelessWidget {
                   color: AppColors.violet.withValues(alpha: 0.3),
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  const Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 14,
-                    color: AppColors.violet,
-                  ),
-                  const SizedBox(width: 7),
-                  Text(
-                    AppInfo.credit,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
+              child: Builder(
+                builder: (context) {
+                  final dark = theme.brightness == Brightness.dark;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Image.asset(
+                        dark
+                            ? 'assets/xyverse_icon_white.png'
+                            : 'assets/xyverse_icon_black.png',
+                        height: 16,
+                        width: 16,
+                      ),
+                      const SizedBox(width: 7),
+                      Text(
+                        AppInfo.credit,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
             const SizedBox(height: 14),

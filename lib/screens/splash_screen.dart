@@ -162,23 +162,29 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                       color: theme.colorScheme.surface.withValues(alpha: 0.5),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Icon(
-                          Icons.auto_awesome_rounded,
-                          size: 14,
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 7),
-                        Text(
-                          AppInfo.credit,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                      ],
+                    child: Builder(
+                      builder: (context) {
+                        final dark = theme.brightness == Brightness.dark;
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Text(
+                              'Built in',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Image.asset(
+                              dark
+                                  ? 'assets/xyverse_wordmark_white.png'
+                                  : 'assets/xyverse_wordmark_black.png',
+                              height: 14,
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 12),

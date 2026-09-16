@@ -1,8 +1,8 @@
-# XyStudio AI 💜⚡
+# XyStudio AI
 
-Aplikasi Android (Flutter) untuk bikin **judul, deskripsi, artikel, penjelasan aplikasi,
-deskripsi Play Store, caption + hashtag, ide nama, catatan rilis, copy iklan, email,
-dan brainstorming** — semuanya ditenagai **Groq API** (Llama 4, GPT-OSS, Qwen3, Kimi K2).
+Aplikasi Android (Flutter) + web untuk bikin **judul, artikel, caption, bio sosmed,
+script video, prompt gambar & video, riset web, ringkasan URL**, dan banyak lagi —
+semuanya ditenagai **Groq API** (GPT-OSS 120B/20B, Qwen3.8, Allam 2).
 
 **Repo:** <https://github.com/xykalnotkel/groq-studio> ·
 **CI:** setiap push ke `main` otomatis menjalankan format-check → analyze → test → build APK + AAB + web.
@@ -12,29 +12,33 @@ dan brainstorming** — semuanya ditenagai **Groq API** (Llama 4, GPT-OSS, Qwen3
 
 > Preview tampilan (statis): buka `preview/ui_preview.html` di browser.
 
-Cukup tulis satu kalimat tentang idemu, pilih mode, tekan tombol. Hasilnya muncul
-kata demi kata (streaming), bisa disalin, dibagikan, dan tersimpan otomatis di riwayat.
+Cukup tulis satu kalimat tentang idemu, pilih dari 24 mode, tekan tombol. Hasilnya
+muncul huruf demi huruf dengan animasi halus (kecepatan bisa diatur / dimatikan),
+bisa **didengarkan** (TTS), disalin, dibagikan, dan tersimpan otomatis di riwayat.
 
 ---
 
-## ✨ Fitur
+## Fitur
 
 | Fitur | Keterangan |
 |---|---|
-| 20 mode generate | Judul, Deskripsi, Artikel, Penjelasan Aplikasi, Play Store, Caption & Hashtag, Ide Nama, Catatan Rilis, Copy Iklan, Email & Pengumuman, Brainstorming, Script Video, Prompt Gambar, Kalender Konten, **Terjemah & Parafrase**, **Deskripsi Produk**, **Thread X**, **Riset Keyword & SEO**, **Balas Chat Pembeli**, Prompt Bebas |
-| Splash screen | Logo + credit **Built in XyVerse** saat aplikasi dibuka |
-| Popup komunitas | Ajakan gabung **Saluran WA XyVerse**: tombol X, centang "Jangan tampilkan lagi", tombol **Laporkan bug** |
+| 24 mode generate | Judul, Deskripsi, Artikel, Penjelasan Aplikasi, Play Store, Caption & Hashtag, **Bio Sosmed/Akun Aplikasi**, Ide Nama, Catatan Rilis, Copy Iklan, Email, Brainstorming, Script Video, **Prompt Gambar (Midjourney/Flux/SDXL/DALL-E + parameter & negative prompt)**, **Prompt Video (Sora/Veo/Runway/Kling)**, Kalender Konten, Terjemah & Parafrase, Deskripsi Produk, Thread X, Riset Keyword & SEO, **Riset Web (fetch sumber sendiri)**, **Baca & Ringkas URL**, Balas Chat Pembeli, Prompt Bebas |
+| Model Auto (muter) | Rotasi model tiap generate + **pindah otomatis** saat 429/5xx/error; badge "dijawab oleh model" di setiap hasil; pilihan manual tetap ada |
+| Daftar model live | Diambil dari `GET /models`, filter otomatis: whisper/orpheus/guard/safeguard/compound tidak muncul |
+| 12 gaya menulis | Natural, Profesional, Padat & Tajam, Bercerita, Elegan, Santai, Persuasif, Informatif, Puitis, Lucu, Formal, Inspiratif — **nol emoji**: dilarang di prompt & disaring di kode |
+| Animasi output | Huruf demi huruf yang halus; kecepatan 1-10, bisa dimatikan |
+| Dengarkan (TTS) | Tombol play/pause/stop + slider nada & kecepatan. Bahasa Indonesia memakai suara perangkat (flutter_tts); keluaran bahasa Inggris memakai **Groq Orpheus** |
+| Statistik | Total generate, kata, karakter, mode favorit, streak harian, grafik 7 hari, tombol reset |
+| Popup komunitas | Ajakan gabung **Saluran WA XyVerse** dalam rasio 4:3 bergaya morphing (gradien meleleh, elemen melayang + motion blur, teks tebal-lembut): tombol X, centang "Jangan tampilkan lagi", tombol **Laporkan bug** (WA 6283116632566), credit **Built in XyVerse** dengan logo resmi |
 | Streaming real-time | Hasil muncul per kata, ada tombol **Hentikan** |
 | Bahasa bisa diganti | Indonesia, English, Melayu, Jepang, Mandarin, Arab, Spanyol |
-| Gaya & panjang | Profesional / Santai / Persuasif / Lucu / Formal / Inspiratif × Singkat / Sedang / Panjang |
-| Kreativitas | Slider temperature 0.0 – 1.5 |
-| Pilih model live | Daftar model diambil langsung dari akun Groq kamu (`GET /models`) |
+| Kreativitas & penalaran | Slider temperature 0.0 – 1.5; reasoning effort GPT-OSS (low/medium/high) |
 | Riwayat | Semua hasil tersimpan di HP, bisa dicari, difavoritkan, dihapus (geser kartu) |
 | Salin & bagikan | Satu ketuk untuk copy atau share ke WA/IG/dll |
 | Tema | Gelap / Terang / ikut sistem, font Plus Jakarta Sans |
 | Tanpa backend | Aplikasi ngobrol langsung ke `api.groq.com` |
 
-## 🎨 UI/UX: modern, clean, morphing
+## UI/UX: modern, clean, morphing
 
 Semua gerakan memakai satu bahasa animasi (`lib/theme/motion.dart` — kurva *emphasized*
 ala Material 3), jadi transisi terasa menyatu, bukan potongan-potongan:
@@ -54,21 +58,21 @@ ala Material 3), jadi transisi terasa menyatu, bukan potongan-potongan:
 
 ---
 
-## 📥 Unduh APK siap pasang
+## Unduh APK siap pasang
 
 Rilis terbaru: <https://github.com/xykalnotkel/groq-studio/releases/latest>
 
 | File | Untuk |
 |---|---|
-| `GroqStudio-1.1.0-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
-| `GroqStudio-1.1.0-armeabi-v7a.apk` | HP Android lama / 32-bit |
-| `GroqStudio-1.1.0-universal.apk` | Semua arsitektur (ukuran paling besar) |
-| `GroqStudio-1.1.0.aab` | Untuk diunggah ke Play Store |
+| `XyStudio-3.0.0-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
+| `XyStudio-3.0.0-armeabi-v7a.apk` | HP Android lama / 32-bit |
+| `XyStudio-3.0.0-universal.apk` | Semua arsitektur (ukuran paling besar) |
+| `XyStudio-3.0.0.aab` | Untuk diunggah ke Play Store |
 
 APK-nya **aman dipasang** (Unknown Sources), tapi karena ditandatangani dengan key debug,
 Android bisa meminta konfirmasi. Isi API key Groq kamu sendiri di tab **Setelan**.
 
-## 🔑 Ambil API key Groq (gratis)
+## Ambil API key Groq (gratis)
 
 1. Buka <https://console.groq.com/keys>
 2. Login (Google/GitHub), lalu **Create API Key**
@@ -78,7 +82,7 @@ Android bisa meminta konfirmasi. Isi API key Groq kamu sendiri di tab **Setelan*
 
 ---
 
-## 🔑 Dua cara pakai API key
+## Dua cara pakai API key
 
 | Cara | Untuk siapa | Cara pasang |
 |---|---|---|
@@ -88,14 +92,14 @@ Android bisa meminta konfirmasi. Isi API key Groq kamu sendiri di tab **Setelan*
 Untuk CI, cukup taruh key di secret `GROQ_API_KEY` pada repo — workflow akan
 menyuntikkannya otomatis lewat `--dart-define`.
 
-⚠️ **Keamanan:** apa pun yang di-`--dart-define` **masih bisa diekstrak** dari
+**Keamanan:** apa pun yang di-`--dart-define` **masih bisa diekstrak** dari
 APK oleh orang yang tahu caranya (walau jauh lebih sulit berkat
 `--obfuscate`). Jadi:
 - Pakai key dengan limit/kuota terpisah untuk APK yang disebar luas.
 - Jangan pernah menaruh key mentah di dalam source code yang di-commit.
 - Opsi paling aman: biarkan setiap pengguna memakai key-nya sendiri.
 
-## 🚀 Cara menjalankan di laptop
+## Cara menjalankan di laptop
 
 ```bash
 # butuh Flutter 3.27+ (project ini dibuat dengan 3.47.4)
@@ -109,7 +113,7 @@ Atau langsung inject key saat menjalankan (tidak perlu mengetik di HP):
 flutter run --dart-define=GROQ_API_KEY=gsk_xxxxxxxxxxxx
 ```
 
-## 📦 Build APK
+## Build APK
 
 ```bash
 # APK universal
@@ -133,7 +137,7 @@ flutter build apk --release --dart-define=GROQ_API_KEY=gsk_xxxxxxxxxxxx
 
 ---
 
-## 🤖 Build otomatis di GitHub Actions
+## Build otomatis di GitHub Actions
 
 Workflow ada di `.github/workflows/build.yml`. Jalan otomatis saat:
 - push ke `main` / `master`
@@ -166,16 +170,16 @@ base64 -w0 ~/groqstudio.jks > keystore.txt   # isi keystore.txt → secret KEYST
 ### Merilis versi baru
 
 ```bash
-# 1. naikkan version di pubspec.yaml, misal 1.1.0+2
-git add . && git commit -m "rilis 1.1.0"
-git tag v1.1.0
+# 1. naikkan version di pubspec.yaml, misal 3.0.0+4
+git add . && git commit -m "rilis 3.0.0"
+git tag v3.0.0
 git push origin main --tags
 # 2. GitHub Actions akan membuat Release berisi APK-nya
 ```
 
 ---
 
-## 🧱 Struktur folder
+## Struktur folder
 
 ```
 lib/
@@ -183,10 +187,14 @@ lib/
 ├── app.dart                # MaterialApp, tema, mode gelap/terang
 ├── core/
 │   ├── constants.dart      # metadata aplikasi & daftar model bawaan
-│   ├── controller.dart     # state: pengaturan, riwayat, proses generate
-│   ├── groq_client.dart    # HTTP client Groq (complete + streaming SSE)
+│   ├── controller.dart     # state: auto-rotasi model, generate, statistik
+│   ├── groq_client.dart    # HTTP client Groq (chat + TTS Orpheus + /models)
 │   ├── prompt_builder.dart # penyusun system/user prompt per mode
-│   └── storage.dart        # SharedPreferences
+│   ├── speech.dart         # tombol Dengarkan: flutter_tts + Orpheus
+│   ├── stats.dart          # statistik pemakaian (streak, grafik 7 hari)
+│   ├── storage.dart        # SharedPreferences
+│   ├── text_utils.dart     # pembersih emoji, HTML → teks
+│   └── web_research.dart   # mode Riset Web & Baca URL (fetch sumber)
 ├── models/                 # settings, generation_mode, history_item
 ├── screens/                # home, history (+detail), settings, root_shell
 ├── widgets/                # mode selector, markdown lite, result view, dll

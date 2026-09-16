@@ -319,8 +319,9 @@ class _ResultPreview extends StatelessWidget {
     return ResultView(
       text: _sampleArticle,
       mode: GenerationMode.fromId('artikel'),
-      model: Settings.defaultModel,
+      model: 'GPT-OSS 120B',
       elapsed: const Duration(milliseconds: 4200),
+      typewriter: false,
     );
   }
 }

@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { APP, MODES, LANGUAGES, TONES, LENGTHS, MODELS } from '../data/app.js';
+import { APP, MODES, LANGUAGES, TONES, LENGTHS, MODELS, AUTO_MODEL } from '../data/app.js';
 
 // Key bawaan (opsional) yang disuntikkan saat build:
 //   PUBLIC_GROQ_API_KEY=gsk_xxx npm run build
@@ -8,7 +8,7 @@ import { APP, MODES, LANGUAGES, TONES, LENGTHS, MODELS } from '../data/app.js';
 const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
 ---
 
-<Base title={`${APP.name} — Web App`} description="Bikin judul, artikel, caption, script video, dan prompt gambar langsung dari browser.">
+<Base title={`${APP.name} — Web App`} description="Bikin judul, artikel, caption, riset web, prompt video, dan 20 mode lain langsung dari browser.">
   <header class="nav">
     <div class="wrap nav-inner">
       <a class="brand" href="/">
@@ -18,7 +18,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
       <nav>
         <a href="/">Beranda</a>
         <a href="/about">Tentang</a>
-        <button class="btn sm ghost" id="btn-settings">⚙ Setelan</button>
+        <button class="btn sm ghost" id="btn-settings">Setelan</button>
       </nav>
     </div>
   </header>
@@ -29,13 +29,18 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
       <p class="label">Mau dibuatin apa?</p>
       <div class="modes" id="modes">
         {MODES.map((m, i) => (
-          <button class={`chip mode-chip${i === 0 ? ' active' : ''}`} data-mode={m.id}>
+          <button class={`chip mode-chip${i === 0 ? ' active' : ''}`} data-mode={m.id} title={m.hint}>
             {m.label}
           </button>
         ))}
       </div>
 
-      <p class="label" style="margin-top:20px">Ceritakan sebentar</p>
+      <div id="engine-row" hidden style="margin-top:14px">
+        <p class="label" style="margin-bottom:8px">Engine target</p>
+        <div class="engines" id="engines"></div>
+      </div>
+
+      <p class="label" style="margin-top:20px" id="input-label">Ceritakan sebentar</p>
       <textarea id="brief" rows="5" placeholder="Contoh: aplikasi pencatat keuangan untuk anak kos yang bisa scan struk"></textarea>
       <textarea id="extra" rows="2" style="margin-top:10px" placeholder="Tambahan: target audiens, kata kunci, catatan (opsional)"></textarea>
 
@@ -58,23 +63,32 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
             {LENGTHS.map((l) => <option value={l.id} selected={l.id === 'sedang'}>{l.label}</option>)}
           </select>
         </label>
+        <label>
+          <span class="label">Model</span>
+          <select id="model">
+            <option value="auto" selected>{AUTO_MODEL.label}</option>
+            {MODELS.map((m) => <option value={m.id}>{m.label}</option>)}
+          </select>
+        </label>
       </div>
 
       <div class="opts">
         <label>
-          <span class="label">Model</span>
-          <select id="model">
-            {MODELS.map((m) => <option value={m.id}>{m.label}</option>)}
-          </select>
-        </label>
-        <label>
           <span class="label">Kreativitas: <b id="temp-val">0.8</b></span>
           <input type="range" id="temp" min="0" max="1.5" step="0.1" value="0.8" />
+        </label>
+        <label>
+          <span class="label">Animasi output</span>
+          <span class="switch-line">
+            <input type="checkbox" id="typewriter" checked />
+            <label for="typewriter">Huruf demi huruf</label>
+            <input type="range" id="tw-speed" min="1" max="10" step="1" value="5" title="Kecepatan animasi" />
+          </span>
         </label>
       </div>
 
       <button class="btn" id="btn-generate" style="width:100%;margin-top:18px">
-        ✨ Buat Judul
+        Buat Judul
       </button>
       <p class="muted small" id="status" style="margin-top:10px"></p>
     </section>
@@ -82,16 +96,30 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     <!-- KANAN: hasil -->
     <section class="card pane result-pane">
       <div class="result-head">
-        <p class="label" style="margin:0">Hasil</p>
-        <div class="result-actions">
-          <button class="chip" id="btn-copy">⧉ Salin</button>
-          <button class="chip" id="btn-clear">🗑 Bersihkan</button>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <p class="label" style="margin:0">Hasil</p>
+          <span class="model-badge" id="model-badge" hidden></span>
         </div>
+        <div class="result-actions">
+          <button class="chip" id="btn-listen" disabled>Dengarkan</button>
+          <button class="chip" id="btn-copy" disabled>Salin</button>
+          <button class="chip" id="btn-clear">Bersihkan</button>
+        </div>
+      </div>
+      <div id="tts-panel" class="tts-panel" hidden>
+        <span id="tts-status">Suara siap</span>
+        <span class="tts-controls">
+          <button class="chip sm-chip" id="tts-play">Putar</button>
+          <button class="chip sm-chip" id="tts-pause" disabled>Jeda</button>
+          <button class="chip sm-chip" id="tts-stop" disabled>Berhenti</button>
+        </span>
+        <span class="tts-slider">Nada <input type="range" id="tts-pitch" min="0.5" max="2" step="0.1" value="1" /></span>
+        <span class="tts-slider">Kecepatan <input type="range" id="tts-rate" min="0.5" max="2" step="0.1" value="1" /></span>
       </div>
       <div id="result" class="md result-box">
         <p class="muted">
           Belum ada hasil. Pilih mode di kiri, tulis idemu, lalu tekan tombolnya.
-          Kalau belum punya API key Groq, buka <b>Setelan</b> dulu ya — gratis.
+          {BUILD_KEY ? 'Key Groq bawaan sudah terpasang.' : 'Kalau belum punya API key Groq, buka Setelan dulu ya — gratis.'}
         </p>
       </div>
       <div class="history">
@@ -133,147 +161,79 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
         <button class="btn sm ghost" id="btn-test-key">Tes koneksi</button>
       </div>
       <p class="muted small" id="key-status" style="margin-top:10px"></p>
+
+      <hr style="margin:18px 0;border:0;border-top:1px solid var(--line)" />
+
+      <div class="stats-box">
+        <div class="sheet-head" style="margin-bottom:10px">
+          <strong>Statistik pemakaian</strong>
+          <button class="chip" id="btn-reset-stats">Reset</button>
+        </div>
+        <div class="stats-grid">
+          <div><b id="st-total">0</b><span>total generate</span></div>
+          <div><b id="st-words">0</b><span>total kata</span></div>
+          <div><b id="st-chars">0</b><span>total karakter</span></div>
+          <div><b id="st-streak">0</b><span>streak harian</span></div>
+        </div>
+        <p class="muted small" id="st-fav" style="margin-top:8px">Mode favorit: belum ada</p>
+        <canvas id="st-chart" width="380" height="90" style="width:100%;margin-top:8px"></canvas>
+      </div>
+
       <hr style="margin:18px 0;border:0;border-top:1px solid var(--line)" />
       <p class="muted small">
         Butuh bantuan?
-        <a href={APP.bugReportUrl} target="_blank" rel="noopener" style="color:var(--pink)">🐞 Laporkan bug</a>
+        <a href={APP.bugReportUrl} target="_blank" rel="noopener" style="color:var(--pink)">Laporkan bug</a>
         ·
         <a href={APP.waChannelUrl} target="_blank" rel="noopener" style="color:var(--green)">Gabung saluran WA</a>
       </p>
-      <p class="credit-line">{APP.credit}</p>
+      <p class="credit-line">
+        <img src="/xyverse_icon_white.png" alt="" width="14" height="14" style="vertical-align:-2px;margin-right:6px" />
+        {APP.credit}
+      </p>
     </div>
   </div>
-</Base>
 
-<script define:vars={{ MODES, BUILD_KEY, APP }}>
+<script define:vars={{ MODES, BUILD_KEY, APP, MODELS, AUTO_MODEL }}>
   const $ = (id) => document.getElementById(id);
   const els = {
-    modes: $('modes'), brief: $('brief'), extra: $('extra'),
-    lang: $('lang'), tone: $('tone'), length: $('length'),
-    model: $('model'), temp: $('temp'), tempVal: $('temp-val'),
+    modes: $('modes'), enginesRow: $('engine-row'), engines: $('engines'),
+    brief: $('brief'), extra: $('extra'), inputLabel: $('input-label'),
+    lang: $('lang'), tone: $('tone'), length: $('length'), model: $('model'),
+    temp: $('temp'), tempVal: $('temp-val'),
+    typewriter: $('typewriter'), twSpeed: $('tw-speed'),
     generate: $('btn-generate'), status: $('status'), result: $('result'),
-    copy: $('btn-copy'), clear: $('btn-clear'), history: $('history-list'),
+    badge: $('model-badge'), listen: $('btn-listen'), copy: $('btn-copy'), clear: $('btn-clear'),
+    ttsPanel: $('tts-panel'), ttsStatus: $('tts-status'),
+    ttsPlay: $('tts-play'), ttsPause: $('tts-pause'), ttsStop: $('tts-stop'),
+    ttsPitch: $('tts-pitch'), ttsRate: $('tts-rate'),
+    history: $('history-list'),
     settings: $('btn-settings'), sheet: $('sheet'), closeSheet: $('btn-close-sheet'),
     apikey: $('apikey'), saveKey: $('btn-save-key'), testKey: $('btn-test-key'),
-    keyStatus: $('key-status'),
+    keyStatus: $('key-status'), resetStats: $('btn-reset-stats'),
   };
 
   const KEY_STORE = 'xystudio:apikey';
   const PREF_STORE = 'xystudio:prefs';
   const HIST_STORE = 'xystudio:history';
+  const STAT_STORE = 'xystudio:stats';
+  const ROT_STORE = 'xystudio:autoIndex';
   const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+  const GROQ_TTS = 'https://api.groq.com/openai/v1/audio/speech';
 
   let mode = MODES[0];
+  let engine = (mode.engines || [null])[0] || null;
   let controller = null;
   let busy = false;
+  let fullText = '';
+  let answeredBy = null;
+  let twTimer = null;
+  let twShown = 0;
 
-  // ── preferensi ──────────────────────────────────────────────────
-  function loadPrefs() {
-    try { return JSON.parse(localStorage.getItem(PREF_STORE) || '{}'); } catch { return {}; }
-  }
-  function savePrefs(p) {
-    try { localStorage.setItem(PREF_STORE, JSON.stringify(p)); } catch {}
-  }
-  const prefs = loadPrefs();
-  if (prefs.lang) els.lang.value = prefs.lang;
-  if (prefs.tone) els.tone.value = prefs.tone;
-  if (prefs.length) els.length.value = prefs.length;
-  if (prefs.model) els.model.value = prefs.model;
-  if (prefs.temp) { els.temp.value = prefs.temp; els.tempVal.textContent = prefs.temp; }
-  if (prefs.mode) {
-    const m = MODES.find((x) => x.id === prefs.mode);
-    if (m) { mode = m; syncModeChips(); }
-  }
-  try {
-    const savedKey = localStorage.getItem(KEY_STORE);
-    if (savedKey) els.apikey.value = savedKey;
-  } catch {}
-
-  function syncPrefs() {
-    savePrefs({
-      lang: els.lang.value, tone: els.tone.value, length: els.length.value,
-      model: els.model.value, temp: els.temp.value, mode: mode.id,
-    });
-  }
-  ['lang', 'tone', 'length', 'model'].forEach((k) => els[k].addEventListener('change', syncPrefs));
-  els.temp.addEventListener('input', () => { els.tempVal.textContent = els.temp.value; syncPrefs(); });
-
-  function syncModeChips() {
-    els.modes.querySelectorAll('.mode-chip').forEach((c) => {
-      c.classList.toggle('active', c.dataset.mode === mode.id);
-    });
-    els.generate.textContent = busy ? '■ Hentikan' : `✨ Buat ${mode.label}`;
-  }
-
-  els.modes.addEventListener('click', (e) => {
-    const btn = e.target.closest('.mode-chip');
-    if (!btn) return;
-    mode = MODES.find((m) => m.id === btn.dataset.mode) || mode;
-    syncModeChips();
-    syncPrefs();
-  });
-
-  // ── setelan ─────────────────────────────────────────────────────
-  els.settings.addEventListener('click', () => { els.sheet.hidden = false; });
-  els.closeSheet.addEventListener('click', () => { els.sheet.hidden = true; });
-  els.sheet.addEventListener('click', (e) => { if (e.target === els.sheet) els.sheet.hidden = true; });
-
-  els.saveKey.addEventListener('click', () => {
-    const v = els.apikey.value.trim();
-    try { v ? localStorage.setItem(KEY_STORE, v) : localStorage.removeItem(KEY_STORE); } catch {}
-    els.keyStatus.textContent = v ? 'API key tersimpan di browser ini 🔐' : 'API key dihapus.';
-  });
-
-  els.testKey.addEventListener('click', async () => {
-    const key = currentKey();
-    if (!key) { els.keyStatus.textContent = 'Isi API key dulu ya.'; return; }
-    els.keyStatus.textContent = 'Menguji koneksi…';
-    try {
-      const r = await fetch('https://api.groq.com/openai/v1/models', {
-        headers: { Authorization: `Bearer ${key}` },
-      });
-      if (!r.ok) throw new Error(String(r.status));
-      const data = await r.json();
-      els.keyStatus.textContent = `Terhubung! ${data.data?.length ?? 0} model tersedia ✅`;
-    } catch (err) {
-      els.keyStatus.textContent = `Gagal terhubung (${err.message}). Cek key & internet kamu.`;
-    }
-  });
-
-  function currentKey() {
-    const typed = els.apikey.value.trim();
-    if (typed) return typed;
-    try { return localStorage.getItem(KEY_STORE) || BUILD_KEY || ''; } catch { return BUILD_KEY || ''; }
-  }
-
-  // ── generate ────────────────────────────────────────────────────
-  function buildMessages() {
-    const lang = els.lang.options[els.lang.selectedIndex].text;
-    const tone = els.tone.options[els.tone.selectedIndex].text;
-    const length = els.length.options[els.length.selectedIndex].text;
-    const system = [
-      'Kamu adalah XyStudio AI, penulis dan content strategist profesional.',
-      'Aturan wajib:',
-      '1. Balas HANYA dengan hasil yang diminta, tanpa pembuka basa-basi.',
-      '2. Gunakan Markdown rapi: judul pakai ##, poin pakai -, penekanan pakai **tebal**.',
-      `3. Bahasa keluaran: ${lang}.`,
-      `4. Gaya penulisan: ${tone}.`,
-      `5. Panjang: ${length}.`,
-      '6. Kalau brief kurang jelas, buat asumsi masuk akal dan langsung kerjakan.',
-    ].join('\n');
-
-    const user = [
-      'TUGAS: ' + mode.instruction,
-      '',
-      'OBJEK / BRIEF PENGGUNA:',
-      '"""',
-      els.brief.value.trim(),
-      '"""',
-      els.extra.value.trim() ? '\nTAMBAHAN:\n"""\n' + els.extra.value.trim() + '\n"""' : '',
-    ].join('\n');
-
-    return { system, user };
-  }
+  // ── util ──────────────────────────────────────────────────────────
+  const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{1F1E6}-\u{1F1FF}\u2600-\u27BF\u2300-\u23FF\u2B00-\u2BFF\uFE00-\uFE0F\u200D\u20E3\u2190-\u21FF\u2900-\u297F\u00A9\u00AE\u2122]/gu;
+  const stripEmoji = (s) => s.replace(EMOJI_RE, '').replace(/[ \t]{2,}/g, ' ').replace(/\n[ \t]*\n[ \t]*(\n[ \t]*)+/g, '\n\n').trimEnd();
+  const countWords = (s) => (s.trim() ? s.trim().split(/\s+/).length : 0);
+  const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
   function escapeHtml(s) {
     return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -296,92 +256,449 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     return '<p>' + html + '</p>';
   }
 
-  function setBusy(v) {
-    busy = v;
-    syncModeChips();
-    els.generate.classList.toggle('stop', v);
+  // ── preferensi ──────────────────────────────────────────────────
+  function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREF_STORE) || '{}'); } catch { return {}; } }
+  function savePrefs(p) { try { localStorage.setItem(PREF_STORE, JSON.stringify(p)); } catch {} }
+  const prefs = loadPrefs();
+  if (prefs.lang) els.lang.value = prefs.lang;
+  if (prefs.tone) els.tone.value = prefs.tone;
+  if (prefs.length) els.length.value = prefs.length;
+  if (prefs.model) els.model.value = prefs.model;
+  if (prefs.temp) { els.temp.value = prefs.temp; els.tempVal.textContent = prefs.temp; }
+  if (prefs.tw === false) els.typewriter.checked = false;
+  if (prefs.twSpeed) els.twSpeed.value = prefs.twSpeed;
+  if (prefs.mode) { const m = MODES.find((x) => x.id === prefs.mode); if (m) { mode = m; engine = (m.engines || [null])[0] || null; } }
+  try { const savedKey = localStorage.getItem(KEY_STORE); if (savedKey) els.apikey.value = savedKey; } catch {}
+
+  function syncPrefs() {
+    savePrefs({
+      lang: els.lang.value, tone: els.tone.value, length: els.length.value,
+      model: els.model.value, temp: els.temp.value, mode: mode.id,
+      tw: els.typewriter.checked, twSpeed: els.twSpeed.value,
+    });
+  }
+  ['lang', 'tone', 'length', 'model'].forEach((k) => els[k].addEventListener('change', syncPrefs));
+  els.temp.addEventListener('input', () => { els.tempVal.textContent = els.temp.value; syncPrefs(); });
+  els.typewriter.addEventListener('change', syncPrefs);
+  els.twSpeed.addEventListener('input', syncPrefs);
+
+  function syncModeUI() {
+    els.modes.querySelectorAll('.mode-chip').forEach((c) => {
+      c.classList.toggle('active', c.dataset.mode === mode.id);
+    });
+    els.generate.textContent = busy ? 'Hentikan' : `Buat ${mode.label}`;
+    els.inputLabel.textContent = mode.inputLabel || 'Ceritakan sebentar';
+    els.brief.placeholder = mode.placeholder || '';
+    els.extra.style.display = mode.kind === 'urlSummary' ? 'none' : '';
+    els.extra.placeholder = mode.engines
+      ? 'Tambahan: gaya visual, negative prompt, catatan (opsional)'
+      : 'Tambahan: target audiens, kata kunci, catatan (opsional)';
+    // engine
+    if (mode.engines && mode.engines.length) {
+      els.enginesRow.hidden = false;
+      els.engines.innerHTML = mode.engines.map((e) =>
+        `<button class="chip engine-chip${e === engine ? ' active' : ''}" data-engine="${e}">${e}</button>`).join('');
+    } else {
+      els.enginesRow.hidden = true;
+      els.engines.innerHTML = '';
+    }
+  }
+
+  els.modes.addEventListener('click', (e) => {
+    const btn = e.target.closest('.mode-chip');
+    if (!btn) return;
+    mode = MODES.find((m) => m.id === btn.dataset.mode) || mode;
+    engine = (mode.engines || [null])[0] || null;
+    syncModeUI(); syncPrefs();
+  });
+  els.engines.addEventListener('click', (e) => {
+    const btn = e.target.closest('.engine-chip');
+    if (!btn) return;
+    engine = btn.dataset.engine;
+    syncModeUI();
+  });
+
+  // ── setelan ─────────────────────────────────────────────────────
+  els.settings.addEventListener('click', () => { els.sheet.hidden = false; renderStats(); });
+  els.closeSheet.addEventListener('click', () => { els.sheet.hidden = true; });
+  els.sheet.addEventListener('click', (e) => { if (e.target === els.sheet) els.sheet.hidden = true; });
+
+  els.saveKey.addEventListener('click', () => {
+    const v = els.apikey.value.trim();
+    try { v ? localStorage.setItem(KEY_STORE, v) : localStorage.removeItem(KEY_STORE); } catch {}
+    els.keyStatus.textContent = v ? 'API key tersimpan di browser ini.' : 'API key dihapus.';
+  });
+
+  els.testKey.addEventListener('click', async () => {
+    const key = currentKey();
+    if (!key) { els.keyStatus.textContent = 'Isi API key dulu ya.'; return; }
+    els.keyStatus.textContent = 'Menguji koneksi…';
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: { Authorization: `Bearer ${key}` },
+      });
+      if (!r.ok) throw new Error(String(r.status));
+      const data = await r.json();
+      els.keyStatus.textContent = `Terhubung! ${(data.data || []).length} model tersedia.`;
+    } catch (err) {
+      els.keyStatus.textContent = `Gagal terhubung (${err.message}). Cek key & internet kamu.`;
+    }
+  });
+
+  function currentKey() {
+    const typed = els.apikey.value.trim();
+    if (typed) return typed;
+    try { return localStorage.getItem(KEY_STORE) || BUILD_KEY || ''; } catch { return BUILD_KEY || ''; }
+  }
+
+  // ── statistik (localStorage) ────────────────────────────────────
+  function loadStats() {
+    try { return JSON.parse(localStorage.getItem(STAT_STORE) || '{"t":0,"w":0,"c":0,"modes":{},"days":{}}'); }
+    catch { return { t: 0, w: 0, c: 0, modes: {}, days: {} }; }
+  }
+  function recordStats(text) {
+    const s = loadStats();
+    s.t += 1; s.w += countWords(text); s.c += text.length;
+    s.modes[mode.id] = (s.modes[mode.id] || 0) + 1;
+    const k = dayKey(); s.days[k] = (s.days[k] || 0) + 1;
+    try { localStorage.setItem(STAT_STORE, JSON.stringify(s)); } catch {}
+  }
+  function statsStreak(s) {
+    let cursor = new Date(); let streak = 0;
+    if (!s.days[dayKey(cursor)]) { cursor.setDate(cursor.getDate() - 1); if (!s.days[dayKey(cursor)]) return 0; }
+    while (s.days[dayKey(cursor)]) { streak += 1; cursor.setDate(cursor.getDate() - 1); }
+    return streak;
+  }
+  function renderStats() {
+    const s = loadStats();
+    $('st-total').textContent = s.t;
+    $('st-words').textContent = s.w >= 1000 ? (s.w / 1000).toFixed(1) + ' rb' : s.w;
+    $('st-chars').textContent = s.c >= 1000 ? (s.c / 1000).toFixed(1) + ' rb' : s.c;
+    $('st-streak').textContent = statsStreak(s);
+    const fav = Object.entries(s.modes).sort((a, b) => b[1] - a[1])[0];
+    const favLabel = fav ? (MODES.find((m) => m.id === fav[0]) || { label: fav[0] }).label : 'belum ada';
+    $('st-fav').textContent = `Mode favorit: ${favLabel}${fav ? ` (${fav[1]}x)` : ''}`;
+    // grafik 7 hari
+    const cv = $('st-chart'); const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const days = [];
+    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+    const max = Math.max(1, ...days.map((d) => s.days[dayKey(d)] || 0));
+    const slot = cv.width / 7;
+    days.forEach((d, i) => {
+      const v = s.days[dayKey(d)] || 0;
+      const h = v === 0 ? 3 : (v / max) * 58;
+      const x = slot * i + slot * 0.25;
+      ctx.fillStyle = v ? (i === 6 ? '#7c5cff' : 'rgba(124,92,255,.55)') : 'rgba(255,255,255,.12)';
+      ctx.beginPath(); ctx.roundRect(x, 62 - h, slot * 0.5, h, 4); ctx.fill();
+      if (v) { ctx.fillStyle = '#a78bfa'; ctx.font = '700 10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(v, x + slot * 0.25, 58 - h); }
+      ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.font = '600 10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][d.getDay()], x + slot * 0.25, 78);
+    });
+  }
+  els.resetStats.addEventListener('click', () => {
+    if (!confirm('Reset semua statistik pemakaian? Riwayat hasil tidak ikut terhapus.')) return;
+    try { localStorage.removeItem(STAT_STORE); } catch {}
+    renderStats();
+  });
+
+  // ── riset web: cari sumber lalu dirangkum ───────────────────────
+  async function fetchViaProxy(url) {
+    // langsung dulu, lalu lewat proxy CORS publik.
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (r.ok) return await r.text();
+    } catch {}
+    try {
+      const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), { signal: AbortSignal.timeout(20000) });
+      if (r.ok) return await r.text();
+    } catch {}
+    return null;
+  }
+
+  function htmlToText(html, maxChars = 2500) {
+    let t = html
+      .replace(/<(script|style|noscript|svg|iframe|nav|header|footer|form)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<\/(p|div|section|article|li|ul|ol|h[1-6]|tr|table|blockquote|br)>/gi, '\n')
+      .replace(/<br[^>]*>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+      .replace(/&#(\d+);/g, (_, n) => { try { return String.fromCharCode(+n); } catch { return ''; } });
+    t = t.split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n');
+    return t.length > maxChars ? t.slice(0, maxChars) + ' …' : t;
+  }
+
+  // Pencarian untuk mode riset: Wikipedia (CORS resmi) + DuckDuckGo via proxy.
+  async function webSearch(topic) {
+    const found = [];
+    try {
+      const r = await fetch(
+        'https://id.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srlimit=6&srsearch=' + encodeURIComponent(topic),
+        { signal: AbortSignal.timeout(15000) },
+      );
+      const j = await r.json();
+      for (const hit of (j.query?.search || [])) {
+        found.push({
+          title: hit.title,
+          url: 'https://id.wikipedia.org/wiki/' + encodeURIComponent(hit.title.replace(/ /g, '_')),
+          wikiApi: 'https://id.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&explaintext=1&exintro=0&titles=' + encodeURIComponent(hit.title),
+        });
+      }
+    } catch {}
+    if (!found.length) {
+      try {
+        const html = await fetchViaProxy('https://html.duckduckgo.com/html/?q=' + encodeURIComponent(topic));
+        if (html) {
+          const re = /class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
+          let m;
+          while ((m = re.exec(html)) && found.length < 6) {
+            let href = m[1].startsWith('//') ? 'https:' + m[1] : m[1];
+            const uddg = (href.match(/[?&]uddg=([^&]+)/) || [])[1];
+            if (uddg) href = decodeURIComponent(uddg);
+            found.push({ title: htmlToText(m[2], 140), url: href });
+          }
+        }
+      } catch {}
+    }
+    return found;
+  }
+
+  async function readSource(src) {
+    if (src.wikiApi) {
+      try {
+        const r = await fetch(src.wikiApi, { signal: AbortSignal.timeout(15000) });
+        const j = await r.json();
+        const page = Object.values(j.query?.pages || {})[0];
+        if (page?.extract) return { ...src, text: page.extract.slice(0, 2500) };
+      } catch {}
+    }
+    const html = await fetchViaProxy(src.url);
+    if (!html) return null;
+    const text = htmlToText(html, 2200);
+    return text.trim().length < 80 ? null : { ...src, text };
+  }
+
+  async function gatherResearch(topic) {
+    const links = await webSearch(topic);
+    if (!links.length) throw new Error('Tidak ada hasil pencarian untuk topik itu. Coba kata kunci lain.');
+    els.status.textContent = `Membaca ${Math.min(links.length, 5)} sumber…`;
+    const settled = await Promise.all(links.slice(0, 6).map(readSource));
+    const readable = settled.filter(Boolean).slice(0, 5);
+    if (!readable.length) throw new Error('Semua sumber gagal dibuka dari browser. Coba aplikasi Android-nya atau ulangi nanti.');
+    return readable.map((s, i) => `--- SUMBER ${i + 1}: ${s.title} ---\nURL: ${s.url}\n${stripEmoji(s.text)}`).join('\n\n');
+  }
+
+  // ── generate (auto-rotasi + failover) ───────────────────────────
+  function buildMessages(sourceBlock) {
+    const langLabel = els.lang.options[els.lang.selectedIndex].text;
+    const langCode = els.lang.value;
+    const toneInstr = (TONES.find((t) => t.id === els.tone.value) || {}).instruction || '';
+    const lengthInstr = (LENGTHS.find((l) => l.id === els.length.value) || {}).instruction || '';
+    const system = [
+      'Kamu adalah XyStudio AI, penulis dan content strategist profesional.',
+      'Aturan wajib:',
+      '1. Balas HANYA dengan hasil yang diminta, tanpa pembuka basa-basi.',
+      '2. Gunakan Markdown rapi: judul pakai ##, poin pakai -, penekanan pakai **tebal**.',
+      `3. Bahasa keluaran: ${langLabel} (kode: ${langCode}).`,
+      `4. Gaya penulisan: ${toneInstr}.`,
+      `5. Panjang: ${lengthInstr}.`,
+      '6. Kalau brief kurang jelas, buat asumsi masuk akal dan langsung kerjakan.',
+      '7. DILARANG KERAS memakai emoji atau simbol dekoratif apa pun — teks polos saja.',
+    ].join('\n');
+
+    const parts = [];
+    if (engine) parts.push(`ENGINE TARGET: ${engine}\nSesuaikan parameter dan sintaks dengan engine target tersebut.\n`);
+    parts.push('TUGAS:\n' + mode.instruction + '\n');
+    parts.push('OBJEK / BRIEF PENGGUNA:\n"""\n' + els.brief.value.trim() + '\n"""');
+    if (els.extra.value.trim()) parts.push('\nTAMBAHAN:\n"""\n' + els.extra.value.trim() + '\n"""');
+    if (sourceBlock) parts.push('\n' + sourceBlock);
+
+    return { system, user: parts.join('\n') };
+  }
+
+  function isGptOss(id) { return id.startsWith('openai/gpt-oss'); }
+
+  function payloadFor(modelId, system, user, maxTokens) {
+    const body = { model: modelId, stream: true, max_tokens: maxTokens };
+    if (isGptOss(modelId)) {
+      // GPT-OSS: instruksi di USER message, tanpa reasoning stream, suhu 0.6.
+      body.messages = [{ role: 'user', content: `INSTRUKSI SISTEM (patuhi sepenuhnya):\n${system}\n\n${user}` }];
+      body.temperature = 0.6;
+      body.include_reasoning = false;
+      body.reasoning_effort = 'medium';
+    } else {
+      body.messages = [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ];
+      body.temperature = parseFloat(els.temp.value);
+      body.top_p = 0.95;
+    }
+    const info = MODELS.find((m) => m.id === modelId);
+    if (info && info.ctx <= 8192) {
+      body.max_tokens = Math.min(maxTokens, 1536);
+      const u = body.messages[body.messages.length - 1];
+      if (u.content.length > 2200) u.content = u.content.slice(0, 2200) + '\n[brief dipotong agar muat]';
+    }
+    return body;
+  }
+
+  function nextAutoModels() {
+    let idx = 0;
+    try { idx = parseInt(localStorage.getItem(ROT_STORE) || '0', 10) || 0; } catch {}
+    const order = MODELS.map((_, i) => MODELS[(idx + i) % MODELS.length]);
+    try { localStorage.setItem(ROT_STORE, String((idx + 1) % MODELS.length)); } catch {}
+    return order;
+  }
+
+  function setBusy(v) { busy = v; syncModeUI(); els.generate.classList.toggle('stop', v); }
+
+  function startTypewriter() {
+    clearInterval(twTimer);
+    if (!els.typewriter.checked) { twShown = fullText.length; els.result.innerHTML = renderMd(fullText); return; }
+    twTimer = setInterval(() => {
+      const target = fullText.length;
+      if (twShown >= target) { clearInterval(twTimer); twTimer = null; return; }
+      let step = Math.max(1, Math.ceil(parseInt(els.twSpeed.value, 10) * 30 * 0.033));
+      if (target - twShown > 260) step = target - twShown;
+      twShown = Math.min(target, twShown + step);
+      els.result.innerHTML = renderMd(fullText.slice(0, twShown));
+    }, 33);
+  }
+
+  function showBadge(label) {
+    answeredBy = label;
+    els.badge.hidden = false;
+    els.badge.textContent = 'dijawab oleh ' + label;
   }
 
   async function generate() {
     if (busy) { controller?.abort(); return; }
 
     const brief = els.brief.value.trim();
-    if (!brief) { els.status.textContent = 'Tulis dulu brief-nya ya 🙂'; return; }
+    if (!brief) { els.status.textContent = mode.kind === 'urlSummary' ? 'Tempel dulu URL halamannya ya.' : 'Tulis dulu brief-nya ya.'; return; }
     const key = currentKey();
     if (!key) {
-      els.status.textContent = 'API key Groq belum ada. Buka Setelan ⚙ lalu tempel key kamu.';
+      els.status.textContent = 'API key Groq belum ada. Buka Setelan lalu tempel key kamu.';
       els.sheet.hidden = false;
       return;
     }
 
-    const { system, user } = buildMessages();
-    controller = new AbortController();
     setBusy(true);
-    els.status.textContent = 'Sedang menulis…';
-    els.result.innerHTML = '<p class="muted">✍️ …</p>';
+    fullText = ''; twShown = 0; answeredBy = null; els.badge.hidden = true;
+    els.listen.disabled = true; els.copy.disabled = true;
+    els.result.innerHTML = '<p class="muted">Sedang bekerja…</p>';
 
     const started = performance.now();
-    try {
-      const res = await fetch(GROQ_URL, {
-        method: 'POST',
-        signal: controller.signal,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-        body: JSON.stringify({
-          model: els.model.value,
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: user },
-          ],
-          temperature: parseFloat(els.temp.value),
-          max_tokens: mode.max || 2048,
-          stream: true,
-        }),
-      });
+    controller = new AbortController();
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const msg = err?.error?.message || `HTTP ${res.status}`;
-        throw new Error(
-          res.status === 401 ? 'API key tidak valid. Cek lagi di Setelan.' :
-          res.status === 429 ? 'Kuota Groq penuh (rate limit). Tunggu sebentar.' :
-          msg
-        );
+    try {
+      // Pra-pemrosesan mode riset & URL.
+      let sourceBlock = null;
+      if (mode.kind === 'webResearch') {
+        els.status.textContent = 'Mencari sumber di web…';
+        sourceBlock = 'SUMBER WEB (hasil pencarian yang sudah dibuka aplikasi):\n\n' + await gatherResearch(brief);
+      } else if (mode.kind === 'urlSummary') {
+        const m = brief.match(/https?:\/\/[^\s<>"')]+/);
+        if (!m) throw new Error('Tidak menemukan URL di teks kamu. Tempel link lengkapnya.');
+        const url = m[0].replace(/[.,;]+$/, '');
+        els.status.textContent = 'Membuka ' + url + ' …';
+        const html = await fetchViaProxy(url);
+        if (!html) throw new Error('Halaman tidak bisa dibuka dari browser (blokir CORS). Coba aplikasi Android-nya.');
+        const text = htmlToText(html, 6000);
+        if (text.trim().length < 80) throw new Error('Halaman tidak punya teks yang cukup untuk diringkas.');
+        sourceBlock = `ISI HALAMAN (diambil langsung oleh aplikasi dari ${url}):\n\n${text}`;
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let out = '';
+      const { system, user } = buildMessages(sourceBlock);
+      const maxTokens = mode.max || 2048;
+      const manual = els.model.value !== 'auto';
+      const attempts = manual
+        ? [{ id: els.model.value, label: (MODELS.find((m) => m.id === els.model.value) || { label: els.model.value }).label }]
+        : nextAutoModels();
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const raw of lines) {
-          const line = raw.trim();
-          if (!line.startsWith('data:')) continue;
-          const data = line.slice(5).trim();
-          if (data === '[DONE]') continue;
-          try {
-            const json = JSON.parse(data);
-            const delta = json?.choices?.[0]?.delta?.content;
-            if (delta) {
-              out += delta;
-              els.result.innerHTML = renderMd(out);
+      let lastErr = null;
+      for (let i = 0; i < attempts.length; i++) {
+        const target = attempts[i];
+        els.status.textContent = `Menulis dengan ${target.label}…`;
+        try {
+          const res = await fetch(GROQ_URL, {
+            method: 'POST',
+            signal: controller.signal,
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+            body: JSON.stringify(payloadFor(target.id, system, user, maxTokens)),
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const msg = err?.error?.message || `HTTP ${res.status}`;
+            const e = new Error(
+              res.status === 401 ? 'API key tidak valid. Cek lagi di Setelan.' :
+              res.status === 429 ? 'Kuota Groq penuh (rate limit).' : msg
+            );
+            e.status = res.status;
+            throw e;
+          }
+
+          showBadge(target.label);
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            for (const raw of lines) {
+              const line = raw.trim();
+              if (!line.startsWith('data:')) continue;
+              const data = line.slice(5).trim();
+              if (data === '[DONE]') continue;
+              try {
+                const json = JSON.parse(data);
+                const delta = json?.choices?.[0]?.delta?.content;
+                if (delta) { fullText += delta; startTypewriterCatchUp(); }
+              } catch {}
             }
-          } catch {}
+          }
+
+          fullText = stripEmoji(fullText);
+          clearInterval(twTimer); twTimer = null;
+          startTypewriter();
+
+          const secs = ((performance.now() - started) / 1000).toFixed(1);
+          els.status.textContent = `Selesai dalam ${secs}s · ${countWords(fullText)} kata · ${target.label}`;
+          els.listen.disabled = false; els.copy.disabled = false;
+          saveHistory(fullText, target.label);
+          recordStats(fullText);
+          return; // sukses
+        } catch (err) {
+          lastErr = err;
+          if (err.name === 'AbortError') throw err;
+          const retryable = !manual && !fullText && i < attempts.length - 1 &&
+            (err.status === 429 || err.status >= 500 || !err.status);
+          if (retryable) {
+            els.status.textContent = `${target.label} bermasalah — pindah otomatis ke ${attempts[i + 1].label}…`;
+            await new Promise((r) => setTimeout(r, 400));
+            continue;
+          }
+          throw err;
         }
       }
-
-      els.result.innerHTML = renderMd(out);
-      const secs = ((performance.now() - started) / 1000).toFixed(1);
-      els.status.textContent = `Selesai dalam ${secs}s · ${out.trim().split(/\s+/).length} kata · ${els.model.value}`;
-      saveHistory(out);
+      throw lastErr || new Error('Semua model gagal.');
     } catch (err) {
       if (err.name === 'AbortError') {
         els.status.textContent = 'Dihentikan.';
+        if (fullText.trim()) {
+          fullText = stripEmoji(fullText);
+          els.result.innerHTML = renderMd(fullText);
+          els.listen.disabled = false; els.copy.disabled = false;
+          saveHistory(fullText, answeredBy || '—');
+          recordStats(fullText);
+        }
       } else {
         els.status.textContent = 'Gagal: ' + err.message;
         els.result.innerHTML = `<p class="muted">Gagal menghasilkan teks. ${escapeHtml(err.message)}</p>`;
@@ -392,36 +709,149 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     }
   }
 
+  function startTypewriterCatchUp() {
+    if (twTimer) return; // typewriter aktif mengikuti teks
+    if (!els.typewriter.checked) { els.result.innerHTML = renderMd(fullText); return; }
+    twShown = fullText.length; // saat streaming deras, tampilkan langsung
+    els.result.innerHTML = renderMd(fullText);
+  }
+
   els.generate.addEventListener('click', generate);
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') generate();
   });
 
   els.copy.addEventListener('click', async () => {
-    const text = els.result.innerText;
     try {
-      await navigator.clipboard.writeText(text);
-      els.status.textContent = 'Teks berhasil disalin ✅';
+      await navigator.clipboard.writeText(fullText);
+      els.status.textContent = 'Teks berhasil disalin';
     } catch {
       els.status.textContent = 'Browser memblokir clipboard. Salin manual ya.';
     }
   });
 
   els.clear.addEventListener('click', () => {
+    fullText = ''; clearInterval(twTimer); twTimer = null;
     els.result.innerHTML = '<p class="muted">Hasil dibersihkan.</p>';
     els.status.textContent = '';
+    els.badge.hidden = true;
+    els.listen.disabled = true; els.copy.disabled = true;
+    els.ttsPanel.hidden = true;
   });
 
-  // ── riwayat ─────────────────────────────────────────────────────
-  function loadHistory() {
-    try { return JSON.parse(localStorage.getItem(HIST_STORE) || '[]'); } catch { return []; }
+  // ── Dengarkan (TTS) ─────────────────────────────────────────────
+  let ttsAudio = null;
+  let ttsMode = 'device'; // device | orpheus
+  let ttsState = 'idle'; // idle | loading | playing | paused
+
+  function ttsSetState(state, label) {
+    ttsState = state;
+    els.ttsStatus.textContent = label;
+    els.ttsPlay.disabled = state === 'loading';
+    els.ttsPlay.textContent = state === 'paused' ? 'Lanjut' : 'Putar';
+    els.ttsPause.disabled = state !== 'playing';
+    els.ttsStop.disabled = state === 'idle' || state === 'loading';
   }
-  function saveHistory(text) {
+
+  function ttsClean(text) {
+    return stripEmoji(text)
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/#{1,6}\s*/g, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/^\s*[-•]\s+/gm, '')
+      .replace(/^\s*>\s*/gm, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .trim();
+  }
+
+  async function ttsSpeak() {
+    const text = ttsClean(fullText);
+    if (!text) return;
+    ttsStopInternal();
+    const rate = parseFloat(els.ttsRate.value);
+    const pitch = parseFloat(els.ttsPitch.value);
+
+    if (els.lang.value === 'en') {
+      // Bahasa Inggris → Orpheus dari Groq.
+      ttsMode = 'orpheus';
+      ttsSetState('loading', 'Menyiapkan suara Orpheus…');
+      try {
+        const r = await fetch(GROQ_TTS, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentKey()}` },
+          body: JSON.stringify({
+            model: 'canopylabs/orpheus-v1-english',
+            input: text.slice(0, 3500),
+            response_format: 'mp3',
+            speed: Math.min(2, Math.max(0.5, rate)),
+          }),
+        });
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({}));
+          const msg = j?.error?.message || `HTTP ${r.status}`;
+          throw new Error(j?.error?.code === 'model_terms_required'
+            ? 'Suara Orpheus butuh persetujuan syarat di console Groq — silakan terima syaratnya di sana. Coba lagi setelahnya.'
+            : msg);
+        }
+        const blob = await r.blob();
+        ttsAudio = new Audio(URL.createObjectURL(blob));
+        ttsAudio.onended = () => ttsSetState('idle', 'Suara siap');
+        await ttsAudio.play();
+        ttsSetState('playing', 'Sedang membaca — Orpheus (Groq)');
+      } catch (err) {
+        ttsSetState('idle', 'Gagal: ' + err.message);
+      }
+      return;
+    }
+
+    // Bahasa lain → Web Speech API perangkat.
+    ttsMode = 'device';
+    if (!('speechSynthesis' in window)) { ttsSetState('idle', 'Browser tidak mendukung suara.'); return; }
+    const utter = new SpeechSynthesisUtterance(text.slice(0, 8000));
+    utter.lang = els.lang.value;
+    utter.pitch = pitch;
+    utter.rate = rate;
+    utter.onend = () => ttsSetState('idle', 'Suara siap');
+    window._xyUtter = utter;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+    ttsSetState('playing', 'Sedang membaca — suara perangkat');
+  }
+
+  function ttsStopInternal() {
+    if (ttsAudio) { try { ttsAudio.pause(); } catch {} ttsAudio = null; }
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+  }
+
+  els.listen.addEventListener('click', () => {
+    els.ttsPanel.hidden = !els.ttsPanel.hidden;
+    if (!els.ttsPanel.hidden && ttsState === 'idle') ttsSpeak();
+  });
+  els.ttsPlay.addEventListener('click', () => {
+    if (ttsMode === 'orpheus' && ttsAudio && ttsState === 'paused') {
+      ttsAudio.play(); ttsSetState('playing', 'Sedang membaca — Orpheus (Groq)');
+    } else if (ttsMode === 'device' && 'speechSynthesis' in window && speechSynthesis.paused) {
+      speechSynthesis.resume(); ttsSetState('playing', 'Sedang membaca — suara perangkat');
+    } else {
+      ttsSpeak();
+    }
+  });
+  els.ttsPause.addEventListener('click', () => {
+    if (ttsMode === 'orpheus' && ttsAudio) { ttsAudio.pause(); ttsSetState('paused', 'Dijeda'); }
+    else if ('speechSynthesis' in window) { speechSynthesis.pause(); ttsSetState('paused', 'Dijeda'); }
+  });
+  els.ttsStop.addEventListener('click', () => { ttsStopInternal(); ttsSetState('idle', 'Suara siap'); });
+
+  // ── riwayat ─────────────────────────────────────────────────────
+  function loadHistory() { try { return JSON.parse(localStorage.getItem(HIST_STORE) || '[]'); } catch { return []; } }
+  function saveHistory(text, modelLabel) {
     if (!text.trim()) return;
     const list = loadHistory();
     list.unshift({
       id: String(Date.now()), mode: mode.label, brief: els.brief.value.trim(),
-      output: text, model: els.model.value, at: new Date().toISOString(),
+      output: text, model: modelLabel, at: new Date().toISOString(),
     });
     try { localStorage.setItem(HIST_STORE, JSON.stringify(list.slice(0, 50))); } catch {}
     renderHistory();
@@ -433,22 +863,27 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
       <div class="hist" data-id="${h.id}">
         <div class="hist-top">
           <span class="hist-mode">${escapeHtml(h.mode)}</span>
-          <span class="muted small">${new Date(h.at).toLocaleDateString('id-ID')}</span>
+          <span class="muted small">${new Date(h.at).toLocaleDateString('id-ID')} · ${escapeHtml(h.model || '')}</span>
         </div>
-        <p class="hist-brief">${escapeHtml(h.brief.slice(0, 90))}</p>
+        <p class="hist-brief">${escapeHtml((h.brief || '').slice(0, 90))}</p>
       </div>`).join('');
     els.history.querySelectorAll('.hist').forEach((el) => {
       el.addEventListener('click', () => {
         const item = list.find((x) => x.id === el.dataset.id);
         if (!item) return;
-        els.result.innerHTML = renderMd(item.output);
+        fullText = item.output; twShown = fullText.length;
+        els.result.innerHTML = renderMd(fullText);
         els.brief.value = item.brief;
+        showBadge(item.model || '—');
+        els.listen.disabled = false; els.copy.disabled = false;
         els.status.textContent = `Dibuka dari riwayat · ${item.mode}`;
       });
     });
   }
+
   renderHistory();
-  syncModeChips();
+  renderStats();
+  syncModeUI();
 </script>
 
 <style>
@@ -465,11 +900,28 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   .app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 26px 22px 60px; align-items: start; }
   .pane { padding: 22px; }
   .modes { display: flex; flex-wrap: wrap; gap: 7px; }
+  .engines { display: flex; flex-wrap: wrap; gap: 7px; }
+  .engine-chip.active { background: linear-gradient(120deg, var(--violet), var(--cyan)); color: #fff; border-color: transparent; }
   .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
   .opts label { display: flex; flex-direction: column; gap: 6px; }
   .opts select, .opts input[type="range"] { height: 46px; }
+  .switch-line { display: flex; align-items: center; gap: 8px; height: 46px; font-size: 13px; }
+  .switch-line input[type="range"] { flex: 1; height: auto; }
 
   .btn.stop { background: linear-gradient(120deg, #ef4444, #b91c1c); box-shadow: 0 14px 34px rgba(239,68,68,.3); }
+
+  .model-badge { font-size: 11px; font-weight: 700; color: var(--cyan);
+                 border: 1px solid rgba(34,211,238,.4); background: rgba(34,211,238,.08);
+                 padding: 3px 10px; border-radius: 999px; }
+
+  .tts-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+               padding: 10px 12px; margin: 8px 0; border-radius: 14px;
+               background: rgba(124,92,255,.08); border: 1px solid rgba(124,92,255,.3);
+               font-size: 12.5px; }
+  .tts-panel .tts-controls { display: flex; gap: 6px; }
+  .tts-panel .tts-slider { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+  .tts-panel input[type="range"] { width: 80px; }
+  .sm-chip { padding: 5px 10px !important; font-size: 11.5px !important; }
 
   .result-pane { display: flex; flex-direction: column; min-height: 480px; }
   .result-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
@@ -485,9 +937,9 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   .hist-brief { font-size: 12.8px; color: #c6c6d8; margin: 0; }
 
   .sheet { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center;
-           background: rgba(5,5,12,.66); backdrop-filter: blur(6px); padding: 18px; }
+           background: rgba(5,5,12,.66); backdrop-filter: blur(6px); padding: 18px; overflow-y: auto; }
   .sheet[hidden] { display: none; }
-  .sheet-card { width: 100%; max-width: 440px; background: #12121f;
+  .sheet-card { width: 100%; max-width: 460px; background: #12121f;
                 border: 1px solid var(--line); border-radius: 24px; padding: 22px;
                 box-shadow: var(--shadow); animation: pop .34s cubic-bezier(.2,0,0,1) both; }
   @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.96) } to { opacity: 1; transform: none } }
@@ -497,9 +949,16 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   .credit-line { margin-top: 14px; text-align: center; font-weight: 800;
                  font-size: 12.5px; letter-spacing: .5px; color: var(--muted); }
 
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .stats-grid div { background: rgba(124,92,255,.09); border: 1px solid rgba(124,92,255,.25);
+                    border-radius: 14px; padding: 10px 8px; text-align: center; }
+  .stats-grid b { display: block; font-size: 17px; letter-spacing: -.3px; }
+  .stats-grid span { font-size: 10.5px; color: var(--muted); }
+
   @media (max-width: 900px) {
     .app-grid { grid-template-columns: 1fr; }
     .opts { grid-template-columns: 1fr; }
     .result-box { max-height: none; }
   }
 </style>
+</Base>

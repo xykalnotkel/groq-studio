@@ -18,6 +18,8 @@ class PromptBuilder {
     required Settings settings,
     required String brief,
     String extra = '',
+    String? engine,
+    String? sourcesBlock,
   }) {
     final system = <String>[
       'Kamu adalah XyStudio AI, penulis dan content strategist profesional '
@@ -35,9 +37,23 @@ class PromptBuilder {
           'langsung kerjakan daripada bertanya balik.',
       '7. Jangan mengarang fakta spesifik seperti harga, alamat, atau '
           'nama orang. Gunakan placeholder bila perlu.',
+      '8. DILARANG KERAS menggunakan emoji atau simbol dekoratif apa pun '
+          'di seluruh jawaban — tulis teks polos saja.',
     ].join('\n');
 
-    final buffer = StringBuffer()
+    final buffer = StringBuffer();
+
+    if (engine != null && engine.isNotEmpty) {
+      buffer
+        ..writeln('ENGINE TARGET: $engine')
+        ..writeln(
+          'Sesuaikan seluruh parameter dan sintaks dengan engine target '
+          'tersebut.',
+        )
+        ..writeln();
+    }
+
+    buffer
       ..writeln('TUGAS:')
       ..writeln(mode.instruction)
       ..writeln()
@@ -55,8 +71,24 @@ class PromptBuilder {
         ..writeln('"""');
     }
 
+    if (sourcesBlock != null && sourcesBlock.isNotEmpty) {
+      buffer
+        ..writeln()
+        ..writeln(sourcesBlock);
+    }
+
     return BuiltPrompt(system: system, user: buffer.toString());
   }
+
+  /// Blok sumber untuk mode Riset Web.
+  static String researchBlock(String topic, String sources) =>
+      'SUMBER WEB (hasil pencarian yang sudah dibuka aplikasi untuk topik '
+      '"$topic"):\n\n$sources';
+
+  /// Blok sumber untuk mode Baca & Ringkas URL.
+  static String urlBlock(String url, String title, String content) =>
+      'ISI HALAMAN (diambil langsung oleh aplikasi dari $url'
+      '${title.isEmpty ? '' : ' — "$title"'}):\n\n$content';
 
   /// Token maksimal yang dipakai untuk sebuah mode.
   static int maxTokensFor(GenerationMode mode) => mode.maxTokens;

@@ -10,6 +10,8 @@ import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/morphing_background.dart';
 
+import 'statistics_screen.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 import '../widgets/option_sheets.dart';
@@ -55,9 +57,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          value.isEmpty ? 'API key dihapus' : 'API key tersimpan 🔐',
-        ),
+        content: Text(value.isEmpty ? 'API key dihapus' : 'API key tersimpan'),
       ),
     );
   }
@@ -267,7 +267,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                           subtitle: Text(
-                            widget.controller.currentModelInfo.id,
+                            widget.controller.isAutoModel
+                                ? 'Rotasi tiap generate + pindah otomatis saat error'
+                                : widget.controller.currentModelInfo.id,
                             style: const TextStyle(fontSize: 11),
                           ),
                           trailing: const Icon(Icons.chevron_right_rounded),
@@ -370,6 +372,142 @@ class _SettingsScreenState extends State<SettingsScreen>
                             ],
                           ),
                         ),
+                        ListTile(
+                          leading: const Icon(Icons.animation_rounded),
+                          title: const Text('Animasi huruf demi huruf'),
+                          subtitle: const Text(
+                            'Hasil mengetik sendiri dengan halus',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                          trailing: Switch(
+                            value: settings.typewriter,
+                            onChanged: (value) =>
+                                widget.controller.updateSettings(
+                                  settings.copyWith(typewriter: value),
+                                ),
+                          ),
+                        ),
+                        if (settings.typewriter)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Row(
+                                  children: <Widget>[
+                                    const Icon(Icons.speed_rounded, size: 20),
+                                    const SizedBox(width: 12),
+                                    const Expanded(
+                                      child: Text('Kecepatan animasi'),
+                                    ),
+                                    Text(
+                                      '${settings.typewriterSpeed}/10',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Slider(
+                                  value: settings.typewriterSpeed.toDouble(),
+                                  min: 1,
+                                  max: 10,
+                                  divisions: 9,
+                                  onChanged: (value) =>
+                                      widget.controller.updateSettings(
+                                        settings.copyWith(
+                                          typewriterSpeed: value.round(),
+                                        ),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        _PickerTile<ReasoningOption>(
+                          icon: Icons.psychology_alt_rounded,
+                          title: 'Penalaran GPT-OSS',
+                          value: ReasoningOption.fromId(settings.reasoning)
+                              .label,
+                          options: ReasoningOption.values,
+                          selected: ReasoningOption.fromId(settings.reasoning),
+                          labelOf: (option) => option.label,
+                          onPicked: (picked) =>
+                              widget.controller.updateSettings(
+                                settings.copyWith(reasoning: picked.id),
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── Suara / Dengarkan ──────────────────────────────────
+                  const SectionLabel('Suara (Dengarkan)'),
+                  GlassCard(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            const Icon(Icons.music_note_rounded, size: 20),
+                            const SizedBox(width: 12),
+                            const Expanded(child: Text('Nada suara')),
+                            Text(
+                              '${settings.ttsPitch.toStringAsFixed(1)}x',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Slider(
+                          value: settings.ttsPitch,
+                          min: 0.5,
+                          max: 2.0,
+                          divisions: 15,
+                          onChanged: (value) =>
+                              widget.controller.updateSettings(
+                                settings.copyWith(ttsPitch: value),
+                              ),
+                        ),
+                        Row(
+                          children: <Widget>[
+                            const Icon(Icons.speed_rounded, size: 20),
+                            const SizedBox(width: 12),
+                            const Expanded(child: Text('Kecepatan bicara')),
+                            Text(
+                              '${settings.ttsRate.toStringAsFixed(1)}x',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Slider(
+                          value: settings.ttsRate,
+                          min: 0.5,
+                          max: 2.0,
+                          divisions: 15,
+                          onChanged: (value) =>
+                              widget.controller.updateSettings(
+                                settings.copyWith(ttsRate: value),
+                              ),
+                        ),
+                        Text(
+                          'Bahasa Indonesia dibacakan suara perangkat. '
+                          'Keluaran bahasa Inggris dibacakan Orpheus dari '
+                          'Groq. Slider ini juga muncul di tombol Dengarkan '
+                          'pada hasil.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontSize: 11,
+                                height: 1.5,
+                                color: Theme.of(context).colorScheme.onSurface
+                                    .withValues(alpha: 0.5),
+                              ),
+                        ),
                       ],
                     ),
                   ),
@@ -414,6 +552,23 @@ class _SettingsScreenState extends State<SettingsScreen>
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Column(
                       children: <Widget>[
+                        ListTile(
+                          leading: const Icon(Icons.bar_chart_rounded),
+                          title: const Text('Statistik pemakaian'),
+                          subtitle: Text(
+                            '${widget.controller.stats.totalGenerates} generate • '
+                            'streak ${widget.controller.stats.dailyStreak} hari',
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => Navigator.of(context).push<void>(
+                            MaterialPageRoute<void>(
+                              builder: (_) => StatisticsScreen(
+                                controller: widget.controller,
+                              ),
+                            ),
+                          ),
+                        ),
                         ListTile(
                           leading: const Icon(Icons.delete_sweep_rounded),
                           title: const Text('Hapus semua riwayat'),
@@ -497,7 +652,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   const SizedBox(height: 18),
                   Center(
                     child: Text(
-                      '${AppInfo.name} v${AppInfo.version} • ${AppInfo.credit} 💜',
+                      '${AppInfo.name} v${AppInfo.version} • ${AppInfo.credit}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface
                             .withValues(alpha: 0.45),

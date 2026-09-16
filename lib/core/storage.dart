@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/history_item.dart';
 import '../models/settings.dart';
+import 'stats.dart';
 
 /// Penyimpanan lokal sederhana (SharedPreferences).
 class StorageService {
@@ -13,6 +14,8 @@ class StorageService {
   static const String _kHistory = 'history';
   static const String _kHidePopup = 'hide_channel_popup';
   static const String _kLaunchCount = 'launch_count';
+  static const String _kStats = 'usage_stats';
+  static const String _kRotation = 'auto_rotation_index';
 
   Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -57,5 +60,35 @@ class StorageService {
 
   Future<void> setLaunchCount(int value) async {
     await _prefs?.setInt(_kLaunchCount, value);
+  }
+
+  // ── Statistik pemakaian ────────────────────────────────────────────────
+  UsageStats loadStats() {
+    final raw = _prefs?.getString(_kStats);
+    if (raw == null || raw.isEmpty) return const UsageStats();
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return UsageStats.fromJson(decoded);
+      }
+    } catch (_) {
+      // data rusak → mulai dari nol
+    }
+    return const UsageStats();
+  }
+
+  Future<void> saveStats(UsageStats stats) async {
+    await _prefs?.setString(_kStats, jsonEncode(stats.toJson()));
+  }
+
+  Future<void> resetStats() async {
+    await _prefs?.remove(_kStats);
+  }
+
+  // ── Rotasi model Auto ─────────────────────────────────────────────────
+  int loadRotationIndex() => _prefs?.getInt(_kRotation) ?? 0;
+
+  Future<void> setRotationIndex(int value) async {
+    await _prefs?.setInt(_kRotation, value);
   }
 }

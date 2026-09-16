@@ -20,7 +20,7 @@ class AppInfo {
 
   static const String name = 'XyStudio AI';
   static const String tagline = 'Tulis apa saja, jadi cepat';
-  static const String version = '2.0.0';
+  static const String version = '3.0.0';
 
   /// Credit pembuat — tampil di splash screen & halaman Tentang.
   static const String brand = 'XyVerse';
@@ -42,6 +42,11 @@ class AppInfo {
   static const String bugReportUrl =
       'https://wa.me/$bugReportPhone?text=$bugReportMessage';
 }
+
+/// Id pseudo-model: aplikasi merotasi model otomatis tiap generate dan
+/// pindah sendiri ke model lain saat terkena 429 / 5xx / error.
+const String kAutoModelId = 'auto';
+const String kAutoModelLabel = 'Auto (muter)';
 
 /// Informasi model Groq.
 class GroqModelInfo {
@@ -67,14 +72,9 @@ class GroqModelInfo {
     );
   }
 
-  /// fallback agar daftar offline tetap rapi kalau API /models gagal.
+  /// Daftar fallback — hanya model chat yang HIDUP per September 2026
+  /// (Llama 3.1/3.3, Llama 4 Scout, dan Qwen3 32B sudah dimatikan Groq).
   static const List<GroqModelInfo> fallback = <GroqModelInfo>[
-    GroqModelInfo(
-      id: 'llama-3.3-70b-versatile',
-      label: 'Llama 3.3 70B',
-      note: 'Paling seimbang — andalan untuk nulis',
-      contextWindow: 131072,
-    ),
     GroqModelInfo(
       id: 'openai/gpt-oss-120b',
       label: 'GPT-OSS 120B',
@@ -88,34 +88,16 @@ class GroqModelInfo {
       contextWindow: 131072,
     ),
     GroqModelInfo(
-      id: 'meta-llama/llama-4-maverick-17b-128e-instruct',
-      label: 'Llama 4 Maverick',
-      note: 'Kreatif, bagus untuk ide & judul',
+      id: 'qwen/qwen3.8-27b',
+      label: 'Qwen3.8 27B',
+      note: 'Seimbang untuk bahasa & logika',
       contextWindow: 131072,
     ),
     GroqModelInfo(
-      id: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      label: 'Llama 4 Scout',
-      note: 'Cepat & efisien',
-      contextWindow: 131072,
-    ),
-    GroqModelInfo(
-      id: 'qwen/qwen3-32b',
-      label: 'Qwen3 32B',
-      note: 'Bagus untuk bahasa & logika',
-      contextWindow: 131072,
-    ),
-    GroqModelInfo(
-      id: 'moonshotai/kimi-k2-instruct-0905',
-      label: 'Kimi K2',
-      note: 'Jagoan teks panjang',
-      contextWindow: 131072,
-    ),
-    GroqModelInfo(
-      id: 'llama-3.1-8b-instant',
-      label: 'Llama 3.1 8B Instant',
-      note: 'Paling ngebut, hemat kuota',
-      contextWindow: 131072,
+      id: 'allam-2-7b',
+      label: 'Allam 2 7B',
+      note: 'Ringan & hemat, konteks kecil',
+      contextWindow: 4096,
     ),
   ];
 
@@ -125,17 +107,26 @@ class GroqModelInfo {
         .replaceAll('-instruct', '')
         .replaceAll('-versatile', '')
         .replaceAll('-instant', '')
-        .replaceAll('-0905', '')
+        .replaceAll('openai/', '')
         .replaceAll('meta-llama/', '')
-        .replaceAll('moonshotai/', '');
+        .replaceAll('moonshotai/', '')
+        .replaceAll('qwen/', '');
   }
 }
 
-/// Daftar id model yang tidak dipakai untuk chat teks (audio / guard / dll).
+/// Potongan id model yang TIDAK dipakai untuk chat teks:
+/// audio (whisper/orpheus/tts), penjaga keamanan (guard/safeguard/
+/// prompt-guard), dan model Compound (menolak payload aplikasi — HTTP 413).
 const List<String> kNonChatModelFilters = <String>[
   'whisper',
+  'orpheus',
   'guard',
+  'safeguard',
   'tts',
-  'allam',
-  'prompt-guard',
+  'compound',
+  'playai',
+  'distil',
 ];
+
+/// Model TTS Groq untuk keluaran bahasa Inggris.
+const String kOrpheusEnglishModel = 'canopylabs/orpheus-v1-english';

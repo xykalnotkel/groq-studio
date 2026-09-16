@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,6 +65,12 @@ void main() {
     // Tanpa preferensi apa pun → popup harus tampil di bukaan pertama.
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
+    // Layar HP portrait — popup 4:3 butuh tinggi yang cukup.
+    tester.view.physicalSize = const Size(1080, 2280);
+    tester.view.devicePixelRatio = 2.625;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final controller = AppController(StorageService());
     await controller.load();
 
@@ -76,10 +83,10 @@ void main() {
     expect(find.text('Jangan tampilkan lagi'), findsOneWidget);
     expect(find.text('Laporkan bug'), findsOneWidget);
 
-    // Centang lalu tutup lewat tombol X.
+    // Centang lalu tutup lewat tombol X (ikon silang di header).
     await tester.tap(find.text('Jangan tampilkan lagi'));
     await tester.pump();
-    await tester.tap(find.byTooltip('Tutup'));
+    await tester.tap(find.byIcon(Icons.close_rounded));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 

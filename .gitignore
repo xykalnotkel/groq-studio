@@ -58,3 +58,7 @@ downloads/
 
 # Golden test (screenshot promosi)
 test/goldens/
+
+# Web build artifacts
+web/node_modules/
+web/dist/

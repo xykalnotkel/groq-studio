@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../core/constants.dart';
 import '../core/controller.dart';
 import '../theme/app_theme.dart';
 
@@ -110,6 +111,9 @@ Future<T?> showPickerSheet<T>({
 }
 
 /// Bottom sheet khusus pemilihan model Groq (bisa refresh dari API).
+///
+/// Paling atas ada opsi **Auto (muter)**: aplikasi merotasi model tiap
+/// generate dan otomatis pindah ke model lain saat 429 / 5xx / error.
 Future<void> showModelSheet(BuildContext context, AppController controller) {
   final theme = Theme.of(context);
   return showModalBottomSheet<void>(
@@ -135,6 +139,7 @@ Future<void> showModelSheet(BuildContext context, AppController controller) {
             child: ListenableBuilder(
               listenable: controller,
               builder: (context, _) {
+                final isAuto = controller.settings.model == kAutoModelId;
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
@@ -193,19 +198,16 @@ Future<void> showModelSheet(BuildContext context, AppController controller) {
                       ),
                     ),
                     Flexible(
-                      child: ListView.builder(
+                      child: ListView(
                         shrinkWrap: true,
                         padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-                        itemCount: controller.models.length,
-                        itemBuilder: (context, index) {
-                          final model = controller.models[index];
-                          final isSelected =
-                              model.id == controller.settings.model;
-                          return ListTile(
+                        children: <Widget>[
+                          // ── Opsi Auto ──────────────────────────────
+                          ListTile(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            selected: isSelected,
+                            selected: isAuto,
                             selectedTileColor: theme.colorScheme.primary
                                 .withValues(alpha: 0.10),
                             contentPadding: const EdgeInsets.symmetric(
@@ -216,8 +218,8 @@ Future<void> showModelSheet(BuildContext context, AppController controller) {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                gradient: isSelected ? AppTheme.brand : null,
-                                color: isSelected
+                                gradient: isAuto ? AppTheme.brand : null,
+                                color: isAuto
                                     ? null
                                     : theme.colorScheme.primary.withValues(
                                         alpha: 0.10,
@@ -225,23 +227,24 @@ Future<void> showModelSheet(BuildContext context, AppController controller) {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
-                                Icons.memory_rounded,
+                                Icons.autorenew_rounded,
                                 size: 20,
-                                color: isSelected
+                                color: isAuto
                                     ? Colors.white
                                     : theme.colorScheme.primary,
                               ),
                             ),
                             title: Text(
-                              model.label,
+                              kAutoModelLabel,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: isSelected
+                                fontWeight: isAuto
                                     ? FontWeight.w800
                                     : FontWeight.w600,
                               ),
                             ),
                             subtitle: Text(
-                              model.id,
+                              'Rotasi model tiap generate + pindah otomatis '
+                              'kalau model sibuk atau error',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontSize: 11,
                                 color: theme.colorScheme.onSurface.withValues(
@@ -249,7 +252,7 @@ Future<void> showModelSheet(BuildContext context, AppController controller) {
                                 ),
                               ),
                             ),
-                            trailing: isSelected
+                            trailing: isAuto
                                 ? Icon(
                                     Icons.check_circle_rounded,
                                     color: theme.colorScheme.primary,
@@ -257,12 +260,91 @@ Future<void> showModelSheet(BuildContext context, AppController controller) {
                                 : null,
                             onTap: () async {
                               await controller.updateSettings(
-                                controller.settings.copyWith(model: model.id),
+                                controller.settings.copyWith(
+                                  model: kAutoModelId,
+                                ),
                               );
                               if (context.mounted) Navigator.of(context).pop();
                             },
-                          );
-                        },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: Text(
+                              'Atau pilih manual:',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // ── Daftar model ───────────────────────────
+                          for (final model in controller.models)
+                            ListTile(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              selected: model.id == controller.settings.model,
+                              selectedTileColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.10),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 2,
+                              ),
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.10,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.memory_rounded,
+                                  size: 20,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              title: Text(
+                                model.label,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight:
+                                      model.id == controller.settings.model
+                                      ? FontWeight.w800
+                                      : FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${model.id}${model.note.isEmpty ? '' : ' — ${model.note}'}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 11,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                              ),
+                              trailing: model.id == controller.settings.model
+                                  ? Icon(
+                                      Icons.check_circle_rounded,
+                                      color: theme.colorScheme.primary,
+                                    )
+                                  : null,
+                              onTap: () async {
+                                await controller.updateSettings(
+                                  controller.settings.copyWith(model: model.id),
+                                );
+                                if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                            ),
+                        ],
                       ),
                     ),
                   ],

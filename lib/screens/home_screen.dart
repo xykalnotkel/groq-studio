@@ -31,6 +31,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with AutomaticKeepAliveClientMixin {
   GenerationMode _mode = GenerationMode.values.first;
+  String? _engine;
   final TextEditingController _brief = TextEditingController();
   final TextEditingController _extra = TextEditingController();
 
@@ -50,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (!controller.hasApiKey) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Isi API key Groq dulu di tab Setelan ya 🔑'),
+          content: const Text('Isi API key Groq dulu di tab Setelan ya'),
           action: SnackBarAction(
             label: 'Buka',
             onPressed: widget.onOpenSettings,
@@ -60,7 +61,12 @@ class _HomeScreenState extends State<HomeScreen>
       return;
     }
     FocusScope.of(context).unfocus();
-    controller.generate(mode: _mode, brief: _brief.text, extra: _extra.text);
+    controller.generate(
+      mode: _mode,
+      brief: _brief.text,
+      extra: _extra.text,
+      engine: _engine,
+    );
   }
 
   @override
@@ -89,11 +95,26 @@ class _HomeScreenState extends State<HomeScreen>
                         const SectionLabel('Mau dibuatin apa?'),
                         ModeSelector(
                           selected: _mode,
-                          onSelected: (mode) => setState(() => _mode = mode),
+                          onSelected: (mode) => setState(() {
+                            _mode = mode;
+                            _engine = mode.engines.isEmpty
+                                ? null
+                                : mode.engines.first;
+                          }),
                         ),
+                        if (_mode.usesEngines) ...<Widget>[
+                          const SizedBox(height: 14),
+                          _EnginePicker(
+                            engines: _mode.engines,
+                            selected: _engine,
+                            color: _mode.color,
+                            onSelected: (engine) =>
+                                setState(() => _engine = engine),
+                          ),
+                        ],
                         const SizedBox(height: 20),
                         SectionLabel(
-                          'Ceritakan sebentar',
+                          _mode.inputLabel,
                           trailing: TextButton.icon(
                             onPressed: () {
                               _brief.clear();
@@ -146,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen>
       );
     } else if (controller.output.trim().isEmpty && controller.isBusy) {
       key = 'loading';
-      child = _LoadingCard(mode: _mode);
+      child = _LoadingCard(mode: _mode, message: controller.statusMessage);
     } else if (controller.output.trim().isEmpty) {
       key = 'empty';
       child = _TipsCard(onPick: (text) => setState(() => _brief.text = text));
@@ -155,11 +176,14 @@ class _HomeScreenState extends State<HomeScreen>
       child = ResultView(
         text: controller.output,
         mode: _mode,
-        model: controller.settings.model,
+        model: controller.answeredByLabel,
         elapsed: controller.elapsed,
         streaming: controller.status == GenerationStatus.streaming,
         onRegenerate: controller.regenerate,
         onStop: controller.stop,
+        controller: controller,
+        typewriter: controller.settings.typewriter,
+        typewriterSpeed: controller.settings.typewriterSpeed,
       );
     }
 
@@ -336,7 +360,13 @@ class _BriefCard extends StatelessWidget {
             controller: brief,
             maxLines: 5,
             minLines: 3,
-            textCapitalization: TextCapitalization.sentences,
+            textCapitalization: mode.kind == ModeKind.standard
+                ? TextCapitalization.sentences
+                : TextCapitalization.none,
+            keyboardType: mode.kind == ModeKind.urlSummary
+                ? TextInputType.url
+                : TextInputType.multiline,
+            autocorrect: mode.kind != ModeKind.urlSummary,
             style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
             decoration: InputDecoration(
               hintText: mode.placeholder,
@@ -349,26 +379,29 @@ class _BriefCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: extra,
-            maxLines: 2,
-            minLines: 1,
-            textCapitalization: TextCapitalization.sentences,
-            style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
-            decoration: InputDecoration(
-              isDense: true,
-              hintText:
-                  'Tambahan: target audiens, kata kunci, catatan (opsional)',
-              hintStyle: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 13,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-              ),
-              fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.35,
+          if (mode.kind != ModeKind.urlSummary) ...<Widget>[
+            const SizedBox(height: 12),
+            TextField(
+              controller: extra,
+              maxLines: 2,
+              minLines: 1,
+              textCapitalization: TextCapitalization.sentences,
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: mode.usesEngines
+                    ? 'Tambahan: gaya visual, negative prompt, catatan (opsional)'
+                    : 'Tambahan: target audiens, kata kunci, catatan (opsional)',
+                hintStyle: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
+                fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.35,
+                ),
               ),
             ),
-          ),
+          ],
           const SizedBox(height: 14),
           Wrap(
             spacing: 8,
@@ -681,9 +714,10 @@ class _TipsCard extends StatelessWidget {
 }
 
 class _LoadingCard extends StatelessWidget {
-  const _LoadingCard({required this.mode});
+  const _LoadingCard({required this.mode, this.message});
 
   final GenerationMode mode;
+  final String? message;
 
   @override
   Widget build(BuildContext context) {
@@ -704,10 +738,14 @@ class _LoadingCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Text(
-                'Sedang menulis…',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  message ?? 'Sedang menulis…',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
@@ -881,6 +919,90 @@ class _ActionBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pilihan engine (prompt gambar / prompt video)
+// ─────────────────────────────────────────────────────────────────────────────
+class _EnginePicker extends StatelessWidget {
+  const _EnginePicker({
+    required this.engines,
+    required this.selected,
+    required this.color,
+    required this.onSelected,
+  });
+
+  final List<String> engines;
+  final String? selected;
+  final Color color;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          'Engine target',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            for (final engine in engines)
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => onSelected(engine),
+                child: AnimatedContainer(
+                  duration: AppMotion.fast,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: engine == selected
+                        ? LinearGradient(
+                            colors: <Color>[
+                              color.withValues(alpha: 0.95),
+                              color.withValues(alpha: 0.7),
+                            ],
+                          )
+                        : null,
+                    color: engine == selected
+                        ? null
+                        : theme.colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.6,
+                          ),
+                    border: Border.all(
+                      color: engine == selected
+                          ? color
+                          : theme.colorScheme.outline,
+                    ),
+                  ),
+                  child: Text(
+                    engine,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: engine == selected
+                          ? Colors.white
+                          : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -523,7 +523,7 @@ class _DetailResult extends StatelessWidget {
                   await Clipboard.setData(ClipboardData(text: item.output));
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Teks berhasil disalin ✅')),
+                    const SnackBar(content: Text('Teks berhasil disalin')),
                   );
                 },
                 icon: const Icon(Icons.copy_all_rounded, size: 17),

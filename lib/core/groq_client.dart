@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -12,15 +13,26 @@ class GroqException implements Exception {
   final String message;
   final int? statusCode;
 
+  /// 429 (rate limit), 5xx (server), dan error jaringan — kondisi yang
+  /// layak dicoba ulang dengan model lain saat mode Auto aktif.
+  bool get retryable =>
+      statusCode == 429 ||
+      (statusCode != null && statusCode! >= 500) ||
+      message.contains('koneksi') ||
+      message.contains('Koneksi') ||
+      message.contains('lambat');
+
   @override
   String toString() => message;
 }
 
 /// Client minimal untuk Groq Cloud (OpenAI-compatible).
 ///
-/// Mendukung dua mode:
+/// Mendukung:
 /// * [complete] — tunggu sampai selesai, lalu kembalikan teks utuh.
 /// * [stream]   — kirim potongan teks (delta) begitu datang (SSE).
+/// * [speech]   — TTS Orpheus untuk hasil berbahasa Inggris.
+/// * [fetchModels] — daftar model live + filter non-chat.
 class GroqClient {
   GroqClient({required this.apiKey, http.Client? client})
     : _client = client ?? http.Client();
@@ -43,6 +55,24 @@ class GroqClient {
     _client.close();
   }
 
+  static bool _isGptOss(String model) => model.startsWith('openai/gpt-oss');
+
+  /// Batasi prompt & max_tokens untuk model dengan jendela konteks kecil
+  /// (mis. allam-2-7b yang hanya 4096 token).
+  static int _capMaxTokens(String modelId, int contextWindow, int maxTokens) {
+    if (contextWindow > 0 && contextWindow <= 8192) {
+      return maxTokens.clamp(256, 1536);
+    }
+    return maxTokens;
+  }
+
+  static String _capPrompt(String modelId, int contextWindow, String prompt) {
+    if (contextWindow > 0 && contextWindow <= 8192 && prompt.length > 2200) {
+      return '${prompt.substring(0, 2200)}\n[brief dipotong agar muat]';
+    }
+    return prompt;
+  }
+
   Map<String, dynamic> _payload({
     required String model,
     required String system,
@@ -50,17 +80,45 @@ class GroqClient {
     required double temperature,
     required int maxTokens,
     required bool stream,
-  }) => <String, dynamic>{
-    'model': model,
-    'messages': <Map<String, String>>[
-      <String, String>{'role': 'system', 'content': system},
-      <String, String>{'role': 'user', 'content': prompt},
-    ],
-    'temperature': temperature,
-    'max_tokens': maxTokens,
-    'top_p': 0.95,
-    'stream': stream,
-  };
+    required String reasoningEffort,
+    required int contextWindow,
+  }) {
+    final cappedTokens = _capMaxTokens(model, contextWindow, maxTokens);
+
+    // GPT-OSS: instruksi DITARUH DI USER MESSAGE (model ini tidak memakai
+    // system prompt), tanpa reasoning stream, temperature tetap 0.6.
+    if (_isGptOss(model)) {
+      final merged = _capPrompt(
+        model,
+        contextWindow,
+        'INSTRUKSI SISTEM (patuhi sepenuhnya):\n$system\n\n$prompt',
+      );
+      return <String, dynamic>{
+        'model': model,
+        'messages': <Map<String, String>>[
+          <String, String>{'role': 'user', 'content': merged},
+        ],
+        'temperature': 0.6,
+        'max_tokens': cappedTokens,
+        'stream': stream,
+        'include_reasoning': false,
+        'reasoning_effort': reasoningEffort,
+      };
+    }
+
+    final cappedPrompt = _capPrompt(model, contextWindow, prompt);
+    return <String, dynamic>{
+      'model': model,
+      'messages': <Map<String, String>>[
+        <String, String>{'role': 'system', 'content': system},
+        <String, String>{'role': 'user', 'content': cappedPrompt},
+      ],
+      'temperature': temperature,
+      'max_tokens': cappedTokens,
+      'top_p': 0.95,
+      'stream': stream,
+    };
+  }
 
   /// Generate tanpa streaming.
   Future<String> complete({
@@ -69,6 +127,8 @@ class GroqClient {
     required String prompt,
     required double temperature,
     required int maxTokens,
+    String reasoningEffort = 'medium',
+    int contextWindow = 0,
   }) async {
     final uri = Uri.parse('$baseUrl/chat/completions');
     final response = await _client
@@ -83,6 +143,8 @@ class GroqClient {
               temperature: temperature,
               maxTokens: maxTokens,
               stream: false,
+              reasoningEffort: reasoningEffort,
+              contextWindow: contextWindow,
             ),
           ),
         )
@@ -114,6 +176,8 @@ class GroqClient {
     required String prompt,
     required double temperature,
     required int maxTokens,
+    String reasoningEffort = 'medium',
+    int contextWindow = 0,
   }) async* {
     final request = http.Request('POST', Uri.parse('$baseUrl/chat/completions'))
       ..headers.addAll(_headers..['Accept'] = 'text/event-stream')
@@ -125,6 +189,8 @@ class GroqClient {
           temperature: temperature,
           maxTokens: maxTokens,
           stream: true,
+          reasoningEffort: reasoningEffort,
+          contextWindow: contextWindow,
         ),
       );
 
@@ -148,6 +214,34 @@ class GroqClient {
         if (delta != null && delta.isNotEmpty) yield delta;
       }
     }
+  }
+
+  /// Text-to-speech Orpheus (keluaran bahasa Inggris). Mengembalikan
+  /// byte audio (MP3).
+  Future<Uint8List> speech({
+    required String text,
+    String model = kOrpheusEnglishModel,
+    double speed = 1.0,
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/audio/speech'),
+          headers: _headers,
+          body: jsonEncode(<String, dynamic>{
+            'model': model,
+            // Orpheus memakai jendela kecil — potong aman.
+            'input': text.length > 3500 ? text.substring(0, 3500) : text,
+            'response_format': 'mp3',
+            'speed': speed.clamp(0.5, 2.0),
+          }),
+        )
+        .timeout(const Duration(seconds: 90));
+
+    _throwIfError(
+      response.statusCode,
+      utf8.decode(response.bodyBytes, allowMalformed: true),
+    );
+    return response.bodyBytes;
   }
 
   /// Ambil daftar model yang tersedia untuk API key ini.
@@ -216,13 +310,21 @@ class GroqClient {
 
   static String _messageFor(int statusCode, String body) {
     String? apiMessage;
+    String? apiCode;
     try {
       final decoded = jsonDecode(body);
       if (decoded is Map && decoded['error'] is Map) {
         apiMessage = (decoded['error'] as Map)['message']?.toString();
+        apiCode = (decoded['error'] as Map)['code']?.toString();
       }
     } catch (_) {
       apiMessage = null;
+    }
+
+    if (apiCode == 'model_terms_required') {
+      return 'Model suara ini butuh persetujuan syarat pemakaian di '
+          'console Groq. Buka console.groq.com, terima syaratnya, lalu '
+          'coba lagi. Sementara itu aplikasi memakai suara perangkat.';
     }
 
     final detail = apiMessage == null ? '' : '\n\nDetail: $apiMessage';

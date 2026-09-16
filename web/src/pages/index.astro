@@ -3,12 +3,12 @@ import Base from '../layouts/Base.astro';
 import { APP, MODES } from '../data/app.js';
 
 const highlights = [
-  { icon: '⚡', title: 'Streaming real-time', text: 'Hasil muncul kata demi kata — nggak perlu menunggu selesai.' },
-  { icon: '🎛️', title: 'Hasil bisa diatur', text: 'Bahasa, gaya, panjang, dan tingkat kreativitas bebas dipilih.' },
-  { icon: '📚', title: 'Riwayat otomatis', text: 'Semua hasil tersimpan di perangkat, bisa dicari & dibagikan.' },
-  { icon: '🎨', title: 'UI morphing', text: 'Latar bergerak halus, tombol berubah bentuk, transisi menyatu.' },
-  { icon: '🔒', title: 'Privat', text: 'API key hanya di perangkatmu, dikirim langsung ke Groq.' },
-  { icon: '📱', title: 'Android + Web', text: 'Satu akun, bisa dipakai di HP Android maupun browser.' },
+  { color: '#7C5CFF', title: 'Model Auto (muter)', text: 'Model dirotasi tiap generate dan otomatis pindah saat ada yang sibuk atau error.' },
+  { color: '#22D3EE', title: 'Streaming + animasi', text: 'Hasil muncul huruf demi huruf dengan halus; kecepatannya bisa diatur atau dimatikan.' },
+  { color: '#4ADE80', title: 'Riset Web bawaan', text: 'Aplikasi mencari & membaca sumber sendiri, lalu merangkumnya. Ada juga mode ringkas URL.' },
+  { color: '#F472B6', title: '12 gaya menulis', text: 'Natural, padat-tajam, bercerita, elegan, puitis, dan banyak lagi — tanpa emoji di hasil.' },
+  { color: '#FBBF24', title: 'Statistik pemakaian', text: 'Total generate, kata, karakter, mode favorit, streak harian, dan grafik 7 hari.' },
+  { color: '#FB7185', title: 'Android + Web', text: 'Satu pengalaman di HP Android dan browser. API key hanya tersimpan di perangkatmu.' },
 ];
 
 const shots = [
@@ -38,20 +38,20 @@ const shots = [
     <!-- HERO -->
     <section class="hero">
       <div class="hero-copy">
-        <span class="badge">✨ {MODES.length} mode generate · Ditenagai Groq</span>
+        <span class="badge">{MODES.length} mode generate · Ditenagai Groq</span>
         <h1>
           Tulis <span class="grad">judul, artikel, caption</span><br />
           cuma dari satu kalimat.
         </h1>
         <p class="muted lead">
           {APP.name} mengubah ide setengah jadi tulisan jadi: artikel lengkap,
-          deskripsi produk, naskah video, prompt gambar, sampai balasan chat
-          pembeli. Cepat, gratis, dan tampilannya enak dipakai.
+          deskripsi produk, naskah video, prompt gambar &amp; video, riset web,
+          sampai balasan chat pembeli. Cepat, gratis, dan tampilannya enak dipakai.
         </p>
         <div class="cta">
-          <a class="btn" href="/app">🚀 Buka Web App</a>
+          <a class="btn" href="/app">Buka Web App</a>
           <a class="btn ghost" href={APP.releasesUrl} target="_blank" rel="noopener">
-            📱 Download APK
+            Download APK
           </a>
         </div>
         <div class="hero-meta muted small">
@@ -69,7 +69,7 @@ const shots = [
       <div class="grid-3">
         {highlights.map((h) => (
           <div class="card feat">
-            <div class="feat-icon">{h.icon}</div>
+            <div class="feat-icon"><span class="feat-dot" style={`background:${h.color}`}></span></div>
             <h3>{h.title}</h3>
             <p class="muted">{h.text}</p>
           </div>
@@ -150,7 +150,9 @@ const shots = [
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .feat h3 { font-size: 16px; margin-bottom: 6px; }
   .feat p { font-size: 13.6px; line-height: 1.6; }
-  .feat-icon { font-size: 22px; margin-bottom: 10px; }
+  .feat-icon { margin-bottom: 10px; }
+  .feat-dot { display: inline-block; width: 18px; height: 18px; border-radius: 6px;
+              box-shadow: 0 0 16px rgba(124,92,255,.4); }
 
   .modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; }
   .mode { padding: 14px; border-radius: 16px; border: 1px solid var(--line);

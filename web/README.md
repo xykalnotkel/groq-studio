@@ -3,6 +3,12 @@
 Astro + vanilla JS, static (SSG). Jalan di browser mana pun, manggil **Groq API
 langsung dari browser** (api.groq.com mengizinkan CORS: `access-control-allow-origin: *`).
 
+Fitur v3: 24 mode, 12 gaya menulis, model **Auto (muter)** dengan rotasi &
+failover 429/5xx, animasi huruf demi huruf, statistik (localStorage), tombol
+**Dengarkan** (Web Speech API / Orpheus Groq untuk bahasa Inggris), mode Riset
+Web & Baca URL (fetch lewat proxy CORS), dan popup saluran WA 4:3 dengan logo
+XyVerse.
+
 ## Menjalankan
 
 ```bash
@@ -24,7 +30,7 @@ npm run preview
 PUBLIC_GROQ_API_KEY=gsk_xxxx npm run build
 ```
 
-⚠️ **Peringatan:** semua variabel berawalan `PUBLIC_` ikut masuk ke bundle
+**Peringatan:** semua variabel berawalan `PUBLIC_` ikut masuk ke bundle
 browser dan bisa dibaca siapa pun. Pakai hanya kalau kamu siap kuotanya
 dipakai bersama — atau biarkan pengguna memasukkan key-nya sendiri lewat
 panel **Setelan** (disimpan di localStorage perangkatnya).

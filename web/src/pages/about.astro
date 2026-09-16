@@ -5,7 +5,7 @@ import { APP, MODES } from '../data/app.js';
 const stack = [
   { label: 'Android', value: 'Flutter 3.47 · Dart 3.13 · Material 3' },
   { label: 'Web', value: 'Astro 5 · vanilla JS · SSG' },
-  { label: 'AI', value: 'Groq Cloud (Llama 4, GPT-OSS, Qwen3, Kimi K2)' },
+  { label: 'AI', value: 'Groq Cloud (GPT-OSS 120B/20B, Qwen3.8 27B, Allam 2) + Orpheus TTS' },
   { label: 'Penyimpanan', value: 'SharedPreferences (Android) · localStorage (web)' },
   { label: 'Build', value: 'GitHub Actions → APK, AAB, & Release otomatis' },
 ];
@@ -31,13 +31,16 @@ const stack = [
       <img src="/logo.png" alt="" width="86" height="86" class="logo" />
       <h1>{APP.name}</h1>
       <p class="muted">{APP.tagline} · Versi {APP.version}</p>
-      <div class="credit">{APP.credit}</div>
+      <div class="credit">
+        <span>Built in</span>
+        <img src="/xyverse_wordmark_white.png" alt="XyVerse" height="14" />
+      </div>
       <p class="desc">
         {APP.name} adalah studio menulis AI yang membantu kamu mengubah satu
         kalimat ide menjadi tulisan jadi — artikel, deskripsi produk, caption,
-        naskah video, prompt gambar, sampai balasan chat pembeli. Semua
-        ditenagai Groq, salah satu layanan inferensi AI tercepat saat ini,
-        sehingga hasilnya muncul kata demi kata dalam hitungan detik.
+        naskah video, prompt gambar &amp; video, riset web, sampai balasan chat
+        pembeli. Semua ditenagai Groq, salah satu layanan inferensi AI tercepat
+        saat ini, sehingga hasilnya muncul huruf demi huruf dalam hitungan detik.
       </p>
       <div class="cta">
         <a class="btn" href="/app">Buka Web App</a>
@@ -67,10 +70,10 @@ const stack = [
     <section class="card links">
       <h2>Tautan</h2>
       <div class="link-grid">
-        <a href={APP.waChannelUrl} target="_blank" rel="noopener">💬 Gabung {APP.waChannelName}</a>
-        <a href={APP.bugReportUrl} target="_blank" rel="noopener">🐞 Laporkan bug</a>
-        <a href={APP.githubUrl} target="_blank" rel="noopener">💻 Source code</a>
-        <a href={APP.keysUrl} target="_blank" rel="noopener">🔑 Ambil API key Groq</a>
+        <a href={APP.waChannelUrl} target="_blank" rel="noopener">Gabung {APP.waChannelName}</a>
+        <a href={APP.bugReportUrl} target="_blank" rel="noopener">Laporkan bug</a>
+        <a href={APP.githubUrl} target="_blank" rel="noopener">Source code</a>
+        <a href={APP.keysUrl} target="_blank" rel="noopener">Ambil API key Groq</a>
       </div>
     </section>
 
@@ -102,7 +105,7 @@ const stack = [
   .logo { border-radius: 22px; box-shadow: 0 18px 44px rgba(124,92,255,.35); }
   h1 { font-size: 30px; font-weight: 800; letter-spacing: -.7px; margin: 14px 0 4px; }
   .credit {
-    display: inline-block; margin: 14px 0 16px;
+    display: inline-flex; align-items: center; gap: 8px; margin: 14px 0 16px;
     padding: 7px 16px; border-radius: 999px;
     background: linear-gradient(120deg, rgba(124,92,255,.2), rgba(34,211,238,.2));
     border: 1px solid rgba(124,92,255,.34);
