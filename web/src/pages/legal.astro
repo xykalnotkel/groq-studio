@@ -1,0 +1,42 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP } from '../data/app.js';
+---
+
+<Base title={`Legal — ${APP.name}`} description={`Informasi hukum ${APP.name}.`}>
+  <main class="wrap doc">
+    <header class="doc-head">
+      <p class="kicker">Hukum</p>
+      <h1>Legal</h1>
+    </header>
+    <article class="prose">
+      <p>
+        {APP.name} dibuat oleh {APP.brand}. Situs resmi:
+        <a href={APP.siteUrl}>{APP.siteUrl.replace('https://', '')}</a>.
+        Unduhan resmi: <a href={APP.downloadUrl}>{APP.downloadUrl.replace('https://', '')}</a>.
+      </p>
+      <ul>
+        <li><a href="/terms">Syarat penggunaan</a></li>
+        <li><a href="/privacy">Kebijakan privasi</a></li>
+        <li><a href={APP.githubUrl} target="_blank" rel="noopener">Kode sumber (repositori publik)</a></li>
+      </ul>
+      <h2>Merek dan pihak ketiga</h2>
+      <p>
+        Groq adalah merek Groq, Inc. WhatsApp adalah merek Meta. Android adalah merek Google.
+        {APP.name} tidak berafiliasi dengan mereka. Kamu bertanggung jawab mematuhi syarat Groq
+        saat memakai API key-mu.
+      </p>
+      <h2>Lisensi kode</h2>
+      <p>
+        Kode aplikasi ada di GitHub. Pakai sesuai lisensi yang tertera di repositori.
+        Logo dan nama {APP.brand} tetap milik {APP.brand}.
+      </p>
+      <h2>Kontak</h2>
+      <p>
+        Laporan penyalahgunaan atau permintaan data: lewat
+        <a href="#" data-bug-open>formulir bantuan</a>
+        atau saluran WhatsApp resmi.
+      </p>
+    </article>
+  </main>
+</Base>

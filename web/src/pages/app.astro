@@ -8,25 +8,14 @@ import { APP, MODES, LANGUAGES, TONES, LENGTHS, MODELS, AUTO_MODEL } from '../da
 const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
 ---
 
-<Base title={`${APP.name} — Web App`} description="Bikin judul, artikel, caption, riset web, prompt video, dan 20 mode lain langsung dari browser.">
-  <header class="nav">
-    <div class="wrap nav-inner">
-      <a class="brand" href="/">
-        <img src="/logo.png" alt="" width="34" height="34" />
-        <span>{APP.name}</span>
-      </a>
-      <nav>
-        <a href="/">Beranda</a>
-        <a href="/about">Tentang</a>
-        <button class="btn sm ghost" id="btn-settings">Setelan</button>
-      </nav>
-    </div>
-  </header>
-
+<Base current="app" title={`${APP.name} — Web App`} description="Bikin judul, artikel, caption, riset web, prompt video, dan 20 mode lain langsung dari browser.">
   <main class="wrap app-grid">
     <!-- KIRI: formulir -->
     <section class="card pane">
-      <p class="label">Mau dibuatin apa?</p>
+      <div class="pane-top">
+        <p class="label">Mau dibuatin apa?</p>
+        <button class="btn sm ghost" id="btn-settings" type="button">Setelan</button>
+      </div>
       <div class="modes" id="modes">
         {MODES.map((m, i) => (
           <button class={`chip mode-chip${i === 0 ? ' active' : ''}`} data-mode={m.id} title={m.hint}>
@@ -933,18 +922,10 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
 </script>
 
 <style>
-  .nav { padding: 16px 0; border-bottom: 1px solid var(--line);
-         background: rgba(10,10,20,.7); backdrop-filter: blur(12px);
-         position: sticky; top: 0; z-index: 20; }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
-  .brand img { border-radius: 9px; }
-  .nav nav { display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 600; }
-  .nav nav a { color: var(--muted); }
-  .nav nav a:hover { color: var(--text); }
-
   .app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 26px 22px 60px; align-items: start; }
   .pane { padding: 22px; }
+  .pane-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+  .pane-top .label { margin: 0; }
   .modes { display: flex; flex-wrap: wrap; gap: 7px; }
   .engines { display: flex; flex-wrap: wrap; gap: 7px; }
   .engine-chip.active { background: linear-gradient(120deg, var(--violet), var(--cyan)); color: #fff; border-color: transparent; }
@@ -953,8 +934,6 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   .opts select, .opts input[type="range"] { height: 46px; }
   .switch-line { display: flex; align-items: center; gap: 8px; height: 46px; font-size: 13px; }
   .switch-line input[type="range"] { flex: 1; height: auto; }
-
-  .btn.stop { background: linear-gradient(120deg, #ef4444, #b91c1c); box-shadow: 0 14px 34px rgba(239,68,68,.3); }
 
   .model-badge { font-size: 11px; font-weight: 700; color: var(--cyan);
                  border: 1px solid rgba(34,211,238,.4); background: rgba(34,211,238,.08);

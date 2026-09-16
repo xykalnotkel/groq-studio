@@ -1,15 +1,15 @@
 # XyStudio AI — Versi Web
 
-Live: **https://xykalnotkel.github.io/groq-studio/** — deploy otomatis via GitHub Actions ke GitHub Pages.
+Live: **https://xystudio.my.id** (Vercel). Unduhan APK: **https://dl.xystudio.my.id**.
 
 Astro + vanilla JS, static (SSG). Jalan di browser mana pun, manggil **Groq API
 langsung dari browser** (api.groq.com mengizinkan CORS: `access-control-allow-origin: *`).
 
-Fitur v3.2: 24 mode, 12 gaya menulis, model **Auto (muter)** dengan rotasi &
-failover 429/5xx, sunting & suka hasil, statistik (localStorage), formulir bug, tombol
+Fitur: 24 mode, 12 gaya menulis, model **Auto (muter)** dengan rotasi dan
+failover 429/5xx, sunting dan suka hasil, statistik (localStorage), formulir bug, tombol
 **Dengarkan** (Web Speech API / Orpheus Groq untuk bahasa Inggris), mode Riset
-Web & Baca URL (fetch lewat proxy CORS), latar morphing, dan popup saluran WA 4:3 dengan logo
-XyVerse.
+Web dan Baca URL, latar kaca statis, tombol 2.5D, popup saluran WA 4:3, plus
+halaman Changelog, Panduan, Legal, Syarat, Privasi, Bantuan, dan Download.
 
 ## Menjalankan
 
@@ -28,6 +28,8 @@ npm run preview
 
 ## Menyuntikkan API key bawaan (opsional)
 
+Di Vercel, set env `PUBLIC_GROQ_API_KEY` (jangan di-commit). Lokal:
+
 ```bash
 PUBLIC_GROQ_API_KEY=gsk_xxxx npm run build
 ```
@@ -42,33 +44,37 @@ panel **Setelan** (disimpan di localStorage perangkatnya).
 ```
 web/
 ├── src/
-│   ├── data/app.js          # konfigurasi + daftar mode (sama dgn Android)
-│   ├── layouts/Base.astro   # kerangka, footer, credit, popup
+│   ├── data/app.js
+│   ├── layouts/Base.astro
 │   ├── components/
-│   │   └── ChannelPopup.astro  # popup saluran WA (X, centang, lapor bug)
+│   │   ├── SiteHeader.astro
+│   │   ├── SiteFooter.astro
+│   │   ├── ChannelPopup.astro
+│   │   └── BugReportModal.astro
 │   ├── pages/
-│   │   ├── index.astro      # landing
-│   │   ├── app.astro        # generator (streaming, riwayat, setelan)
-│   │   └── about.astro      # tentang + credit
-│   └── styles/global.css    # morphing background & komponen
-└── public/                  # logo, wa-channel.png, shots/
+│   │   ├── index.astro
+│   │   ├── app.astro
+│   │   ├── about.astro
+│   │   ├── download.astro
+│   │   ├── changelog.astro
+│   │   ├── guide.astro
+│   │   ├── learn.astro
+│   │   ├── support.astro
+│   │   ├── legal.astro
+│   │   ├── terms.astro
+│   │   └── privacy.astro
+│   └── styles/global.css
+├── public/
+└── vercel.json              # 302 APK + host rewrite dl.xystudio.my.id
 ```
-
-## Fitur
-
-- 20 mode generate, identik dengan aplikasi Android
-- Streaming kata demi kata (SSE) + tombol hentikan
-- Bahasa / gaya / panjang / model / kreativitas
-- Riwayat tersimpan di localStorage (50 entri terakhir)
-- Salin hasil, buka kembali dari riwayat
-- Popup saluran WA: tombol **X**, centang **Jangan tampilkan lagi**, tombol **Laporkan bug**
-- Tema gelap dengan latar morphing
 
 ## Deploy
 
-- **Vercel / Netlify**: arahkan ke folder `web/`, build `npm run build`, output `dist`
-- **GitHub Pages**: tambahkan `base: '/groq-studio'` di `astro.config.mjs`
+Vercel, root directory `web`, framework Astro, output `dist`.
+Domain: `xystudio.my.id`, `www.xystudio.my.id`, `dl.xystudio.my.id`.
+
+Tautan `/android`, `/android-32`, `/universal` mengarah ke berkas rilis v3.2.0.
 
 ---
 
-Built in XyVerse 💜
+Built in XyVerse

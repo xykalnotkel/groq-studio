@@ -4,11 +4,11 @@ import { APP, MODES } from '../data/app.js';
 
 const highlights = [
   { color: '#7C5CFF', title: 'Model Auto (muter)', text: 'Model dirotasi tiap generate dan otomatis pindah saat ada yang sibuk atau error.' },
-  { color: '#22D3EE', title: 'Morphing & bisa disunting', text: 'Latar blob yang bergerak pelan, tombol yang berubah bentuk, transisi geser. Hasil bisa langsung disunting dan disukai, lalu tersimpan di riwayat.' },
-  { color: '#4ADE80', title: 'Riset Web bawaan', text: 'Aplikasi mencari & membaca sumber sendiri, lalu merangkumnya. Ada juga mode ringkas URL.' },
+  { color: '#22D3EE', title: 'Hasil bisa disunting', text: 'Teks muncul utuh, lalu bisa langsung disunting dan disukai. Riwayat tersimpan di perangkatmu.' },
+  { color: '#4ADE80', title: 'Riset Web bawaan', text: 'Aplikasi mencari dan membaca sumber sendiri, lalu merangkumnya. Ada juga mode ringkas URL.' },
   { color: '#F472B6', title: '12 gaya menulis', text: 'Natural, padat-tajam, bercerita, elegan, puitis, dan banyak lagi — tanpa emoji di hasil.' },
   { color: '#FBBF24', title: 'Statistik pemakaian', text: 'Total generate, kata, karakter, mode favorit, streak harian, dan grafik 7 hari.' },
-  { color: '#FB7185', title: 'Android + Web', text: 'Satu pengalaman di HP Android dan browser. Ada floating overlay (izin tampil di atas aplikasi lain), PiP, dan widget beranda; API key hanya tersimpan di perangkatmu.' },
+  { color: '#FB7185', title: 'Android + Web', text: 'Satu pengalaman di HP Android dan browser. Ada floating overlay, PiP, dan widget beranda; API key hanya tersimpan di perangkatmu.' },
 ];
 
 const shots = [
@@ -19,23 +19,8 @@ const shots = [
 ];
 ---
 
-<Base>
-  <header class="nav">
-    <div class="wrap nav-inner">
-      <a class="brand" href="/">
-        <img src="/logo.png" alt="" width="38" height="38" />
-        <span>{APP.name}</span>
-      </a>
-      <nav>
-        <a href="/app">Web App</a>
-        <a href="/about">Tentang</a>
-        <a class="btn sm" href="/app">Mulai Nulis</a>
-      </nav>
-    </div>
-  </header>
-
+<Base current="home">
   <main class="wrap">
-    <!-- HERO -->
     <section class="hero">
       <div class="hero-copy">
         <span class="badge">{MODES.length} mode generate · Ditenagai Groq</span>
@@ -45,17 +30,15 @@ const shots = [
         </h1>
         <p class="muted lead">
           {APP.name} mengubah ide setengah jadi tulisan jadi: artikel lengkap,
-          deskripsi produk, naskah video, prompt gambar &amp; video, riset web,
+          deskripsi produk, naskah video, prompt gambar dan video, riset web,
           sampai balasan chat pembeli. Cepat, gratis, dan tampilannya enak dipakai.
         </p>
         <div class="cta">
           <a class="btn" href="/app">Buka Web App</a>
-          <a class="btn ghost" href={APP.releasesUrl} target="_blank" rel="noopener">
-            Download APK
-          </a>
+          <a class="btn ghost" href="/download">Download APK</a>
         </div>
         <div class="hero-meta muted small">
-          Tanpa daftar akun · API key Groq gratis · Android 7+ &amp; browser modern
+          Tanpa daftar akun · API key Groq gratis · Android 7+ dan browser modern
         </div>
       </div>
       <div class="hero-art">
@@ -63,7 +46,6 @@ const shots = [
       </div>
     </section>
 
-    <!-- HIGHLIGHTS -->
     <section class="section">
       <h2 class="section-title">Kenapa pakai {APP.name}?</h2>
       <div class="grid-3">
@@ -77,7 +59,6 @@ const shots = [
       </div>
     </section>
 
-    <!-- MODES -->
     <section class="section">
       <h2 class="section-title">{MODES.length} mode siap pakai</h2>
       <div class="modes">
@@ -90,7 +71,6 @@ const shots = [
       </div>
     </section>
 
-    <!-- SCREENSHOTS -->
     <section class="section">
       <h2 class="section-title">Tampilannya</h2>
       <div class="shots">
@@ -100,10 +80,9 @@ const shots = [
       </div>
     </section>
 
-    <!-- WA CTA -->
     <section class="section wa">
       <div class="wa-inner">
-        <img src="/wa-channel.png" alt="" class="wa-art" />
+        <img src="/wa_popup_43.png" alt="" class="wa-art" />
         <div class="wa-copy">
           <h2>Gabung {APP.waChannelName}</h2>
           <p class="muted">
@@ -119,16 +98,6 @@ const shots = [
 </Base>
 
 <style>
-  .nav { padding: 18px 0; position: sticky; top: 0; z-index: 20;
-         background: rgba(10,10,20,.72); backdrop-filter: blur(12px);
-         border-bottom: 1px solid var(--line); }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; }
-  .brand img { border-radius: 10px; }
-  .nav nav { display: flex; align-items: center; gap: 20px; font-size: 14px; font-weight: 600; }
-  .nav nav a:not(.btn) { color: var(--muted); }
-  .nav nav a:not(.btn):hover { color: var(--text); }
-
   .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 44px;
           align-items: center; padding: 58px 0 30px; }
   .badge { display: inline-block; padding: 6px 14px; border-radius: 999px;
@@ -156,9 +125,8 @@ const shots = [
 
   .modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; }
   .mode { padding: 14px; border-radius: 16px; border: 1px solid var(--line);
-          background: rgba(20,20,36,.6); display: flex; flex-direction: column; gap: 3px;
-          transition: transform .2s, border-color .2s; }
-  .mode:hover { transform: translateY(-3px); border-color: var(--violet); }
+          background: rgba(20,20,36,.6); display: flex; flex-direction: column; gap: 3px; }
+  .mode:hover { border-color: var(--violet); }
   .mode strong { font-size: 13.6px; }
 
   .shots { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; }

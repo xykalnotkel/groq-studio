@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP } from '../data/app.js';
+---
+
+<Base current="guide" title={`Panduan — ${APP.name}`} description={`Cara memakai ${APP.name} di web dan Android.`}>
+  <main class="wrap doc">
+    <header class="doc-head">
+      <p class="kicker">Dokumentasi</p>
+      <h1>Panduan</h1>
+      <p class="muted">Ringkas. Langsung praktek.</p>
+    </header>
+    <article class="prose">
+      <h2>1. Buka web atau pasang APK</h2>
+      <p>
+        Web App tidak perlu daftar akun. Buka <a href="/app">/app</a>.
+        Versi Android di <a href="/download">Download</a>.
+      </p>
+
+      <h2>2. Siapkan API key Groq</h2>
+      <p>
+        Ambil key gratis di <a href={APP.keysUrl} target="_blank" rel="noopener">console.groq.com/keys</a>.
+        Tempel di Setelan. Key hanya tersimpan di perangkat atau browser kamu.
+      </p>
+
+      <h2>3. Pilih mode, tulis brief, tekan buat</h2>
+      <p>
+        Brief boleh satu kalimat. Tambahan opsional untuk audiens, kata kunci, atau catatan.
+        Model Auto akan memutar model dan pindah sendiri kalau yang sedang dipakai sibuk.
+      </p>
+
+      <h2>4. Sunting, suka, salin, dengarkan</h2>
+      <p>
+        Hasil bisa disunting lalu disimpan ke riwayat. Tombol Suka menandai item.
+        Dengarkan memakai suara perangkat; bahasa Inggris memakai Orpheus di Groq
+        (perlu menyetujui syarat model di konsol Groq).
+      </p>
+
+      <h2>5. Riset web dan ringkas URL</h2>
+      <p>
+        Mode riset mencari sumber, membacanya, lalu merangkum. Mode URL meminta tautan lengkap.
+        Browser kadang diblokir CORS; kalau gagal, ulangi di aplikasi Android.
+      </p>
+
+      <h2>6. Overlay di Android</h2>
+      <p>
+        Fitur mengambang membutuhkan izin "tampil di atas aplikasi lain"
+        (SYSTEM_ALERT_WINDOW), bukan Picture-in-Picture saja.
+      </p>
+
+      <p>
+        Masih macet? Buka <a href="/support">Bantuan</a> atau
+        <a href="#" data-bug-open>laporkan bug</a>.
+      </p>
+    </article>
+  </main>
+</Base>

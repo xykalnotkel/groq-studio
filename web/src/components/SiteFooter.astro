@@ -1,0 +1,44 @@
+---
+import { APP, FOOTER } from '../data/app.js';
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <img src="/logo.png" width="36" height="36" alt="" />
+        <div>
+          <strong>{APP.name}</strong>
+          <p class="muted small">{APP.tagline}. {APP.credit}.</p>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>Produk</h4>
+        {FOOTER.product.map((l) => <a href={l.href}>{l.label}</a>)}
+      </div>
+      <div class="foot-col">
+        <h4>Pelajari</h4>
+        {FOOTER.learn.map((l) => <a href={l.href}>{l.label}</a>)}
+      </div>
+      <div class="foot-col">
+        <h4>Bantuan</h4>
+        {FOOTER.support.map((l) =>
+          l.bug ? (
+            <button type="button" data-bug-open>{l.label}</button>
+          ) : l.ext ? (
+            <a href={l.href} target="_blank" rel="noopener">{l.label}</a>
+          ) : (
+            <a href={l.href}>{l.label}</a>
+          )
+        )}
+      </div>
+      <div class="foot-col">
+        <h4>Legal</h4>
+        {FOOTER.legal.map((l) => <a href={l.href}>{l.label}</a>)}
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <p class="muted small">&copy; {new Date().getFullYear()} {APP.brand}. Versi {APP.version}.</p>
+      <span class="credit-pill">{APP.credit}</span>
+    </div>
+  </div>
+</footer>

@@ -4,28 +4,14 @@ import { APP, MODES } from '../data/app.js';
 
 const stack = [
   { label: 'Android', value: 'Flutter 3.47 · Dart 3.13 · Material 3' },
-  { label: 'Web', value: 'Astro 5 · vanilla JS · SSG' },
+  { label: 'Web', value: 'Astro 5 · vanilla JS · SSG · Vercel' },
   { label: 'AI', value: 'Groq Cloud (GPT-OSS 120B/20B, Qwen3.8 27B, Allam 2) + Orpheus TTS' },
   { label: 'Penyimpanan', value: 'SharedPreferences (Android) · localStorage (web)' },
-  { label: 'Build', value: 'GitHub Actions → APK, AAB, & Release otomatis' },
+  { label: 'Build', value: 'GitHub Actions untuk APK · Vercel untuk situs' },
 ];
 ---
 
-<Base title={`Tentang ${APP.name}`} description={`Tentang ${APP.name}, studio menulis AI ${APP.credit}.`}>
-  <header class="nav">
-    <div class="wrap nav-inner">
-      <a class="brand" href="/">
-        <img src="/logo.png" alt="" width="34" height="34" />
-        <span>{APP.name}</span>
-      </a>
-      <nav>
-        <a href="/">Beranda</a>
-        <a href="/app">Web App</a>
-        <a class="btn sm" href="/app">Mulai Nulis</a>
-      </nav>
-    </div>
-  </header>
-
+<Base current="about" title={`Tentang ${APP.name}`} description={`Tentang ${APP.name}, studio menulis AI ${APP.credit}.`}>
   <main class="wrap about">
     <section class="hero card">
       <img src="/logo.png" alt="" width="86" height="86" class="logo" />
@@ -38,14 +24,14 @@ const stack = [
       <p class="desc">
         {APP.name} adalah studio menulis AI yang membantu kamu mengubah satu
         kalimat ide menjadi tulisan jadi — artikel, deskripsi produk, caption,
-        naskah video, prompt gambar &amp; video, riset web, sampai balasan chat
+        naskah video, prompt gambar dan video, riset web, sampai balasan chat
         pembeli. Semua ditenagai Groq, salah satu layanan inferensi AI tercepat
-        saat ini — hasilnya muncul utuh dalam hitungan detik di permukaan kaca
-        yang tenang, lalu bisa langsung disunting atau disukai.
+        saat ini. Hasilnya muncul utuh dalam hitungan detik, lalu bisa langsung
+        disunting atau disukai.
       </p>
       <div class="cta">
         <a class="btn" href="/app">Buka Web App</a>
-        <a class="btn ghost" href={APP.releasesUrl} target="_blank" rel="noopener">Download APK</a>
+        <a class="btn ghost" href="/download">Download APK</a>
       </div>
     </section>
 
@@ -53,10 +39,10 @@ const stack = [
       <h2>Baru di versi 3.2</h2>
       <div class="modes">
         <span class="mode">Layar abu di generate diperbaiki</span>
-        <span class="mode">Animasi morphing kembali (blob, tombol, shimmer)</span>
+        <span class="mode">Animasi morphing di aplikasi Android</span>
         <span class="mode">Pindah halaman geser, bukan fade</span>
         <span class="mode">Floating overlay: izin tampil di atas aplikasi lain</span>
-        <span class="mode">Hasil bisa disunting &amp; disukai</span>
+        <span class="mode">Hasil bisa disunting dan disukai</span>
         <span class="mode">Widget beranda + ikon transparan</span>
       </div>
     </section>
@@ -87,32 +73,25 @@ const stack = [
         <a href="#" data-bug-open>Laporkan bug</a>
         <a href={APP.githubUrl} target="_blank" rel="noopener">Source code</a>
         <a href={APP.keysUrl} target="_blank" rel="noopener">Ambil API key Groq</a>
+        <a href="/changelog">Changelog</a>
+        <a href="/legal">Legal</a>
       </div>
     </section>
 
     <section class="card privasi">
       <h2>Privasi</h2>
       <p class="muted">
-        API key Groq milikmu disimpan hanya di perangkat/browser kamu dan
+        API key Groq milikmu disimpan hanya di perangkat atau browser kamu dan
         dikirim langsung ke <code>api.groq.com</code>. Tidak ada server
         perantara, tidak ada analitik, dan pengembang tidak menyimpan teks
-        apa pun yang kamu hasilkan.
+        apa pun yang kamu hasilkan. Detailnya ada di
+        <a href="/privacy">Kebijakan privasi</a>.
       </p>
     </section>
   </main>
 </Base>
 
 <style>
-  .nav { padding: 16px 0; border-bottom: 1px solid var(--line);
-         background: rgba(10,10,20,.7); backdrop-filter: blur(12px);
-         position: sticky; top: 0; z-index: 20; }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
-  .brand img { border-radius: 9px; }
-  .nav nav { display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 600; }
-  .nav nav a { color: var(--muted); }
-  .nav nav a:hover { color: var(--text); }
-
   .about { padding: 34px 22px 20px; display: grid; gap: 16px; }
   .hero { text-align: center; padding: 34px 24px; }
   .logo { border-radius: 22px; box-shadow: 0 18px 44px rgba(124,92,255,.35); }
@@ -138,11 +117,11 @@ const stack = [
 
   .link-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .link-grid a { padding: 13px 16px; border-radius: 14px; border: 1px solid var(--line);
-                 background: rgba(26,26,43,.6); font-size: 13.8px; font-weight: 600;
-                 transition: border-color .2s, transform .18s; }
-  .link-grid a:hover { border-color: var(--violet); transform: translateY(-2px); }
+                 background: rgba(26,26,43,.6); font-size: 13.8px; font-weight: 600; }
+  .link-grid a:hover { border-color: var(--violet); }
 
   .privasi p { font-size: 14px; }
+  .privasi a { color: #b9a6ff; text-decoration: underline; text-underline-offset: 3px; }
   code { background: rgba(124,92,255,.16); padding: 2px 6px; border-radius: 6px; font-size: 13px; }
 
   @media (max-width: 700px) {

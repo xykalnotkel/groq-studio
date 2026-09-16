@@ -1,0 +1,25 @@
+---
+import { APP, NAV } from '../data/app.js';
+const { current = '' } = Astro.props;
+---
+<header class="site-nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="/">
+      <img src="/logo.png" width="32" height="32" alt="" />
+      {APP.name}
+    </a>
+    <nav class="nav-links" id="nav-links">
+      {NAV.map((item) => (
+        <a href={item.href} class={current === item.id ? 'is-on' : ''}>{item.label}</a>
+      ))}
+    </nav>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Menu">
+      <span></span>
+    </button>
+  </div>
+</header>
+<script>
+  const toggle = document.getElementById('nav-toggle');
+  const links = document.getElementById('nav-links');
+  toggle?.addEventListener('click', () => links?.classList.toggle('open'));
+</script>

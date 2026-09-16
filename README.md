@@ -5,11 +5,11 @@ script video, prompt gambar & video, riset web, ringkasan URL**, dan banyak lagi
 semuanya ditenagai **Groq API** (GPT-OSS 120B/20B, Qwen3.8, Allam 2).
 
 **Repo:** <https://github.com/xykalnotkel/groq-studio> ·
-**CI:** setiap push ke `main` otomatis menjalankan format-check → analyze → test → build APK + AAB + web.
+**CI:** setiap push ke `main` otomatis menjalankan format-check → analyze → test → build APK + AAB. Situs web di-deploy Vercel.
 
 > Ada dua versi: **aplikasi Android** (folder ini) dan **versi web** (folder
-> [`web/`](web/README.md) — Astro) yang terdeploy otomatis di
-> **https://xykalnotkel.github.io/groq-studio/**.
+> [`web/`](web/README.md) — Astro) di **https://xystudio.my.id**.
+> Unduhan APK resmi: **https://dl.xystudio.my.id**.
 
 > Preview tampilan (statis): buka `preview/ui_preview.html` di browser.
 
@@ -248,7 +248,7 @@ npm install
 npm run dev      # http://localhost:4321
 ```
 
-Halaman: `/` landing · `/app` generator (streaming + riwayat) · `/about`.
+Situs: <https://xystudio.my.id> — `/` landing · `/app` generator · `/download` APK · `/about` dan halaman legal.
 Detail lengkap ada di [`web/README.md`](web/README.md).
 
 ## 🏪 Materi Play Store

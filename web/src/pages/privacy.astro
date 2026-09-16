@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP } from '../data/app.js';
+---
+
+<Base title={`Kebijakan privasi — ${APP.name}`} description={`Bagaimana ${APP.name} menangani data kamu.`}>
+  <main class="wrap doc">
+    <header class="doc-head">
+      <p class="kicker">Legal</p>
+      <h1>Kebijakan privasi</h1>
+      <p class="muted">Terakhir diperbarui 16 September 2026.</p>
+    </header>
+    <article class="prose">
+      <h2>Ringkas</h2>
+      <p>
+        Kami tidak menjalankan analitik, tidak membuat akun wajib, dan tidak menyimpan
+        tulisanmu di server {APP.brand}. Teks dikirim dari perangkatmu ke Groq.
+      </p>
+
+      <h2>Data di perangkat</h2>
+      <p>
+        Web App menyimpan API key, preferensi, riwayat, dan statistik di localStorage browser.
+        Aplikasi Android memakai penyimpanan lokal (SharedPreferences dan setara).
+        Menghapus data situs atau mencopot aplikasi menghapus salinan lokal itu.
+      </p>
+
+      <h2>Data yang dikirim ke Groq</h2>
+      <p>
+        Brief, instruksi mode, dan (untuk TTS Inggris) teks yang dibacakan dikirim ke
+        <code>api.groq.com</code> memakai key yang aktif. Groq memproses sesuai kebijakan mereka.
+        Kami tidak mengoperasikan proksi yang menyalin isi percakapan.
+      </p>
+
+      <h2>Unduhan dan hosting</h2>
+      <p>
+        Situs di-host di Vercel. Tautan unduhan di {APP.downloadUrl.replace('https://', '')}
+        mengarahkan ke berkas rilis. Log akses standar (IP, user-agent) bisa tercatat
+        pada penyedia hosting, DNS, dan GitHub sebagai bagian operasi jaringan, bukan untuk profil iklan.
+      </p>
+
+      <h2>Laporan bug</h2>
+      <p>
+        Formulir bug menyusun pesan di browser, lalu membuka WhatsApp. Isi laporan hanya
+        terkirim jika kamu menekan kirim.
+      </p>
+
+      <h2>Anak-anak</h2>
+      <p>
+        Layanan tidak ditujukan untuk anak di bawah 13 tahun. Jangan masukkan data pribadi anak.
+      </p>
+
+      <h2>Perubahan</h2>
+      <p>
+        Kebijakan ini bisa diperbarui. Tanggal di atas adalah acuan versi terbaru.
+        Pertanyaan: lewat <a href="/support">Bantuan</a>.
+      </p>
+    </article>
+  </main>
+</Base>

@@ -1,0 +1,58 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP } from '../data/app.js';
+
+const releases = [
+  {
+    ver: '3.2.0',
+    date: '16 Sep 2026',
+    items: [
+      'Layar abu saat generate di Android diperbaiki.',
+      'Animasi morphing kembali di aplikasi (blob, tombol, shimmer). Latar situs web tidak dianimasikan.',
+      'Pindah halaman memakai geser, bukan fade.',
+      'Floating overlay memakai izin tampil di atas aplikasi lain.',
+      'Hasil bisa disunting dan disukai; widget beranda dan ikon transparan tetap ada.',
+    ],
+  },
+  {
+    ver: '3.1.0',
+    date: '2026',
+    items: [
+      'Sunting dan suka hasil generate.',
+      'Formulir laporan bug yang dikirim ke WhatsApp.',
+      'Ikon adaptif transparan.',
+    ],
+  },
+  {
+    ver: '3.0.0',
+    date: '2026',
+    items: [
+      '24 mode generate, 12 gaya menulis.',
+      'Model Auto dengan rotasi dan failover.',
+      'Riset web dan ringkas URL.',
+      'TTS: suara perangkat, Orpheus untuk bahasa Inggris.',
+    ],
+  },
+];
+---
+
+<Base title={`Changelog — ${APP.name}`} description={`Catatan rilis ${APP.name}. Versi sekarang ${APP.version}.`}>
+  <main class="wrap doc">
+    <header class="doc-head">
+      <p class="kicker">Catatan rilis</p>
+      <h1>Changelog</h1>
+      <p class="muted">Versi aplikasi saat ini: {APP.version}. Unduh lewat <a href="/download">halaman Download</a>.</p>
+    </header>
+    {releases.map((r) => (
+      <article class="cl-item">
+        <div>
+          <div class="cl-ver">v{r.ver}</div>
+          <div class="cl-date">{r.date}</div>
+        </div>
+        <ul class="prose">
+          {r.items.map((it) => <li>{it}</li>)}
+        </ul>
+      </article>
+    ))}
+  </main>
+</Base>

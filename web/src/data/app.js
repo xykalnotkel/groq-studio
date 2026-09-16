@@ -9,13 +9,74 @@ export const APP = {
     'Studio menulis AI: judul, artikel, caption, riset web, prompt video, dan 24 mode lainnya. Ditenagai Groq.',
   waChannelUrl: 'https://whatsapp.com/channel/0029VbB7nwuJZg3ym6UQ4Z1L',
   waChannelName: 'Saluran WA XyVerse',
+  bugReportPhone: '6283116632566',
   bugReportUrl:
     'https://wa.me/6283116632566?text=Halo%20XyVerse!%20Saya%20mau%20lapor%20bug%20di%20XyStudio%20AI%20(web):%0A%0A%E2%80%A2%20Halaman:%0A%E2%80%A2%20Mode:%0A%E2%80%A2%20Cerita%20singkat:',
   githubUrl: 'https://github.com/xykalnotkel/groq-studio',
   keysUrl: 'https://console.groq.com/keys',
-  apkUrl:
-    'https://github.com/xykalnotkel/groq-studio/releases/download/v3.1.0/XyStudio-3.1.0-arm64-v8a.apk',
-  releasesUrl: 'https://github.com/xykalnotkel/groq-studio/releases/latest',
+  siteUrl: 'https://xystudio.my.id',
+  downloadUrl: 'https://dl.xystudio.my.id',
+  apkUrl: 'https://dl.xystudio.my.id/android',
+  apk32Url: 'https://dl.xystudio.my.id/android-32',
+  apkUniversalUrl: 'https://dl.xystudio.my.id/universal',
+  releasesUrl: 'https://dl.xystudio.my.id',
+};
+
+export const DOWNLOADS = [
+  {
+    id: 'android',
+    href: 'https://dl.xystudio.my.id/android',
+    file: 'XyStudio-3.2.0-arm64-v8a.apk',
+    label: 'Android 64-bit',
+    note: 'Pilihan utama. Hampir semua HP Android modern.',
+    primary: true,
+  },
+  {
+    id: 'android-32',
+    href: 'https://dl.xystudio.my.id/android-32',
+    file: 'XyStudio-3.2.0-armeabi-v7a.apk',
+    label: 'Android 32-bit',
+    note: 'HP Android lama.',
+  },
+  {
+    id: 'universal',
+    href: 'https://dl.xystudio.my.id/universal',
+    file: 'XyStudio-3.2.0-universal.apk',
+    label: 'Universal',
+    note: 'Semua arsitektur. Ukuran paling besar.',
+  },
+];
+
+export const NAV = [
+  { href: '/', label: 'Beranda', id: 'home' },
+  { href: '/app', label: 'Web App', id: 'app' },
+  { href: '/download', label: 'Download', id: 'download' },
+  { href: '/guide', label: 'Panduan', id: 'guide' },
+  { href: '/about', label: 'Tentang', id: 'about' },
+];
+
+export const FOOTER = {
+  product: [
+    { href: '/app', label: 'Web App' },
+    { href: '/download', label: 'Download APK' },
+    { href: '/changelog', label: 'Changelog' },
+    { href: '/guide', label: 'Panduan' },
+  ],
+  learn: [
+    { href: '/about', label: 'Tentang' },
+    { href: '/learn', label: 'Pelajari lebih lanjut' },
+    { href: '/changelog', label: 'Catatan rilis' },
+  ],
+  support: [
+    { href: '/support', label: 'Bantuan' },
+    { href: '#', label: 'Laporkan bug', bug: true },
+    { href: 'https://whatsapp.com/channel/0029VbB7nwuJZg3ym6UQ4Z1L', label: 'Saluran WA', ext: true },
+  ],
+  legal: [
+    { href: '/legal', label: 'Legal' },
+    { href: '/terms', label: 'Syarat penggunaan' },
+    { href: '/privacy', label: 'Kebijakan privasi' },
+  ],
 };
 
 // 24 mode generate — sama dengan versi Android supaya hasilnya konsisten.

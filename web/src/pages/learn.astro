@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP } from '../data/app.js';
+---
+
+<Base title={`Pelajari lebih lanjut — ${APP.name}`} description={`Cara kerja ${APP.name}, model Groq, dan kenapa hasilnya cepat.`}>
+  <main class="wrap doc">
+    <header class="doc-head">
+      <p class="kicker">Pelajari</p>
+      <h1>Pelajari lebih lanjut</h1>
+    </header>
+    <article class="prose">
+      <h2>Apa itu {APP.name}?</h2>
+      <p>
+        Studio menulis, bukan chatbot. Kamu pilih mode (judul, artikel, caption, riset, dan seterusnya),
+        kasih brief, lalu dapat hasil siap tempel. Aplikasi Android dan Web App memakai daftar mode yang sama.
+      </p>
+
+      <h2>Kenapa Groq?</h2>
+      <p>
+        Groq menjalankan model bahasa dengan latensi rendah. Teks panjang muncul utuh dalam hitungan detik.
+        Model yang dipakai saat ini: GPT-OSS 120B dan 20B, Qwen3.8 27B, Allam 2 7B, plus Whisper, Orpheus, dan Llama Guard.
+        Model yang sudah tidak tersedia tidak ditawarkan di Setelan.
+      </p>
+
+      <h2>Di mana teks diproses?</h2>
+      <p>
+        Perangkatmu mengirim brief langsung ke api.groq.com. Situs ini tidak punya backend yang menyimpan tulisanmu.
+        Kebijakan Groq berlaku untuk data yang mereka terima. Baca juga
+        <a href="/privacy">Kebijakan privasi</a>.
+      </p>
+
+      <h2>Android vs web</h2>
+      <p>
+        Android punya overlay mengambang, widget beranda, dan transisi geser.
+        Web App jalan di browser modern, dengan riwayat di localStorage.
+        Latar situs web diam (tidak dianimasikan); aplikasi Android tetap memakai morphing.
+      </p>
+
+      <h2>Unduhan</h2>
+      <p>
+        APK resmi hanya lewat <a href={APP.downloadUrl}>{APP.downloadUrl.replace('https://', '')}</a>.
+        Jangan unduh dari tautan acak.
+      </p>
+    </article>
+  </main>
+</Base>

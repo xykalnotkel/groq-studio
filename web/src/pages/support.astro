@@ -1,0 +1,56 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP } from '../data/app.js';
+---
+
+<Base title={`Bantuan — ${APP.name}`} description={`Bantuan, FAQ, dan laporan bug ${APP.name}.`}>
+  <main class="wrap doc">
+    <header class="doc-head">
+      <p class="kicker">Dukungan</p>
+      <h1>Bantuan</h1>
+    </header>
+    <article class="prose">
+      <h2>API key ditolak atau 401</h2>
+      <p>
+        Pastikan key diawali <code>gsk_</code> dan belum dihapus di konsol Groq.
+        Buat key baru di <a href={APP.keysUrl} target="_blank" rel="noopener">console.groq.com/keys</a>,
+        lalu simpan lagi di Setelan.
+      </p>
+
+      <h2>Kuota penuh (429)</h2>
+      <p>
+        Groq membatasi pemakaian gratis per menit. Model Auto akan pindah sendiri.
+        Kalau semua model penuh, tunggu sebentar lalu ulangi.
+      </p>
+
+      <h2>Riset web gagal di browser</h2>
+      <p>
+        Banyak situs memblokir baca dari browser (CORS). Coba aplikasi Android, atau ganti kata kunci.
+      </p>
+
+      <h2>Suara Orpheus minta syarat</h2>
+      <p>
+        TTS bahasa Inggris memakai Orpheus. Buka konsol Groq, setujui syarat modelnya, lalu coba lagi.
+        Bahasa lain memakai suara perangkat.
+      </p>
+
+      <h2>APK tidak terpasang</h2>
+      <p>
+        Pakai berkas 64-bit untuk HP modern. Izinkan pasang dari sumber tidak dikenal.
+        Unduh hanya dari <a href="/download">{APP.downloadUrl.replace('https://', '')}</a>.
+      </p>
+
+      <h2>Overlay tidak muncul</h2>
+      <p>
+        Di Android, izinkan "tampil di atas aplikasi lain" untuk {APP.name}. Bukan izin Picture-in-Picture.
+      </p>
+
+      <h2>Hubungi kami</h2>
+      <p>
+        <a href="#" data-bug-open>Kirim laporan bug lewat formulir</a>
+        (nanti terbuka WhatsApp). Atau gabung
+        <a href={APP.waChannelUrl} target="_blank" rel="noopener">{APP.waChannelName}</a>.
+      </p>
+    </article>
+  </main>
+</Base>

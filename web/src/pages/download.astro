@@ -1,0 +1,63 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP, DOWNLOADS } from '../data/app.js';
+---
+
+<Base current="download" title={`Download ${APP.name}`} description={`Unduh APK ${APP.name} ${APP.version} untuk Android. Tautan resmi: ${APP.downloadUrl}.`}>
+  <main class="wrap dl-grid">
+    <section class="card dl-card">
+      <p class="kicker">Unduhan resmi</p>
+      <h1>Download {APP.name}</h1>
+      <p class="muted" style="margin:10px 0 18px">
+        Versi {APP.version} untuk Android 7 ke atas. File diambil lewat
+        <code>{APP.downloadUrl.replace('https://', '')}</code> — bukan tautan GitHub.
+        Pilih sesuai HP kamu.
+      </p>
+      <div class="dl-list">
+        {DOWNLOADS.map((d) => (
+          <div class="dl-row">
+            <div>
+              <strong>{d.label}</strong>
+              <p class="muted small">{d.note}</p>
+              <p class="muted small">{d.file}</p>
+            </div>
+            <a class={d.primary ? 'btn sm' : 'btn sm ghost'} href={d.href}>{d.primary ? 'Unduh' : 'APK'}</a>
+          </div>
+        ))}
+      </div>
+      <p class="muted small" style="margin-top:16px">
+        Android bisa memperingatkan "sumber tidak dikenal". Itu normal untuk APK di luar Play Store.
+        Izinkan pemasangan dari browser, lalu buka filenya.
+      </p>
+    </section>
+
+    <aside class="card dl-card">
+      <h2>Cara pasang</h2>
+      <ol class="prose" style="margin-top:10px">
+        <li>Unduh APK 64-bit kalau HP-mu keluaran beberapa tahun terakhir.</li>
+        <li>Buka file dari notifikasi unduhan.</li>
+        <li>Kalau diminta, izinkan pasang dari sumber ini.</li>
+        <li>Buka {APP.name}, lalu isi API key Groq di Setelan (gratis).</li>
+      </ol>
+      <p class="muted small" style="margin-top:12px">
+        Butuh bantuan? Buka <a href="/support">halaman Bantuan</a>
+        atau <a href="#" data-bug-open>laporkan bug</a>.
+      </p>
+      <div style="margin-top:18px;display:flex;flex-direction:column;gap:10px">
+        <a class="btn" href="/app">Coba dulu di browser</a>
+        <a class="btn ghost" href="/changelog">Lihat changelog</a>
+      </div>
+    </aside>
+  </main>
+</Base>
+
+<style>
+  .kicker {
+    font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--cyan); margin-bottom: 8px;
+  }
+  h1 { font-size: 32px; font-weight: 800; letter-spacing: -.7px; line-height: 1.15; }
+  h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  code { background: rgba(124,92,255,.16); padding: 2px 6px; border-radius: 6px; font-size: 13px; }
+  a { color: #b9a6ff; }
+</style>

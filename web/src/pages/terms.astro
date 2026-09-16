@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP } from '../data/app.js';
+---
+
+<Base title={`Syarat penggunaan — ${APP.name}`} description={`Syarat penggunaan ${APP.name}.`}>
+  <main class="wrap doc">
+    <header class="doc-head">
+      <p class="kicker">Legal</p>
+      <h1>Syarat penggunaan</h1>
+      <p class="muted">Berlaku untuk situs {APP.siteUrl.replace('https://', '')}, unduhan APK, dan Web App. Terakhir diperbarui 16 September 2026.</p>
+    </header>
+    <article class="prose">
+      <h2>1. Penerimaan</h2>
+      <p>
+        Dengan memakai {APP.name} kamu setuju dengan syarat ini dan
+        <a href="/privacy">Kebijakan privasi</a>. Kalau tidak setuju, jangan pakai layanannya.
+      </p>
+
+      <h2>2. Apa yang kami sediakan</h2>
+      <p>
+        {APP.name} adalah alat bantu menulis yang memanggil Groq dari perangkatmu.
+        Hasil AI bisa salah, usang, atau tidak lengkap. Jangan andalkan sebagai nasihat hukum,
+        medis, keuangan, atau profesional.
+      </p>
+
+      <h2>3. Akun dan API key</h2>
+      <p>
+        Kami tidak mewajibkan akun {APP.brand}. Kamu memakai API key Groq milikmu
+        (atau key bawaan situs, kalau tersedia) dan patuh pada syarat Groq.
+        Jangan membagikan key, jangan memakai layanan untuk spam, penipuan, atau konten terlarang.
+      </p>
+
+      <h2>4. Konten kamu</h2>
+      <p>
+        Brief dan hasil adalah tanggung jawabmu. Kamu menjamin tidak mengirim materi yang
+        melanggar hukum atau hak orang lain. Kami tidak mengklaim hak cipta atas teks yang kamu hasilkan.
+      </p>
+
+      <h2>5. Unduhan</h2>
+      <p>
+        APK resmi hanya dari {APP.downloadUrl.replace('https://', '')}.
+        Pemasangan di luar toko aplikasi adalah risiko sendiri. Jangan sideload dari sumber lain
+        yang mengatasnamakan {APP.name}.
+      </p>
+
+      <h2>6. Ketersediaan</h2>
+      <p>
+        Layanan bergantung pada Groq dan jaringan. Kami boleh mengubah, menghentikan, atau
+        membatasi fitur tanpa pemberitahuan. Model bisa ditambah atau dihapus mengikuti Groq.
+      </p>
+
+      <h2>7. Penafian</h2>
+      <p>
+        Layanan diberikan apa adanya. {APP.brand} tidak menjamin ketersediaan, keakuratan, atau
+        kesesuaian untuk tujuan tertentu, sejauh diizinkan hukum yang berlaku.
+      </p>
+
+      <h2>8. Hukum</h2>
+      <p>
+        Syarat ini mengikuti hukum Republik Indonesia. Sengketa diupayakan diselesaikan secara musyawarah.
+      </p>
+    </article>
+  </main>
+</Base>

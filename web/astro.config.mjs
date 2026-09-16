@@ -4,10 +4,8 @@ import { defineConfig } from 'astro/config';
 // XyStudio AI — versi web.
 // Semua halaman statis (SSG); pemanggilan Groq dilakukan dari browser
 // karena api.groq.com mengizinkan CORS (access-control-allow-origin: *).
-//
-// Catatan deploy: kalau mau taruh di GitHub Pages (https://user.github.io/repo),
-// tambahkan: base: '/groq-studio',
 export default defineConfig({
+  site: 'https://xystudio.my.id',
   outDir: 'dist',
   server: {
     host: '0.0.0.0',
