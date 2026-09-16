@@ -29,6 +29,7 @@ export const DOWNLOADS = [
     file: 'XyStudio-3.2.2-arm64-v8a.apk',
     label: 'Android 64-bit',
     note: 'Pilihan utama. Hampir semua HP Android modern.',
+    sha256: '70dc3545a950eb8c90c2fdfff72a7164e907476aff0c32359784ceb457aeb3fa',
     primary: true,
   },
   {
@@ -37,6 +38,7 @@ export const DOWNLOADS = [
     file: 'XyStudio-3.2.2-armeabi-v7a.apk',
     label: 'Android 32-bit',
     note: 'HP Android lama.',
+    sha256: '03a6d51c076439c5f08cedc21ab94be59a1e3f86e6737c67bde8aaa1740b4b79',
   },
   {
     id: 'universal',
@@ -44,6 +46,7 @@ export const DOWNLOADS = [
     file: 'XyStudio-3.2.2-universal.apk',
     label: 'Universal',
     note: 'Semua arsitektur. Ukuran paling besar.',
+    sha256: '143ceccf6c5c16379ee277a4a57a9e2af5d8ccfd08f3d11179b6f42bd756b45f',
   },
 ];
 

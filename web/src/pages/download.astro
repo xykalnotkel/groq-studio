@@ -29,6 +29,7 @@ const shots = [
               <strong>{d.label}</strong>
               <p class="muted small">{d.note}</p>
               <p class="muted small">{d.file}</p>
+              {d.sha256 && <p class="muted small sha">SHA-256 {d.sha256}</p>}
             </div>
             <a class={d.primary ? 'btn sm' : 'btn sm ghost'} href={d.href}>{d.primary ? 'Unduh' : 'APK'}</a>
           </div>
@@ -100,8 +101,9 @@ const shots = [
           <h3>Cara cek sendiri</h3>
           <p class="muted">
             Unduh hanya dari <code>{APP.downloadUrl.replace('https://', '')}</code>.
-            Bandingkan SHA256 di catatan rilis GitHub. Unggah APK ke VirusTotal
-            kalau mau. Jangan pasang berkas yang dikirim orang lewat chat.
+            Bandingkan SHA-256 di kartu unduhan. APK 3.2.2 lolos ClamAV (bersih)
+            dan ditandatangani CN=XyVerse. Unggah ke VirusTotal kalau mau cek
+            mesin lain. Jangan pasang berkas yang dikirim orang lewat chat.
           </p>
         </div>
         <div>
