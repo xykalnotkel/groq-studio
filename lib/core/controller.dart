@@ -90,6 +90,7 @@ class AppController extends ChangeNotifier {
     if (_displayOutput.isNotEmpty) return _displayOutput;
     return _rawOutput;
   }
+
   String? get errorMessage => _errorMessage;
 
   /// Pesan progres ("Mencari sumber…", "Menulis dengan …").
