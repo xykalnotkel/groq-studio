@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'motion.dart';
 
@@ -63,15 +62,19 @@ class AppTheme {
           TargetPlatform.macOS: MorphPageTransitionsBuilder(),
         },
       ),
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(base.textTheme)
-          .apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface),
+      textTheme: base.textTheme.apply(
+        fontFamily: 'PlusJakartaSans',
+        bodyColor: scheme.onSurface,
+        displayColor: scheme.onSurface,
+      ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.plusJakartaSans(
+        titleTextStyle: TextStyle(
+          fontFamily: 'PlusJakartaSans',
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: scheme.onSurface,
@@ -123,8 +126,9 @@ class AppTheme {
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
-        labelTextStyle: WidgetStatePropertyAll(
-          GoogleFonts.plusJakartaSans(
+        labelTextStyle: const WidgetStatePropertyAll(
+          TextStyle(
+            fontFamily: 'PlusJakartaSans',
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),

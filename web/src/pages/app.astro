@@ -184,7 +184,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     </div>
   </div>
 
-<script define:vars={{ MODES, BUILD_KEY, APP, MODELS, AUTO_MODEL }}>
+<script define:vars={{ MODES, BUILD_KEY, APP, MODELS, AUTO_MODEL, TONES, LENGTHS }}>
   const $ = (id) => document.getElementById(id);
   const els = {
     modes: $('modes'), enginesRow: $('engine-row'), engines: $('engines'),
@@ -325,17 +325,19 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
 
   els.testKey.addEventListener('click', async () => {
     const key = currentKey();
-    if (!key) { els.keyStatus.textContent = 'Isi API key dulu ya.'; return; }
+    if (!key) { els.keyStatus.innerHTML = '<span class="xy-err-inline">Isi API key dulu ya.</span>'; return; }
     els.keyStatus.textContent = 'Menguji koneksi…';
     try {
       const r = await fetch('https://api.groq.com/openai/v1/models', {
         headers: { Authorization: `Bearer ${key}` },
       });
-      if (!r.ok) throw new Error(String(r.status));
+      if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
       const data = await r.json();
       els.keyStatus.textContent = `Terhubung! ${(data.data || []).length} model tersedia.`;
+      if (window.xyToast) window.xyToast('Koneksi Groq berhasil.', 'ok');
     } catch (err) {
-      els.keyStatus.textContent = `Gagal terhubung (${err.message}). Cek key & internet kamu.`;
+      const friendly = window.xyFriendlyError ? window.xyFriendlyError(err) : 'Gagal terhubung. Cek key & internet kamu.';
+      els.keyStatus.innerHTML = `<span class="xy-err-inline">${friendly}</span>`;
     }
   });
 
@@ -390,10 +392,20 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
       ctx.fillText(['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][d.getDay()], x + slot * 0.25, 78);
     });
   }
-  els.resetStats.addEventListener('click', () => {
-    if (!confirm('Reset semua statistik pemakaian? Riwayat hasil tidak ikut terhapus.')) return;
+  els.resetStats.addEventListener('click', async () => {
+    const ok = window.xyConfirm
+      ? await window.xyConfirm({
+          title: 'Reset statistik?',
+          body: 'Angka pemakaian di browser ini dihapus. Riwayat hasil tidak ikut terhapus.',
+          ok: 'Reset',
+          cancel: 'Batal',
+          danger: true,
+        })
+      : true;
+    if (!ok) return;
     try { localStorage.removeItem(STAT_STORE); } catch {}
     renderStats();
+    if (window.xyToast) window.xyToast('Statistik direset.', 'ok');
   });
 
   // ── riset web: cari sumber lalu dirangkum ───────────────────────
@@ -573,10 +585,17 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     if (busy) { controller?.abort(); return; }
 
     const brief = els.brief.value.trim();
-    if (!brief) { els.status.textContent = mode.kind === 'urlSummary' ? 'Tempel dulu URL halamannya ya.' : 'Tulis dulu brief-nya ya.'; return; }
+    if (!brief) {
+      const msg = mode.kind === 'urlSummary' ? 'Tempel dulu URL halamannya ya.' : 'Tulis dulu brief-nya ya.';
+      els.status.innerHTML = `<span class="xy-err-inline">${msg}</span>`;
+      if (window.xyToast) window.xyToast(msg, 'error');
+      return;
+    }
     const key = currentKey();
     if (!key) {
-      els.status.textContent = 'API key Groq belum ada. Buka Setelan lalu tempel key kamu.';
+      const msg = 'API key Groq belum ada. Buka Setelan lalu tempel key kamu.';
+      els.status.innerHTML = `<span class="xy-err-inline">${msg}</span>`;
+      if (window.xyToast) window.xyToast(msg, 'error');
       els.sheet.hidden = false;
       return;
     }
@@ -628,11 +647,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
 
           if (!res.ok) {
             const err = await res.json().catch(() => ({}));
-            const msg = err?.error?.message || `HTTP ${res.status}`;
-            const e = new Error(
-              res.status === 401 ? 'API key tidak valid. Cek lagi di Setelan.' :
-              res.status === 429 ? 'Kuota Groq penuh (rate limit).' : msg
-            );
+            const e = new Error(err?.error?.message || `HTTP ${res.status}`);
             e.status = res.status;
             throw e;
           }
@@ -698,12 +713,14 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
           recordStats(fullText);
         }
       } else {
-        els.status.textContent = 'Gagal: ' + err.message;
+        const friendly = (window.xyFriendlyError ? window.xyFriendlyError(err) : err.message);
+        els.status.innerHTML = `<span class="xy-err-inline">${escapeHtml(friendly)}</span>`;
+        if (window.xyToast) window.xyToast(friendly, 'error');
         if (fullText.trim()) {
           fullText = keepText(fullText);
           renderResult(true);
         } else {
-          els.result.innerHTML = `<p class="muted">Gagal menghasilkan teks. ${escapeHtml(err.message)}</p>`;
+          els.result.innerHTML = `<div class="xy-error"><strong>Tidak bisa menulis</strong><p>${escapeHtml(friendly)}</p></div>`;
         }
       }
     } finally {
@@ -721,6 +738,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     try {
       await navigator.clipboard.writeText(fullText);
       els.status.textContent = 'Teks berhasil disalin';
+      if (window.xyToast) window.xyToast('Teks disalin.', 'ok');
     } catch {
       els.status.textContent = 'Browser memblokir clipboard. Salin manual ya.';
     }
@@ -834,9 +852,11 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
         if (!r.ok) {
           const j = await r.json().catch(() => ({}));
           const msg = j?.error?.message || `HTTP ${r.status}`;
-          throw new Error(j?.error?.code === 'model_terms_required'
-            ? 'Suara Orpheus butuh persetujuan syarat di console Groq — silakan terima syaratnya di sana. Coba lagi setelahnya.'
+          const te = new Error(j?.error?.code === 'model_terms_required'
+            ? 'model_terms'
             : msg);
+          te.status = r.status;
+          throw te;
         }
         const blob = await r.blob();
         ttsAudio = new Audio(URL.createObjectURL(blob));
@@ -844,7 +864,9 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
         await ttsAudio.play();
         ttsSetState('playing', 'Sedang membaca — Orpheus (Groq)');
       } catch (err) {
-        ttsSetState('idle', 'Gagal: ' + err.message);
+        const friendly = window.xyFriendlyError ? window.xyFriendlyError(err) : err.message;
+        ttsSetState('idle', friendly);
+        if (window.xyToast) window.xyToast(friendly, 'error');
       }
       return;
     }
@@ -963,7 +985,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
 
   .result-pane { display: flex; flex-direction: column; min-height: 480px; }
   .result-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-  .result-actions { display: flex; gap: 8px; }
+  .result-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .result-box { flex: 1; overflow-y: auto; max-height: 60vh; padding: 4px 2px; }
   .history { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
   .hist-list { display: grid; gap: 8px; max-height: 220px; overflow-y: auto; }

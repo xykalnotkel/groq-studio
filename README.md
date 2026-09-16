@@ -30,6 +30,7 @@ tersimpan otomatis di riwayat.
 | 12 gaya menulis | Natural, Profesional, Padat & Tajam, Bercerita, Elegan, Santai, Persuasif, Informatif, Puitis, Lucu, Formal, Inspiratif — **nol emoji**: dilarang di prompt & disaring di kode |
 | Sunting & Suka hasil | Hasil bisa diedit langsung di aplikasi (tersimpan ke riwayat) dan diberi suka/batal suka |
 | Mode mengambang | Gelembung overlay (izin **Tampilkan di atas aplikasi lain**): generate 24 mode di atas aplikasi lain, geser posisi, ukuran K/S/B atau tarik sudut. PiP opsional |
+| FAQ | Halaman FAQ di situs: API key, ukuran APK, overlay, error |
 | Widget beranda | Pintasan 4 mode (Judul, Caption, Artikel, Ide) yang membuka aplikasi langsung ke mode tersebut |
 | Ikon adaptif | Glyph XyVerse tanpa background (transparan) |
 | Laporan bug | Formulir dalam aplikasi (perangkat, versi, mode, cerita) → terkirim rapi via WhatsApp |

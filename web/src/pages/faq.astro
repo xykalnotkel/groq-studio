@@ -1,0 +1,81 @@
+---
+import Base from '../layouts/Base.astro';
+import { APP } from '../data/app.js';
+
+const faqs = [
+  {
+    q: 'XyStudio AI ini apa?',
+    a: `${APP.name} adalah studio menulis. Kamu kasih satu kalimat, aplikasi yang nulis judul, artikel, caption, prompt gambar/video, riset, dan 20 mode lain. Jalan di Android dan di browser.`,
+  },
+  {
+    q: 'API key Groq dari mana? Berbayar?',
+    a: `Gratis. Buka <a href="${APP.keysUrl}" target="_blank" rel="noopener">console.groq.com/keys</a>, buat key (awalan gsk_), tempel di Setelan. Key hanya tersimpan di HP atau browser kamu — tidak dikirim ke server XyVerse.`,
+  },
+  {
+    q: 'Kenapa aplikasi terpasang 100 MB lebih?',
+    a: 'Itu biasanya karena kamu memasang APK <strong>Universal</strong> (semua arsitektur). Pakai unduhan <strong>Android 64-bit</strong> — ukuran pasang jauh lebih kecil. Jangan pasang berkas debug atau universal kecuali HP-mu 32-bit.',
+  },
+  {
+    q: 'APK mana yang harus kudownload?',
+    a: 'Hampir semua HP 2018 ke atas: <a href="/download">Android 64-bit</a>. HP sangat lama: 32-bit. Universal hanya jika kamu tidak yakin — ukurannya paling besar.',
+  },
+  {
+    q: 'Izin tampil di atas aplikasi lain itu apa?',
+    a: 'Itu izin overlay (bukan Picture-in-Picture). Dipakai gelembung mengambang supaya kamu bisa generate 24 mode di atas aplikasi lain, geser posisinya, dan atur ukuran K/S/B.',
+  },
+  {
+    q: 'Hasil generate hilang / layar abu?',
+    a: 'Versi 3.2.1 ke atas sudah menahan teks setelah streaming selesai. Kalau masih terjadi, perbarui APK. Di web, jangan tutup tab saat model sedang menulis.',
+  },
+  {
+    q: 'Error 401 / API key ditolak',
+    a: 'Key salah, kedaluwarsa, atau ada spasi. Buat key baru di konsol Groq, simpan lagi di Setelan, lalu Tes koneksi.',
+  },
+  {
+    q: 'Error 429 / kuota penuh',
+    a: 'Batas gratis Groq per menit. Model Auto akan pindah sendiri. Kalau semua model penuh, tunggu sekitar satu menit.',
+  },
+  {
+    q: 'Riset web atau ringkas URL gagal di browser',
+    a: 'Banyak situs memblokir baca dari browser (CORS). Coba aplikasi Android, atau ganti tautan/kata kunci.',
+  },
+  {
+    q: 'Suara Orpheus minta syarat',
+    a: 'TTS bahasa Inggris memakai Orpheus di Groq. Buka console Groq, setujui syarat modelnya, lalu coba lagi. Bahasa lain memakai suara perangkat.',
+  },
+  {
+    q: 'Kenapa hasilnya tanpa emoji?',
+    a: 'Sengaja. Prompt dan penyaring menolak emoji supaya teks siap tempel ke Play Store, iklan, dan dokumen.',
+  },
+  {
+    q: 'Data saya disimpan di mana?',
+    a: 'Di perangkat (aplikasi) atau localStorage (web). Tidak ada akun. Riwayat tidak diunggah ke server XyVerse. Permintaan generate langsung ke api.groq.com.',
+  },
+  {
+    q: 'Bisa dipakai tanpa HP Android?',
+    a: `Bisa. Buka <a href="/app">Web App</a> di browser. Overlay mengambang dan widget beranda hanya di Android.`,
+  },
+  {
+    q: 'Bagaimana lapor bug?',
+    a: 'Pakai <a href="#" data-bug-open>formulir laporan</a> — nanti terbuka WhatsApp dengan pesan rapi. Atau gabung <a href="' + APP.waChannelUrl + '" target="_blank" rel="noopener">' + APP.waChannelName + '</a>.',
+  },
+];
+---
+
+<Base current="faq" title={`FAQ — ${APP.name}`} description={`Pertanyaan yang sering ditanya tentang ${APP.name}: API key, ukuran APK, overlay, error, dan privasi.`}>
+  <main class="wrap doc">
+    <header class="doc-head">
+      <p class="kicker">Bantuan</p>
+      <h1>FAQ</h1>
+      <p class="muted">Jawaban singkat. Kalau belum ketemu, <a href="#" data-bug-open>laporkan bug</a> atau buka <a href="/support">Bantuan</a>.</p>
+    </header>
+    <div class="faq-list">
+      {faqs.map((item) => (
+        <details class="faq-item">
+          <summary>{item.q}</summary>
+          <div class="faq-body" set:html={item.a} />
+        </details>
+      ))}
+    </div>
+  </main>
+</Base>

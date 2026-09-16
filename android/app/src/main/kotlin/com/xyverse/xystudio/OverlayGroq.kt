@@ -212,7 +212,7 @@ class OverlayGroq {
         if (text.contains("Unable to resolve") || text.contains("Failed to connect")) {
             return "Tidak ada koneksi internet."
         }
-        return "Gagal: $text"
+        return "Tidak bisa menulis. Cek koneksi internet, lalu ulangi."
     }
 }
 

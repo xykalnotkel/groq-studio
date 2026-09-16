@@ -38,7 +38,6 @@ dependencies:
   shared_preferences: ^2.3.3
   share_plus: ^12.0.0
   url_launcher: ^6.3.1
-  google_fonts: ^6.2.1
   flutter_tts: ^4.2.3
   audioplayers: ^6.5.1
   path_provider: ^2.1.5
@@ -65,17 +64,28 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Font Plus Jakarta Sans dibundel agar tampil konsisten & tetap rapi
-  # saat perangkat sedang offline (google_fonts memakai aset ini duluan).
+  # Font Plus Jakarta Sans dibundel (tanpa unduh Google Fonts saat jalan).
   assets:
-    - assets/fonts/
-    - assets/wa_channel.png
-    - assets/wa_popup_43.png
+    - assets/wa_popup_43.webp
     - assets/app_icon_512.png
     - assets/xyverse_icon_white.png
     - assets/xyverse_icon_black.png
     - assets/xyverse_wordmark_white.png
     - assets/xyverse_wordmark_black.png
+
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
+          weight: 800
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -344,3 +344,196 @@ textarea:focus, input:focus, select:focus {
   .card { padding: 16px; border-radius: 18px; }
   .foot-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Screenshot / WebP rapi di HP ───────────────────────────────── */
+.phone-shot {
+  width: min(240px, 58vw);
+  aspect-ratio: 9 / 16;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #10101c;
+  flex: none;
+  scroll-snap-align: start;
+}
+.phone-shot img, .phone-shot picture, .phone-shot picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.shots {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(220px, 56vw);
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+  max-width: 100%;
+}
+.shots img { height: auto; max-width: 100%; }
+
+/* ── Select custom (bukan dropdown OS) ──────────────────────────── */
+select.xy-native {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  clip: rect(0 0 0 0);
+}
+.xy-select { position: relative; width: 100%; }
+.xy-select-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 13.6px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.xy-select.open .xy-select-btn,
+.xy-select-btn:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, .16);
+  outline: none;
+}
+.xy-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xy-select-caret {
+  width: 8px; height: 8px; flex: none;
+  border-right: 2px solid #9a9ab4;
+  border-bottom: 2px solid #9a9ab4;
+  transform: rotate(45deg) translate(-2px, -2px);
+}
+.xy-select.open .xy-select-caret { transform: rotate(-135deg) translate(-2px, -2px); }
+.xy-select-menu {
+  position: absolute; z-index: 80; left: 0; right: 0; top: calc(100% + 6px);
+  max-height: 260px; overflow-y: auto;
+  margin: 0; padding: 6px;
+  list-style: none;
+  background: #161624;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.45);
+}
+.xy-select-menu[hidden] { display: none; }
+.xy-select-menu li {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13.4px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+}
+.xy-select-menu li:hover { background: rgba(124,92,255,.14); }
+.xy-select-menu li[aria-selected="true"] {
+  background: linear-gradient(180deg, #8b70ff, #5b4bff);
+  color: #fff;
+}
+
+/* ── Toast & modal custom ───────────────────────────────────────── */
+.xy-toasts {
+  position: fixed; z-index: 200; right: 16px; bottom: 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  width: min(360px, calc(100vw - 28px));
+  pointer-events: none;
+}
+.xy-toast {
+  pointer-events: auto;
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #161624;
+  border: 1px solid var(--line);
+  box-shadow: 0 16px 40px rgba(0,0,0,.4);
+  font-size: 13.2px; font-weight: 600; line-height: 1.45;
+  animation: xy-in .22s ease both;
+}
+.xy-toast-error { border-color: rgba(239,68,68,.45); background: #1c1218; }
+.xy-toast-ok { border-color: rgba(37,211,102,.4); }
+.xy-toast.out { opacity: 0; transform: translateY(8px); transition: .25s; }
+.xy-toast-x {
+  margin-left: auto; width: 22px; height: 22px; flex: none;
+  border: 0; border-radius: 50%; background: rgba(255,255,255,.08);
+  color: #fff; cursor: pointer; position: relative;
+}
+.xy-toast-x:before, .xy-toast-x:after {
+  content: ''; position: absolute; left: 6px; right: 6px; top: 10px; height: 2px;
+  background: currentColor; border-radius: 2px;
+}
+.xy-toast-x:before { transform: rotate(45deg); }
+.xy-toast-x:after { transform: rotate(-45deg); }
+@keyframes xy-in { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+
+.xy-modal-overlay {
+  position: fixed; inset: 0; z-index: 210;
+  display: grid; place-items: center;
+  padding: 18px;
+  background: rgba(5,5,12,.66);
+  backdrop-filter: blur(6px);
+}
+.xy-modal {
+  width: min(420px, 100%);
+  background: #12121f;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.xy-modal-title { display: block; font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+.xy-modal-body { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+.xy-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+.xy-field-error { color: #ff8aa0; font-size: 12px; font-weight: 600; margin-top: 6px; }
+.xy-invalid { border-color: #ef4444 !important; }
+.xy-error {
+  padding: 14px 16px; border-radius: 16px;
+  border: 1px solid rgba(239,68,68,.4);
+  background: rgba(239,68,68,.08);
+}
+.xy-error strong { display: block; margin-bottom: 4px; color: #ffb4c0; }
+.xy-error p { margin: 0; color: #e8d0d6; font-size: 13.5px; }
+.xy-err-inline { color: #ff8aa0; font-weight: 700; }
+
+/* ── FAQ accordion ──────────────────────────────────────────────── */
+.faq-list { display: grid; gap: 10px; }
+.faq-item {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(20,20,36,.7);
+  overflow: hidden;
+}
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  font-weight: 800;
+  font-size: 14.5px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary:after {
+  content: ''; width: 8px; height: 8px; flex: none;
+  border-right: 2px solid #9a9ab4; border-bottom: 2px solid #9a9ab4;
+  transform: rotate(45deg);
+}
+.faq-item[open] summary:after { transform: rotate(-135deg); }
+.faq-item .faq-body {
+  padding: 0 16px 16px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.faq-item .faq-body p { margin-bottom: 8px; }
+.faq-item .faq-body a { color: #b9a6ff; text-decoration: underline; text-underline-offset: 3px; }

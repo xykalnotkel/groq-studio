@@ -110,8 +110,8 @@ jobs:
             ARGS="$ARGS --dart-define=GROQ_API_KEY=$GROQ_API_KEY"
           fi
 
-          flutter build apk $ARGS
-          flutter build apk $ARGS --split-per-abi
+          flutter build apk $ARGS --target-platform android-arm,android-arm64
+          flutter build apk $ARGS --split-per-abi --target-platform android-arm,android-arm64
           flutter build appbundle $ARGS
 
           VERSION=$(grep '^version:' pubspec.yaml | head -1 | awk '{print $2}' | cut -d+ -f1)

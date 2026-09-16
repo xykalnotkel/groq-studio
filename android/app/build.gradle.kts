@@ -46,6 +46,11 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Jangan bundel x86_64 (emulator). Universal jadi arm + arm64 saja
+        // supaya ukuran pasang tidak melonjak ke 100 MB.
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        }
     }
 
     signingConfigs {
@@ -68,6 +73,12 @@ android {
             }
             isMinifyEnabled = false
             isShrinkResources = false
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
         }
     }
 }

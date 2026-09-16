@@ -327,29 +327,30 @@ class GroqClient {
           'coba lagi. Sementara itu aplikasi memakai suara perangkat.';
     }
 
-    final detail = apiMessage == null ? '' : '\n\nDetail: $apiMessage';
-
     switch (statusCode) {
       case 400:
-        return 'Permintaan ditolak Groq. Model mungkin sudah tidak tersedia.$detail';
+        return 'Permintaan ditolak Groq. Model mungkin sudah tidak tersedia. Coba model lain.';
       case 401:
       case 403:
-        return 'API key tidak valid atau tidak punya akses. Cek kembali di menu Setelan.$detail';
+        return 'API key tidak valid atau tidak punya akses. Cek kembali di menu Setelan.';
       case 404:
-        return 'Endpoint/model tidak ditemukan.$detail';
+        return 'Model tidak ditemukan. Pilih model lain di Setelan.';
       case 413:
-        return 'Pesan terlalu panjang untuk model ini. Coba persingkat brief-nya.$detail';
+        return 'Pesan terlalu panjang untuk model ini. Coba persingkat brief-nya.';
       case 422:
-        return 'Ada parameter yang tidak valid.$detail';
+        return 'Ada pengaturan yang tidak diterima model. Coba turunkan panjang atau ganti model.';
       case 429:
-        return 'Kuota/limit Groq sedang penuh (rate limit). Tunggu sebentar lalu coba lagi.$detail';
+        return 'Kuota Groq sedang penuh. Tunggu sebentar, atau biarkan Auto pindah model.';
       case 498:
-        return 'Koneksi ke Groq gagal. Periksa jaringan internet kamu.$detail';
+        return 'Tidak ada koneksi internet. Cek Wi-Fi atau data seluler kamu.';
       default:
         if (statusCode >= 500) {
-          return 'Server Groq sedang bermasalah (kode $statusCode). Coba lagi nanti.$detail';
+          return 'Server Groq lagi bermasalah. Coba lagi beberapa saat.';
         }
-        return 'Gagal menghubungi Groq (kode $statusCode).$detail';
+        if (apiMessage != null && apiMessage.toLowerCase().contains('rate')) {
+          return 'Kuota Groq sedang penuh. Tunggu sebentar lalu coba lagi.';
+        }
+        return 'Gagal menghubungi Groq. Cek koneksi dan API key, lalu ulangi.';
     }
   }
 }

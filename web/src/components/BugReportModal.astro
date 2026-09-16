@@ -11,7 +11,7 @@ import { APP } from '../data/app.js';
 ---
 
 <div class="bug-overlay" id="bug-modal" hidden>
-  <form class="bug-card" id="bug-form" role="dialog" aria-modal="true" aria-labelledby="bug-title">
+  <form class="bug-card" id="bug-form" data-xy-form role="dialog" aria-modal="true" aria-labelledby="bug-title" novalidate>
     <div class="bug-head">
       <span class="bug-ico" aria-hidden="true">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="#7C5CFF"><path d="M20 8h-2.2a6 6 0 0 0-4.3-3.9l1.2-1.2-1.4-1.4-2 2a1.5 1.5 0 0 1-2.6 0l-2-2L5.3 2.9l1.2 1.2A6 6 0 0 0 2.2 8H0v2h2v2H0v2h2a6 6 0 0 0 4.5 5.8l-1.2 1.2 1.4 1.4 2.1-2.1c.7.2 1.4.3 2.2.3s1.5-.1 2.2-.3l2.1 2.1 1.4-1.4-1.2-1.2A6 6 0 0 0 22 14h2v-2h-2v-2h2V8h-4Z" transform="scale(.92) translate(1,1)"/></svg>
@@ -29,31 +29,34 @@ import { APP } from '../data/app.js';
 
     <label class="bug-field">
       <span>Perangkat / HP</span>
-      <input id="bug-device" required placeholder="cth. Samsung Galaxy A54, Windows 11" />
+      <input id="bug-device" required data-error="Isi nama perangkat atau HP kamu." placeholder="cth. Samsung Galaxy A54, Windows 11" />
     </label>
 
     <div class="bug-row">
       <label class="bug-field">
         <span>Versi aplikasi</span>
-        <input id="bug-version" required value={APP.version} />
+        <input id="bug-version" required data-error="Isi versi aplikasinya." value={APP.version} />
       </label>
       <label class="bug-field">
         <span>Mode yang dipakai</span>
         <select id="bug-mode">
           <option>Tidak spesifik</option>
           <option>Judul</option>
-          <option>Caption</option>
+          <option>Deskripsi</option>
           <option>Artikel</option>
-          <option>Ide Konten</option>
+          <option>Caption</option>
+          <option>Overlay mengambang</option>
           <option>Pengaturan / Riwayat</option>
           <option>Suara (Dengarkan)</option>
+          <option>Web App</option>
+          <option>Lainnya</option>
         </select>
       </label>
     </div>
 
     <label class="bug-field">
       <span>Ceritakan bugnya</span>
-      <textarea id="bug-story" rows="4" required
+      <textarea id="bug-story" rows="4" required data-error="Ceritakan dulu bugnya, ya."
         placeholder="Apa yang kamu lakukan, apa yang terjadi, dan apa yang seharusnya terjadi..."></textarea>
     </label>
 

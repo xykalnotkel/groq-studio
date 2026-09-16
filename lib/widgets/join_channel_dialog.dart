@@ -9,7 +9,7 @@ import 'bug_report_dialog.dart';
 
 /// Popup ajakan gabung ke saluran WhatsApp XyVerse — versi 3.1 "quiet".
 ///
-/// * Header berupa **ilustrasi statis 4:3** (`assets/wa_popup_43.png`)
+/// * Header berupa **ilustrasi statis 4:3** (`assets/wa_popup_43.webp`)
 ///   dengan badge kredit "Built in XYVERSE" dan tombol X — tanpa animasi.
 /// * Centang **Jangan tampilkan lagi** disimpan permanen di perangkat.
 /// * Tombol **Laporkan bug** membuka formulir laporan, lalu dikirim via WA.
@@ -311,7 +311,7 @@ class _StaticHeader extends StatelessWidget {
         children: <Widget>[
           // Ilustrasi kaca statis — tanpa animasi apa pun.
           Image.asset(
-            'assets/wa_popup_43.png',
+            'assets/wa_popup_43.webp',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stack) => Container(
               decoration: const BoxDecoration(

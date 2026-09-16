@@ -51,7 +51,7 @@ export const NAV = [
   { href: '/', label: 'Beranda', id: 'home' },
   { href: '/app', label: 'Web App', id: 'app' },
   { href: '/download', label: 'Download', id: 'download' },
-  { href: '/guide', label: 'Panduan', id: 'guide' },
+  { href: '/faq', label: 'FAQ', id: 'faq' },
   { href: '/about', label: 'Tentang', id: 'about' },
 ];
 
@@ -65,9 +65,11 @@ export const FOOTER = {
   learn: [
     { href: '/about', label: 'Tentang' },
     { href: '/learn', label: 'Pelajari lebih lanjut' },
+    { href: '/guide', label: 'Panduan' },
     { href: '/changelog', label: 'Catatan rilis' },
   ],
   support: [
+    { href: '/faq', label: 'FAQ' },
     { href: '/support', label: 'Bantuan' },
     { href: '#', label: 'Laporkan bug', bug: true },
     { href: 'https://whatsapp.com/channel/0029VbB7nwuJZg3ym6UQ4Z1L', label: 'Saluran WA', ext: true },

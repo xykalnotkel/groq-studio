@@ -12,7 +12,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:xystudio/app.dart';
@@ -127,10 +126,6 @@ an dengan tiga langkah sederhana yang realistis dan mudah dilakukan.
 ''';
 
 void main() {
-  setUpAll(() {
-    GoogleFonts.config.allowRuntimeFetching = false;
-  });
-
   testWidgets('01 — Halaman utama', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'hide_channel_popup': true,
