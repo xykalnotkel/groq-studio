@@ -118,15 +118,15 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           mkdir -p dist
           cp "build/app/outputs/flutter-apk/app-$MODE.apk" \
-             "dist/GroqStudio-$VERSION-universal.apk"
+             "dist/XyStudio-$VERSION-universal.apk"
           for f in build/app/outputs/flutter-apk/*-$MODE.apk; do
             case "$f" in
               */app-$MODE.apk) continue ;;
             esac
             ABI=$(basename "$f" | sed -E "s/app-(.+)-$MODE\.apk/\1/")
-            cp "$f" "dist/GroqStudio-$VERSION-$ABI.apk"
+            cp "$f" "dist/XyStudio-$VERSION-$ABI.apk"
           done
-          cp "build/app/outputs/bundle/$MODE/app-$MODE.aab" "dist/GroqStudio-$VERSION.aab"
+          cp "build/app/outputs/bundle/$MODE/app-$MODE.aab" "dist/XyStudio-$VERSION.aab"
           ls -lh dist
 
       - name: Upload symbol obfuscation
