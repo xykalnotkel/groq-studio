@@ -32,12 +32,19 @@ class JoinChannelDialog extends StatefulWidget {
       barrierColor: Colors.black.withValues(alpha: 0.55),
       transitionDuration: AppMotion.normal,
       transitionBuilder: (context, animation, secondary, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: AppMotion.emphasized,
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: AppMotion.emphasized,
+        );
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.08),
+            end: Offset.zero,
+          ).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.92, end: 1).animate(curved),
+            child: child,
           ),
-          child: child,
         );
       },
       pageBuilder: (context, _, _) => JoinChannelDialog(controller: controller),

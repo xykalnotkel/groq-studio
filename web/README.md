@@ -5,10 +5,10 @@ Live: **https://xykalnotkel.github.io/groq-studio/** — deploy otomatis via Git
 Astro + vanilla JS, static (SSG). Jalan di browser mana pun, manggil **Groq API
 langsung dari browser** (api.groq.com mengizinkan CORS: `access-control-allow-origin: *`).
 
-Fitur v3: 24 mode, 12 gaya menulis, model **Auto (muter)** dengan rotasi &
+Fitur v3.2: 24 mode, 12 gaya menulis, model **Auto (muter)** dengan rotasi &
 failover 429/5xx, sunting & suka hasil, statistik (localStorage), formulir bug, tombol
 **Dengarkan** (Web Speech API / Orpheus Groq untuk bahasa Inggris), mode Riset
-Web & Baca URL (fetch lewat proxy CORS), dan popup saluran WA 4:3 dengan logo
+Web & Baca URL (fetch lewat proxy CORS), latar morphing, dan popup saluran WA 4:3 dengan logo
 XyVerse.
 
 ## Menjalankan

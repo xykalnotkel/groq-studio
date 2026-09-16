@@ -87,6 +87,11 @@ import { APP } from '../data/app.js';
     border-radius: 26px;
     overflow: hidden;
     box-shadow: 0 40px 90px rgba(0, 0, 0, .6);
+    animation: cp-slide .4s cubic-bezier(.2, 0, 0, 1) both;
+  }
+  @keyframes cp-slide {
+    from { transform: translateY(28px) scale(.94); }
+    to { transform: none; }
   }
 
   /* Header 4:3 statis — hanya gambar, tanpa animasi. */

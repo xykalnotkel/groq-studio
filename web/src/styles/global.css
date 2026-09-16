@@ -34,7 +34,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 22px; }
 
-/* ── Latar kaca statis ("quiet surface", tanpa morph) ───────────── */
+/* ── Latar morphing (blob bergerak pelan) ───────────────────────── */
 .morph-backdrop {
   position: fixed;
   inset: 0;
@@ -48,20 +48,29 @@ button, input, textarea, select { font: inherit; color: inherit; }
   filter: blur(46px);
   opacity: 0.5;
   border-radius: 50%;
+  will-change: transform;
 }
 .morph-backdrop span:nth-child(1) {
   width: 46vw; height: 46vw; top: -12vw; right: -8vw;
   background: linear-gradient(135deg, var(--indigo), var(--cyan));
+  animation: blob-float 22s ease-in-out infinite;
 }
 .morph-backdrop span:nth-child(2) {
   width: 38vw; height: 38vw; top: 38vh; left: -14vw;
   background: linear-gradient(135deg, var(--pink), var(--violet));
   opacity: 0.38;
+  animation: blob-float 18s ease-in-out infinite reverse;
 }
 .morph-backdrop span:nth-child(3) {
   width: 42vw; height: 42vw; bottom: -14vw; right: 8vw;
   background: linear-gradient(135deg, var(--cyan), var(--violet));
   opacity: 0.3;
+  animation: blob-float 26s ease-in-out infinite 2s;
+}
+@keyframes blob-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(5%, 7%) scale(1.08); }
+  66% { transform: translate(-6%, 3%) scale(0.94); }
 }
 
 /* ── Komponen ───────────────────────────────────────────────────── */

@@ -86,10 +86,8 @@ class _ResultViewState extends State<ResultView> {
         borderRadius: BorderRadius.circular(AppTheme.radius),
         gradient: LinearGradient(
           colors: <Color>[
-            widget.mode.color.withValues(alpha: dark ? 0.14 : 0.08),
-            (dark ? const Color(0xFF141424) : Colors.white).withValues(
-              alpha: 0.95,
-            ),
+            widget.mode.color.withValues(alpha: dark ? 0.18 : 0.10),
+            dark ? const Color(0xFF141424) : Colors.white,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -221,9 +219,12 @@ class _ResultViewState extends State<ResultView> {
                     color: widget.mode.color,
                   ),
                   const SizedBox(width: 5),
-                  Flexible(
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 240),
                     child: Text(
                       'dijawab oleh ${widget.model}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,

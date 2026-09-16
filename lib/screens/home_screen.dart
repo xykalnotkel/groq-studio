@@ -72,16 +72,43 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  /// Masuk mode mengambang (Picture-in-Picture) — aplikasi tetap terlihat
-  /// walau pengguna membuka aplikasi lain.
+  /// Mode mengambang: minta izin "tampil di atas aplikasi lain", lalu
+  /// tampilkan gelembung overlay + PiP (kalau perangkat mendukung).
   Future<void> _enterPip() async {
     try {
-      final ok = await _pipChannel.invokeMethod<bool>('enterPip') ?? false;
-      if (!mounted) return;
-      if (!ok) {
+      final hasOverlay =
+          await _pipChannel.invokeMethod<bool>('hasOverlayPermission') ?? false;
+      if (!hasOverlay) {
+        await _pipChannel.invokeMethod<bool>('requestOverlayPermission');
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Mode mengambang tidak didukung perangkat ini'),
+            content: Text(
+              'Izinkan "Tampilkan di atas aplikasi lain", lalu tekan tombol mengambang lagi.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final snippet = controller.output.trim();
+      await _pipChannel.invokeMethod<bool>('startFloating', <String, String>{
+        'title': AppInfo.name,
+        'snippet': snippet.isEmpty
+            ? 'Siap menulis. Buka aplikasi untuk generate.'
+            : (snippet.length > 120
+                  ? '${snippet.substring(0, 120)}…'
+                  : snippet),
+      });
+
+      final pipOk = await _pipChannel.invokeMethod<bool>('enterPip') ?? false;
+      if (!mounted) return;
+      if (!pipOk) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Gelembung mengambang aktif. Kamu bisa pindah aplikasi — XyStudio tetap terlihat.',
+            ),
           ),
         );
       }
@@ -238,8 +265,22 @@ class _HomeScreenState extends State<HomeScreen>
       );
     }
 
-    // v3.1 "quiet": pergantian keadaan langsung, tanpa morph/transisi.
-    return KeyedSubtree(key: ValueKey<String>(key), child: child);
+    // Morph halus antar keadaan (kosong → loading → hasil → error).
+    return AnimatedSwitcher(
+      duration: AppMotion.normal,
+      switchInCurve: AppMotion.emphasized,
+      switchOutCurve: AppMotion.standard,
+      transitionBuilder: morphTransition,
+      layoutBuilder: (currentChild, previousChildren) => Stack(
+        alignment: Alignment.topCenter,
+        clipBehavior: Clip.none,
+        children: <Widget>[...previousChildren, ?currentChild],
+      ),
+      child: KeyedSubtree(
+        key: ValueKey<String>(key),
+        child: RepaintBoundary(child: child),
+      ),
+    );
   }
 }
 
@@ -818,6 +859,58 @@ class _LoadingCard extends StatelessWidget {
           }),
         ],
       ),
+    );
+  }
+}
+
+class _ShimmerBar extends StatefulWidget {
+  const _ShimmerBar({required this.delay, required this.color});
+
+  final int delay;
+  final Color color;
+
+  @override
+  State<_ShimmerBar> createState() => _ShimmerBarState();
+}
+
+class _ShimmerBarState extends State<_ShimmerBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(Duration(milliseconds: widget.delay), () {
+      if (mounted) _controller.repeat(reverse: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          height: 12,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: widget.color.withValues(
+              alpha: 0.10 + 0.18 * _controller.value,
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -552,9 +552,18 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
 
   function setBusy(v) { busy = v; syncModeUI(); els.generate.classList.toggle('stop', v); }
 
-  // v3.1 "quiet": hasil dirender utuh apa adanya, tanpa animasi ketik.
-  function renderResult() {
-    els.result.innerHTML = renderMd(fullText);
+  // Hasil dirender utuh. Parsing markdown dibungkus try/catch supaya
+  // fence yang belum tertutup tidak merusak panel hasil.
+  let lastRenderAt = 0;
+  function renderResult(force) {
+    const now = performance.now();
+    if (!force && now - lastRenderAt < 50) return;
+    lastRenderAt = now;
+    try {
+      els.result.innerHTML = renderMd(fullText);
+    } catch (err) {
+      els.result.textContent = fullText;
+    }
   }
 
   function showBadge(label) {
@@ -576,7 +585,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     }
 
     setBusy(true);
-    fullText = ''; twShown = 0; answeredBy = null; els.badge.hidden = true;
+    fullText = ''; answeredBy = null; els.badge.hidden = true;
     els.listen.disabled = true; els.copy.disabled = true;
     els.result.innerHTML = '<p class="muted">Sedang bekerja…</p>';
 
@@ -649,13 +658,13 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
               try {
                 const json = JSON.parse(data);
                 const delta = json?.choices?.[0]?.delta?.content;
-                if (delta) { fullText += delta; renderResult(); }
+                if (delta) { fullText += delta; renderResult(false); }
               } catch {}
             }
           }
 
           fullText = stripEmoji(fullText);
-          renderResult();
+          renderResult(true);
 
           const secs = ((performance.now() - started) / 1000).toFixed(1);
           els.status.textContent = `Selesai dalam ${secs}s · ${countWords(fullText)} kata · ${target.label}`;
@@ -684,7 +693,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
         els.status.textContent = 'Dihentikan.';
         if (fullText.trim()) {
           fullText = stripEmoji(fullText);
-          els.result.innerHTML = renderMd(fullText);
+          renderResult(true);
           els.listen.disabled = false; els.copy.disabled = false;
           els.edit.disabled = false; els.like.disabled = false;
           currentId = saveHistory(fullText, answeredBy || '—');
@@ -759,7 +768,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
     const next = els.editText.value.trim();
     if (!next) return;
     fullText = next;
-    renderResult();
+    renderResult(true);
     const list = loadHistory();
     const item = list.find((h) => h.id === currentId);
     if (item) {
@@ -907,7 +916,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
         if (!item) return;
         fullText = item.output;
         currentId = item.id;
-        els.result.innerHTML = renderMd(fullText);
+        renderResult(true);
         els.brief.value = item.brief;
         showBadge(item.model || '—');
         els.listen.disabled = false; els.copy.disabled = false;

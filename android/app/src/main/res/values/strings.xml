@@ -7,4 +7,9 @@
     <string name="widget_mode_caption">Caption</string>
     <string name="widget_mode_artikel">Artikel</string>
     <string name="widget_mode_ide">Ide</string>
+    <string name="overlay_channel_name">Mode mengambang</string>
+    <string name="overlay_notification">XyStudio mengambang di atas aplikasi lain</string>
+    <string name="overlay_default_snippet">Siap menulis. Ketuk untuk membuka aplikasi.</string>
+    <string name="overlay_open">Buka aplikasi</string>
+    <string name="overlay_close">Tutup</string>
 </resources>

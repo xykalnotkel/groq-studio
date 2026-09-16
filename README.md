@@ -14,7 +14,7 @@ semuanya ditenagai **Groq API** (GPT-OSS 120B/20B, Qwen3.8, Allam 2).
 > Preview tampilan (statis): buka `preview/ui_preview.html` di browser.
 
 Cukup tulis satu kalimat tentang idemu, pilih dari 24 mode, tekan tombol. Hasilnya
-muncul utuh dalam hitungan detik di permukaan kaca yang tenang — bisa langsung
+muncul dalam hitungan detik di permukaan morphing — bisa langsung
 **disunting**, **disukai**, **didengarkan** (TTS), disalin, dibagikan, dan
 tersimpan otomatis di riwayat.
 
@@ -29,7 +29,7 @@ tersimpan otomatis di riwayat.
 | Daftar model live | Diambil dari `GET /models`, filter otomatis: whisper/orpheus/guard/safeguard/compound tidak muncul |
 | 12 gaya menulis | Natural, Profesional, Padat & Tajam, Bercerita, Elegan, Santai, Persuasif, Informatif, Puitis, Lucu, Formal, Inspiratif — **nol emoji**: dilarang di prompt & disaring di kode |
 | Sunting & Suka hasil | Hasil bisa diedit langsung di aplikasi (tersimpan ke riwayat) dan diberi suka/batal suka |
-| Mode mengambang (PiP) | Tombol Picture-in-Picture: aplikasi tetap terlihat walau pindah aplikasi; auto-melayang saat minimize (Android 12+) |
+| Mode mengambang | Gelembung overlay (izin **Tampilkan di atas aplikasi lain**) + Picture-in-Picture supaya aplikasi tetap terlihat walau pindah aplikasi |
 | Widget beranda | Pintasan 4 mode (Judul, Caption, Artikel, Ide) yang membuka aplikasi langsung ke mode tersebut |
 | Ikon adaptif | Glyph XyVerse tanpa background (transparan) |
 | Laporan bug | Formulir dalam aplikasi (perangkat, versi, mode, cerita) → terkirim rapi via WhatsApp |
@@ -44,17 +44,16 @@ tersimpan otomatis di riwayat.
 | Tema | Gelap / Terang / ikut sistem, font Plus Jakarta Sans |
 | Tanpa backend | Aplikasi ngobrol langsung ke `api.groq.com` |
 
-## UI/UX: quiet surface — kaca cair yang tenang
+## UI/UX: morphing surface
 
-Sejak v3.1 semua animasi output/feedback dihapus atas permintaan pengguna: tidak ada
-typewriter, shimmer, blob bergerak, maupun hero flight. Yang tersisa hanya fade halus
-untuk perpindahan halaman (`lib/theme/motion.dart`), sehingga permukaan terasa seperti
-kaca cair yang tenang:
+v3.2 mengembalikan gerak morphing (atas permintaan) dan **mengganti fade halaman
+dengan geser**. Typewriter tetap dimatikan — itu yang bikin layar abu waktu generate.
 
-- **Latar kaca statis** — gradien radial lembut, deterministik per halaman, tanpa repaint berkala.
-- **Hasil utuh seketika** — streaming tetap ada (teks bertambah), tetapi tanpa animasi ketik.
-- **Loading tenang** — kerangka garis statis, tanpa shimmer.
-- **Transisi halaman** — fade pendek ala Material, tanpa bounce/scale.
+- **Latar blob morphing** — radial gradient yang bentuknya bernapas pelan, tanpa `saveLayer` (itu yang membuat Impeller menampilkan layar abu).
+- **Tombol morph** — idle lebar penuh, loading jadi pil, streaming jadi tombol stop bundar.
+- **Loading shimmer** — kerangka garis yang bernapas.
+- **Transisi halaman** — geser dari kanan, bukan fade (`lib/theme/motion.dart`).
+- **Hasil streaming** — teks polos selama menulis, markdown rapi setelah selesai (mencegah layar abu).
 - Material 3, sudut membulat konsisten, tipografi Plus Jakarta Sans.
 
 ---
@@ -65,10 +64,10 @@ Rilis terbaru: <https://github.com/xykalnotkel/groq-studio/releases/latest>
 
 | File | Untuk |
 |---|---|
-| `XyStudio-3.1.0-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
-| `XyStudio-3.1.0-armeabi-v7a.apk` | HP Android lama / 32-bit |
-| `XyStudio-3.1.0-universal.apk` | Semua arsitektur (ukuran paling besar) |
-| `XyStudio-3.1.0.aab` | Untuk diunggah ke Play Store |
+| `XyStudio-3.2.0-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
+| `XyStudio-3.2.0-armeabi-v7a.apk` | HP Android lama / 32-bit |
+| `XyStudio-3.2.0-universal.apk` | Semua arsitektur (ukuran paling besar) |
+| `XyStudio-3.2.0.aab` | Untuk diunggah ke Play Store |
 
 APK-nya **aman dipasang** (Unknown Sources), tapi karena ditandatangani dengan key debug,
 Android bisa meminta konfirmasi. Isi API key Groq kamu sendiri di tab **Setelan**.

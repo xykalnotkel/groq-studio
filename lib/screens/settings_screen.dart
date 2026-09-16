@@ -7,6 +7,7 @@ import '../widgets/bug_report_dialog.dart';
 import '../core/controller.dart';
 import '../models/settings.dart';
 import '../theme/app_theme.dart';
+import '../theme/motion.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/morphing_background.dart';
@@ -512,7 +513,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           ),
                           trailing: const Icon(Icons.chevron_right_rounded),
                           onTap: () => Navigator.of(context).push<void>(
-                            MaterialPageRoute<void>(
+                            MorphPageRoute<void>(
                               builder: (_) => StatisticsScreen(
                                 controller: widget.controller,
                               ),

@@ -44,6 +44,8 @@ class AppController extends ChangeNotifier {
   List<GroqModelInfo> _models = GroqModelInfo.fallback;
   GenerationStatus _status = GenerationStatus.idle;
   String _rawOutput = '';
+  String _displayOutput = '';
+  DateTime? _lastStreamNotify;
   String? _errorMessage;
   String? _statusMessage;
   String? _answeredBy;
@@ -78,7 +80,11 @@ class AppController extends ChangeNotifier {
   UsageStats get stats => _stats;
 
   /// Keluaran yang sudah dibersihkan dari emoji (disaring di kode).
-  String get output => stripEmoji(_rawOutput);
+  ///
+  /// Saat streaming memakai teks mentah (tanpa regex berat tiap token)
+  /// supaya UI tidak macet/abu. Disaring penuh saat generate selesai.
+  String get output =>
+      _status == GenerationStatus.streaming ? _rawOutput : _displayOutput;
   String? get errorMessage => _errorMessage;
 
   /// Pesan progres ("Mencari sumber…", "Menulis dengan …").
@@ -329,7 +335,7 @@ class AppController extends ChangeNotifier {
           )) {
             if (_genToken != token) return;
             _rawOutput += delta;
-            notifyListeners();
+            _notifyStream();
           }
         } else {
           final text = await client.complete(
@@ -388,10 +394,12 @@ class AppController extends ChangeNotifier {
     if (_rawOutput.trim().isNotEmpty) {
       _status = GenerationStatus.success;
       _statusMessage = null;
+      _refreshDisplay();
       _saveToHistory();
     } else {
       _status = GenerationStatus.idle;
       _statusMessage = null;
+      _displayOutput = '';
     }
     notifyListeners();
   }
@@ -401,10 +409,33 @@ class AppController extends ChangeNotifier {
     _stopTicker();
     _status = GenerationStatus.idle;
     _rawOutput = '';
+    _displayOutput = '';
     _errorMessage = null;
     _statusMessage = null;
     _elapsed = Duration.zero;
     notifyListeners();
+  }
+
+  /// Batasi rebuild UI saat streaming (tiap token Groq bisa <16ms).
+  /// Tanpa throttle, Markdown/layout di-rebuild puluhan kali/detik
+  /// dan di beberapa HP Impeller menampilkan layar abu penuh.
+  void _notifyStream() {
+    final now = DateTime.now();
+    final last = _lastStreamNotify;
+    if (last != null &&
+        now.difference(last) < const Duration(milliseconds: 50)) {
+      return;
+    }
+    _lastStreamNotify = now;
+    notifyListeners();
+  }
+
+  void _refreshDisplay() {
+    try {
+      _displayOutput = stripEmoji(_rawOutput);
+    } catch (_) {
+      _displayOutput = _rawOutput;
+    }
   }
 
   void _setStatusMessage(String message) {
@@ -414,7 +445,7 @@ class AppController extends ChangeNotifier {
 
   void _startTicker() {
     _ticker?.cancel();
-    _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) {
+    _ticker = Timer.periodic(const Duration(milliseconds: 500), (_) {
       final start = _startedAt;
       if (start == null) return;
       _elapsed = DateTime.now().difference(start);
@@ -515,6 +546,7 @@ class AppController extends ChangeNotifier {
       return;
     }
     _rawOutput = trimmed;
+    _refreshDisplay();
     final id = _lastSavedHistoryId;
     if (id != null) {
       _history = _history

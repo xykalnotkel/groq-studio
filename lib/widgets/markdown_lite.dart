@@ -23,13 +23,18 @@ class MarkdownLite extends StatelessWidget {
       fontSize: 15,
     );
 
-    final blocks = _buildBlocks(context, data, base, theme);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: shrinkWrap ? MainAxisSize.min : MainAxisSize.max,
-      children: blocks,
-    );
+    try {
+      final blocks = _buildBlocks(context, data, base, theme);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: shrinkWrap ? MainAxisSize.min : MainAxisSize.max,
+        children: blocks,
+      );
+    } catch (_) {
+      // Jangan sampai satu baris markdown merusak seluruh tab Buat
+      // (di release mode Flutter menampilkan layar abu tanpa pesan).
+      return SelectableText(data, style: base);
+    }
   }
 
   List<Widget> _buildBlocks(

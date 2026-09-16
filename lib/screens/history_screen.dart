@@ -241,15 +241,17 @@ class _HistoryTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          // v3.1 "quiet": tanpa Hero — ikon mode tampil statis.
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: mode.color.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
+          Hero(
+            tag: 'hist-mode-${item.id}',
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: mode.color.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(mode.icon, size: 20, color: mode.color),
             ),
-            child: Icon(mode.icon, size: 20, color: mode.color),
           ),
           const SizedBox(width: 12),
           Expanded(
