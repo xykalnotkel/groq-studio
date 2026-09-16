@@ -55,10 +55,10 @@ Rilis terbaru: <https://github.com/xykalnotkel/groq-studio/releases/latest>
 
 | File | Untuk |
 |---|---|
-| `GroqStudio-1.0.0-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
-| `GroqStudio-1.0.0-armeabi-v7a.apk` | HP Android lama / 32-bit |
-| `GroqStudio-1.0.0-universal.apk` | Semua arsitektur (ukuran paling besar) |
-| `GroqStudio-1.0.0.aab` | Untuk diunggah ke Play Store |
+| `GroqStudio-1.1.0-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
+| `GroqStudio-1.1.0-armeabi-v7a.apk` | HP Android lama / 32-bit |
+| `GroqStudio-1.1.0-universal.apk` | Semua arsitektur (ukuran paling besar) |
+| `GroqStudio-1.1.0.aab` | Untuk diunggah ke Play Store |
 
 APK-nya **aman dipasang** (Unknown Sources), tapi karena ditandatangani dengan key debug,
 Android bisa meminta konfirmasi. Isi API key Groq kamu sendiri di tab **Setelan**.
