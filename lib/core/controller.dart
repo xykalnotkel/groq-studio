@@ -83,8 +83,13 @@ class AppController extends ChangeNotifier {
   ///
   /// Saat streaming memakai teks mentah (tanpa regex berat tiap token)
   /// supaya UI tidak macet/abu. Disaring penuh saat generate selesai.
-  String get output =>
-      _status == GenerationStatus.streaming ? _rawOutput : _displayOutput;
+  /// Kalau buffer tampilan kosong, jatuh ke teks mentah supaya hasil
+  /// tidak hilang saat status pindah ke success.
+  String get output {
+    if (_status == GenerationStatus.streaming) return _rawOutput;
+    if (_displayOutput.isNotEmpty) return _displayOutput;
+    return _rawOutput;
+  }
   String? get errorMessage => _errorMessage;
 
   /// Pesan progres ("Mencari sumber…", "Menulis dengan …").
@@ -392,9 +397,9 @@ class AppController extends ChangeNotifier {
     _genToken++;
     _stopTicker();
     if (_rawOutput.trim().isNotEmpty) {
+      _refreshDisplay();
       _status = GenerationStatus.success;
       _statusMessage = null;
-      _refreshDisplay();
       _saveToHistory();
     } else {
       _status = GenerationStatus.idle;
@@ -463,6 +468,7 @@ class AppController extends ChangeNotifier {
 
   void _succeed(GenerationMode mode) {
     _stopTicker();
+    _refreshDisplay();
     _status = GenerationStatus.success;
     _statusMessage = null;
     _saveToHistory();

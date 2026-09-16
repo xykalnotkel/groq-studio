@@ -223,6 +223,14 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   // ── util ──────────────────────────────────────────────────────────
   const EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{1F1E6}-\u{1F1FF}\u2600-\u27BF\u2300-\u23FF\u2B00-\u2BFF\uFE00-\uFE0F\u200D\u20E3\u2190-\u21FF\u2900-\u297F\u00A9\u00AE\u2122]/gu;
   const stripEmoji = (s) => s.replace(EMOJI_RE, '').replace(/[ \t]{2,}/g, ' ').replace(/\n[ \t]*\n[ \t]*(\n[ \t]*)+/g, '\n\n').trimEnd();
+  function keepText(src) {
+    try {
+      const cleaned = stripEmoji(src);
+      return cleaned.trim() ? cleaned : src;
+    } catch {
+      return src;
+    }
+  }
   const countWords = (s) => (s.trim() ? s.trim().split(/\s+/).length : 0);
   const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -681,7 +689,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
       if (err.name === 'AbortError') {
         els.status.textContent = 'Dihentikan.';
         if (fullText.trim()) {
-          fullText = stripEmoji(fullText);
+          fullText = keepText(fullText);
           renderResult(true);
           els.listen.disabled = false; els.copy.disabled = false;
           els.edit.disabled = false; els.like.disabled = false;
@@ -691,7 +699,12 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
         }
       } else {
         els.status.textContent = 'Gagal: ' + err.message;
-        els.result.innerHTML = `<p class="muted">Gagal menghasilkan teks. ${escapeHtml(err.message)}</p>`;
+        if (fullText.trim()) {
+          fullText = keepText(fullText);
+          renderResult(true);
+        } else {
+          els.result.innerHTML = `<p class="muted">Gagal menghasilkan teks. ${escapeHtml(err.message)}</p>`;
+        }
       }
     } finally {
       setBusy(false);
