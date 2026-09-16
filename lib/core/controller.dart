@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 
 import '../models/generation_mode.dart';
 import '../models/history_item.dart';
+import '../models/profile.dart';
 import '../models/settings.dart';
 import 'constants.dart';
 import 'groq_client.dart';
+import 'leaderboard.dart';
 import 'prompt_builder.dart';
 import 'speech.dart';
 import 'stats.dart';
@@ -62,6 +64,11 @@ class AppController extends ChangeNotifier {
   int _genToken = 0;
   int _autoIndex = 0;
   String? _lastSavedHistoryId;
+  int _lastTokens = 0;
+  UserProfile? _profile;
+  DraftBrief _draft = const DraftBrief();
+  LeaderboardSnapshot _leaderboard = LeaderboardSnapshot.empty;
+  final LeaderboardClient _board = LeaderboardClient();
 
   static const int _historyLimit = 200;
 
@@ -112,6 +119,9 @@ class AppController extends ChangeNotifier {
   bool get isLoadingModels => _loadingModels;
   String? get modelsError => _modelsError;
   bool get hideChannelPopup => _hideChannelPopup;
+  UserProfile? get profile => _profile;
+  DraftBrief get draft => _draft;
+  LeaderboardSnapshot get leaderboard => _leaderboard;
 
   /// Key yang dipakai: punya pengguna, atau hasil inject saat build.
   String get apiKey =>
@@ -131,6 +141,8 @@ class AppController extends ChangeNotifier {
     _stats = _storage.loadStats();
     _hideChannelPopup = _storage.loadHideChannelPopup();
     _autoIndex = _storage.loadRotationIndex();
+    _profile = _storage.loadProfile();
+    _draft = _storage.loadDraft();
     notifyListeners();
     if (hasApiKey) {
       unawaited(refreshModels());
@@ -198,11 +210,66 @@ class AppController extends ChangeNotifier {
     await _storage.resetStats();
   }
 
-  void _recordStats(String modeId) {
+  void _recordStats(String modeId, {int tokens = 0}) {
     final text = output;
     if (text.trim().isEmpty) return;
-    _stats = _stats.record(modeId: modeId, output: text);
+    _stats = _stats.record(modeId: modeId, output: text, tokens: tokens);
     unawaited(_storage.saveStats(_stats));
+    unawaited(syncLeaderboard());
+  }
+
+  Future<void> saveDraft({
+    required String modeId,
+    required String brief,
+    required String extra,
+  }) async {
+    _draft = DraftBrief(modeId: modeId, brief: brief, extra: extra);
+    await _storage.saveDraft(_draft);
+  }
+
+  Future<void> signIn(UserProfile next, {required bool register}) async {
+    final snapshot = await _board.submit(
+      profile: next,
+      action: register ? 'register' : 'login',
+      tokens: _stats.totalTokens,
+      generates: _stats.totalGenerates,
+    );
+    _profile = next;
+    _leaderboard = snapshot;
+    notifyListeners();
+    await _storage.saveProfile(next);
+  }
+
+  Future<void> signOut() async {
+    _profile = null;
+    notifyListeners();
+    await _storage.saveProfile(null);
+  }
+
+  Future<void> refreshLeaderboard() async {
+    if (_testing) return;
+    try {
+      _leaderboard = await _board.fetch(userId: _profile?.email);
+      notifyListeners();
+    } catch (_) {
+      if (_leaderboard.all.isEmpty) rethrow;
+    }
+  }
+
+  Future<void> syncLeaderboard() async {
+    final account = _profile;
+    if (_testing || account == null || !account.isLoggedIn) return;
+    try {
+      _leaderboard = await _board.submit(
+        profile: account,
+        action: 'sync',
+        tokens: _stats.totalTokens,
+        generates: _stats.totalGenerates,
+      );
+      notifyListeners();
+    } catch (_) {
+      // papan gagal jangan ganggu generate
+    }
   }
 
   // ── Generate ──────────────────────────────────────────────────────────
@@ -356,6 +423,7 @@ class AppController extends ChangeNotifier {
           if (_genToken != token) return;
           _rawOutput = text;
         }
+        _lastTokens = client.lastTotalTokens;
         _succeed(mode);
         return;
       } catch (error) {
@@ -373,6 +441,7 @@ class AppController extends ChangeNotifier {
         }
         // Sudah ada hasil sebagian → simpan sebagai hasil.
         if (_rawOutput.trim().isNotEmpty) {
+          _lastTokens = client.lastTotalTokens;
           _succeed(mode);
           return;
         }
@@ -473,7 +542,11 @@ class AppController extends ChangeNotifier {
     _status = GenerationStatus.success;
     _statusMessage = null;
     _saveToHistory();
-    _recordStats(mode.id);
+    var tokens = _lastTokens;
+    if (tokens <= 0) {
+      tokens = ((output.length) / 4).ceil();
+    }
+    _recordStats(mode.id, tokens: tokens);
     notifyListeners();
   }
 

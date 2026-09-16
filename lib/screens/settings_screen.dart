@@ -498,6 +498,38 @@ class _SettingsScreenState extends State<SettingsScreen>
                   const SizedBox(height: 20),
 
                   // ── Data ───────────────────────────────────────────────
+                  const SectionLabel('Akun & papan'),
+                  GlassCard(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: ListTile(
+                      leading: const Icon(Icons.person_outline_rounded),
+                      title: Text(
+                        widget.controller.profile?.isLoggedIn == true
+                            ? widget.controller.profile!.name
+                            : 'Masuk dengan email',
+                      ),
+                      subtitle: Text(
+                        widget.controller.profile?.isLoggedIn == true
+                            ? widget.controller.profile!.email
+                            : 'Daftar untuk masuk papan penghabis token',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Buka tab Papan di bawah untuk '
+                              'masuk atau daftar.',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
                   const SectionLabel('Data & lain-lain'),
                   GlassCard(
                     padding: const EdgeInsets.symmetric(vertical: 6),

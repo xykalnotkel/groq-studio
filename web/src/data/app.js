@@ -54,6 +54,7 @@ export const NAV = [
   { href: '/', label: 'Beranda', id: 'home' },
   { href: '/app', label: 'Web App', id: 'app' },
   { href: '/download', label: 'Download', id: 'download' },
+  { href: '/papan', label: 'Papan', id: 'papan' },
   { href: '/faq', label: 'FAQ', id: 'faq' },
   { href: '/about', label: 'Tentang', id: 'about' },
 ];
@@ -62,6 +63,7 @@ export const FOOTER = {
   product: [
     { href: '/app', label: 'Web App' },
     { href: '/download', label: 'Download APK' },
+    { href: '/papan', label: 'Papan token' },
     { href: '/changelog', label: 'Changelog' },
     { href: '/guide', label: 'Panduan' },
   ],

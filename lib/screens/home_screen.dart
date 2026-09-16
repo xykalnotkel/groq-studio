@@ -1,6 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../core/leaderboard.dart';
 
 import '../core/constants.dart';
 import '../core/controller.dart';
@@ -58,6 +62,14 @@ class _HomeScreenState extends State<HomeScreen>
         .invokeMethod<String>('getSharedText')
         .then(_applySharedText)
         .catchError((Object _) {});
+    final draft = widget.controller.draft;
+    if (!draft.isEmpty) {
+      _brief.text = draft.brief;
+      _extra.text = draft.extra;
+      final mode = GenerationMode.fromId(draft.modeId);
+      _mode = mode;
+      _engine = mode.engines.isEmpty ? null : mode.engines.first;
+    }
   }
 
   Future<dynamic> _handleLaunchCall(MethodCall call) async {
@@ -144,9 +156,29 @@ class _HomeScreenState extends State<HomeScreen>
     if (_listening) {
       _voiceChannel.invokeMethod<void>('stop').catchError((Object _) {});
     }
+    widget.controller.saveDraft(
+      modeId: _mode.id,
+      brief: _brief.text,
+      extra: _extra.text,
+    );
     _brief.dispose();
     _extra.dispose();
     super.dispose();
+  }
+
+  void _randomMode() {
+    final values = GenerationMode.values;
+    var next = values[Random().nextInt(values.length)];
+    if (next.id == _mode.id && values.length > 1) {
+      next = values[(values.indexOf(next) + 1) % values.length];
+    }
+    setState(() {
+      _mode = next;
+      _engine = next.engines.isEmpty ? null : next.engines.first;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Mode acak: ${next.label}')),
+    );
   }
 
   Future<void> _pasteClipboard() async {
@@ -210,6 +242,11 @@ class _HomeScreenState extends State<HomeScreen>
       return;
     }
     FocusScope.of(context).unfocus();
+    controller.saveDraft(
+      modeId: _mode.id,
+      brief: _brief.text,
+      extra: _extra.text,
+    );
     controller.generate(
       mode: _mode,
       brief: _brief.text,
@@ -242,7 +279,43 @@ class _HomeScreenState extends State<HomeScreen>
                     padding: const EdgeInsets.fromLTRB(18, 4, 18, 150),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate(<Widget>[
-                        const SectionLabel('Mau dibuatin apa?'),
+                        SectionLabel(
+                          'Mau dibuatin apa?',
+                          trailing: TextButton.icon(
+                            onPressed: _randomMode,
+                            icon: const Icon(Icons.casino_rounded, size: 16),
+                            label: const Text('Acak'),
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              textStyle: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ),
+                        if (controller.stats.dailyStreak > 0 ||
+                            controller.stats.totalTokens > 0) ...<Widget>[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: <Widget>[
+                              if (controller.stats.dailyStreak > 0)
+                                _MiniStatChip(
+                                  icon: Icons.local_fire_department_rounded,
+                                  label:
+                                      'Streak '
+                                      '${controller.stats.dailyStreak} hari',
+                                ),
+                              if (controller.stats.totalTokens > 0)
+                                _MiniStatChip(
+                                  icon: Icons.bolt_rounded,
+                                  label:
+                                      '${formatTokens(controller.stats.totalTokens)} '
+                                      'token',
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
                         ModeSelector(
                           selected: _mode,
                           onSelected: (mode) => setState(() {
@@ -745,6 +818,40 @@ class _BriefCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _MiniStatChip extends StatelessWidget {
+  const _MiniStatChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: theme.colorScheme.primary.withValues(alpha: 0.10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 14, color: theme.colorScheme.primary),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

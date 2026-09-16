@@ -44,6 +44,9 @@ class GroqClient {
   final http.Client _client;
   bool _closed = false;
 
+  /// Token Groq dari permintaan terakhir (0 kalau server tidak kirim).
+  int lastTotalTokens = 0;
+
   Map<String, String> get _headers => <String, String>{
     'Content-Type': 'application/json',
     'Authorization': 'Bearer $apiKey',
@@ -84,6 +87,7 @@ class GroqClient {
     required int contextWindow,
   }) {
     final cappedTokens = _capMaxTokens(model, contextWindow, maxTokens);
+    late final Map<String, dynamic> payload;
 
     // GPT-OSS: instruksi DITARUH DI USER MESSAGE (model ini tidak memakai
     // system prompt), tanpa reasoning stream, temperature tetap 0.6.
@@ -93,7 +97,7 @@ class GroqClient {
         contextWindow,
         'INSTRUKSI SISTEM (patuhi sepenuhnya):\n$system\n\n$prompt',
       );
-      return <String, dynamic>{
+      payload = <String, dynamic>{
         'model': model,
         'messages': <Map<String, String>>[
           <String, String>{'role': 'user', 'content': merged},
@@ -104,20 +108,24 @@ class GroqClient {
         'include_reasoning': false,
         'reasoning_effort': reasoningEffort,
       };
+    } else {
+      final cappedPrompt = _capPrompt(model, contextWindow, prompt);
+      payload = <String, dynamic>{
+        'model': model,
+        'messages': <Map<String, String>>[
+          <String, String>{'role': 'system', 'content': system},
+          <String, String>{'role': 'user', 'content': cappedPrompt},
+        ],
+        'temperature': temperature,
+        'max_tokens': cappedTokens,
+        'top_p': 0.95,
+        'stream': stream,
+      };
     }
-
-    final cappedPrompt = _capPrompt(model, contextWindow, prompt);
-    return <String, dynamic>{
-      'model': model,
-      'messages': <Map<String, String>>[
-        <String, String>{'role': 'system', 'content': system},
-        <String, String>{'role': 'user', 'content': cappedPrompt},
-      ],
-      'temperature': temperature,
-      'max_tokens': cappedTokens,
-      'top_p': 0.95,
-      'stream': stream,
-    };
+    if (stream) {
+      payload['stream_options'] = <String, bool>{'include_usage': true};
+    }
+    return payload;
   }
 
   /// Generate tanpa streaming.
@@ -153,6 +161,7 @@ class GroqClient {
     _throwIfError(response.statusCode, response.body);
 
     final data = _decodeObject(response.body);
+    lastTotalTokens = _readUsage(data);
     final choices = data['choices'];
     if (choices is List && choices.isNotEmpty) {
       final first = choices.first;
@@ -200,6 +209,7 @@ class GroqClient {
       _throwIfError(response.statusCode, body);
     }
 
+    lastTotalTokens = 0;
     var buffer = '';
     await for (final chunk in response.stream.transform(utf8.decoder)) {
       buffer += chunk;
@@ -210,6 +220,8 @@ class GroqClient {
         if (line.isEmpty || !line.startsWith('data:')) continue;
         final data = line.substring(5).trim();
         if (data == '[DONE]') return;
+        final usage = _readUsage(_decodeObject(data));
+        if (usage > 0) lastTotalTokens = usage;
         final delta = _extractDelta(data);
         if (delta != null && delta.isNotEmpty) yield delta;
       }
@@ -291,6 +303,14 @@ class GroqClient {
     } catch (_) {
       return null;
     }
+  }
+
+  static int _readUsage(Map<String, dynamic> data) {
+    final usage = data['usage'];
+    if (usage is Map) {
+      return (usage['total_tokens'] as num?)?.toInt() ?? 0;
+    }
+    return 0;
   }
 
   static Map<String, dynamic> _decodeObject(String body) {

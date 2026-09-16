@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/history_item.dart';
+import '../models/profile.dart';
 import '../models/settings.dart';
 import 'stats.dart';
 
@@ -16,6 +17,8 @@ class StorageService {
   static const String _kLaunchCount = 'launch_count';
   static const String _kStats = 'usage_stats';
   static const String _kRotation = 'auto_rotation_index';
+  static const String _kProfile = 'user_profile';
+  static const String _kDraft = 'draft_brief';
 
   Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -90,5 +93,41 @@ class StorageService {
 
   Future<void> setRotationIndex(int value) async {
     await _prefs?.setInt(_kRotation, value);
+  }
+
+  UserProfile? loadProfile() {
+    final raw = _prefs?.getString(_kProfile);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return UserProfile.fromJson(decoded);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<void> saveProfile(UserProfile? profile) async {
+    if (profile == null) {
+      await _prefs?.remove(_kProfile);
+      return;
+    }
+    await _prefs?.setString(_kProfile, jsonEncode(profile.toJson()));
+  }
+
+  DraftBrief loadDraft() {
+    final raw = _prefs?.getString(_kDraft);
+    if (raw == null || raw.isEmpty) return const DraftBrief();
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return DraftBrief.fromJson(decoded);
+      }
+    } catch (_) {}
+    return const DraftBrief();
+  }
+
+  Future<void> saveDraft(DraftBrief draft) async {
+    await _prefs?.setString(_kDraft, jsonEncode(draft.toJson()));
   }
 }

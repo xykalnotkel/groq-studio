@@ -6,6 +6,7 @@ class UsageStats {
     this.totalGenerates = 0,
     this.totalWords = 0,
     this.totalChars = 0,
+    this.totalTokens = 0,
     this.modeCounts = const <String, int>{},
     this.dailyCounts = const <String, int>{},
     this.lastUsed,
@@ -14,6 +15,7 @@ class UsageStats {
   final int totalGenerates;
   final int totalWords;
   final int totalChars;
+  final int totalTokens;
 
   /// modeId -> berapa kali dipakai.
   final Map<String, int> modeCounts;
@@ -31,6 +33,7 @@ class UsageStats {
   UsageStats record({
     required String modeId,
     required String output,
+    int tokens = 0,
     DateTime? at,
   }) {
     final when = at ?? DateTime.now();
@@ -39,6 +42,7 @@ class UsageStats {
       totalGenerates: totalGenerates + 1,
       totalWords: totalWords + countWords(output),
       totalChars: totalChars + output.length,
+      totalTokens: totalTokens + tokens.clamp(0, 1000000),
       modeCounts: <String, int>{
         ...modeCounts,
         modeId: (modeCounts[modeId] ?? 0) + 1,
@@ -92,6 +96,7 @@ class UsageStats {
     'totalGenerates': totalGenerates,
     'totalWords': totalWords,
     'totalChars': totalChars,
+    'totalTokens': totalTokens,
     'modeCounts': modeCounts,
     'dailyCounts': dailyCounts,
     'lastUsed': lastUsed?.toIso8601String(),
@@ -101,6 +106,7 @@ class UsageStats {
     totalGenerates: (json['totalGenerates'] as num?)?.toInt() ?? 0,
     totalWords: (json['totalWords'] as num?)?.toInt() ?? 0,
     totalChars: (json['totalChars'] as num?)?.toInt() ?? 0,
+    totalTokens: (json['totalTokens'] as num?)?.toInt() ?? 0,
     modeCounts: <String, int>{
       for (final entry
           in (json['modeCounts'] as Map<String, dynamic>? ??
