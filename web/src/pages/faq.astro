@@ -12,6 +12,10 @@ const faqs = [
     a: 'Belum. Daftar sebagai developer Google Play berbayar sekitar 25 USD sekali. Modal itu belum ada, jadi APK diedarkan dari situs resmi. Bukan karena aplikasi ini virus, ditolak, atau diblokir Play Protect. Materi listing sudah disiapkan untuk nanti.',
   },
   {
+    q: 'Sudah dicek antivirus?',
+    a: `ClamAV 1.4.3 memindai ketiga APK 3.2.2: bersih. Screenshot ada di <a href="/download#scan">Download — pemindaian</a>. Hash 64-bit belum diindeks VirusTotal; tempel SHA-256 atau unggah APK resmi di sana. Jangan percayai angka 0/70 yang tidak berasal dari VirusTotal.`,
+  },
+  {
     q: 'APK ini virus / malware?',
     a: `Bukan. Kode sumber terbuka di GitHub, APK ${APP.version} ditandatangani keystore resmi XyVerse, dan kode Java/Kotlin di-minify R8. Peringatan Android "sumber tidak dikenal" muncul untuk semua aplikasi di luar Play Store — itu pengingat sideload, bukan vonis berbahaya. Unduh hanya dari <a href="/download">${APP.downloadUrl.replace('https://', '')}</a>.`,
   },

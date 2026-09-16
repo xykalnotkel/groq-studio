@@ -957,7 +957,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
 </script>
 
 <style>
-  .app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 26px 22px 60px; align-items: start; }
+  .app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 26px 0 60px; align-items: start; min-width: 0; }
   .pane { padding: 22px; }
   .pane-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
   .pane-top .label { margin: 0; }
@@ -984,7 +984,7 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   .sm-chip { padding: 5px 10px !important; font-size: 11.5px !important; }
 
   .result-pane { display: flex; flex-direction: column; min-height: 480px; }
-  .result-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .result-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
   .result-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .result-box { flex: 1; overflow-y: auto; max-height: 60vh; padding: 4px 2px; }
   .history { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
@@ -1022,10 +1022,16 @@ const BUILD_KEY: string = import.meta.env.PUBLIC_GROQ_API_KEY ?? '';
   .stats-grid b { display: block; font-size: 17px; letter-spacing: -.3px; }
   .stats-grid span { font-size: 10.5px; color: var(--muted); }
 
+  .sheet-actions { flex-wrap: wrap; }
+  .sheet-card { max-width: min(460px, 100%); }
+  .hist-top { min-width: 0; }
+  .pane-top { flex-wrap: wrap; }
+
   @media (max-width: 900px) {
     .app-grid { grid-template-columns: 1fr; }
     .opts { grid-template-columns: 1fr; }
     .result-box { max-height: none; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </Base>

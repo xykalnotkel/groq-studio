@@ -19,7 +19,7 @@ const stack = [
       <p class="muted">{APP.tagline} · Versi {APP.version}</p>
       <div class="credit">
         <span>Built in</span>
-        <img src="/xyverse_wordmark_white.png" alt="XyVerse" height="14" />
+        <img src="/xyverse_wordmark_white.png" alt="XyVerse" width="40" height="14" />
       </div>
       <p class="desc">
         {APP.name} adalah studio menulis AI yang membantu kamu mengubah satu
@@ -104,7 +104,7 @@ const stack = [
 </Base>
 
 <style>
-  .about { padding: 34px 22px 20px; display: grid; gap: 16px; }
+  .about { padding: 34px 0 20px; display: grid; gap: 16px; min-width: 0; }
   .hero { text-align: center; padding: 34px 24px; }
   .logo { border-radius: 22px; box-shadow: 0 18px 44px rgba(124,92,255,.35); }
   h1 { font-size: 30px; font-weight: 800; letter-spacing: -.7px; margin: 14px 0 4px; }
@@ -114,7 +114,9 @@ const stack = [
     background: linear-gradient(120deg, rgba(124,92,255,.2), rgba(34,211,238,.2));
     border: 1px solid rgba(124,92,255,.34);
     font-weight: 800; font-size: 13px; letter-spacing: .6px;
+    max-width: 100%;
   }
+  .credit img { width: 40px; height: 14px; object-fit: contain; flex: none; }
   .desc { max-width: 640px; margin: 0 auto; color: #b9b9d0; font-size: 14.6px; }
   .cta { display: flex; gap: 12px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
 

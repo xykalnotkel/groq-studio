@@ -24,7 +24,7 @@ import { APP } from '../data/app.js';
 
       <div class="cp-credit-badge">
         <span>Built in</span>
-        <img src="/xyverse_wordmark_white.png" alt="XyVerse" height="13" />
+        <img src="/xyverse_wordmark_white.png" alt="XyVerse" width="37" height="13" />
       </div>
 
       <button class="cp-close" id="cp-close" aria-label="Tutup" title="Tutup">
@@ -116,7 +116,9 @@ import { APP } from '../data/app.js';
     color: rgba(255,255,255,.75);
     font-size: 10.5px; font-weight: 600;
     white-space: nowrap;
+    max-width: calc(100% - 24px);
   }
+  .cp-credit-badge img { width: 37px; height: 13px; object-fit: contain; flex: none; }
 
   .cp-close {
     position: absolute; top: 12px; right: 12px; z-index: 3;

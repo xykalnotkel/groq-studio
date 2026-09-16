@@ -130,13 +130,19 @@ import { APP } from '../data/app.js';
   }
 
   .bug-row { display: flex; gap: 12px; }
-  .bug-row .bug-field { flex: 1; }
+  .bug-row .bug-field { flex: 1; min-width: 0; }
 
   .bug-note { font-size: 11px; color: #55556e; margin: 2px 0 14px; }
 
-  .bug-actions { display: flex; gap: 10px; }
+  .bug-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .bug-actions .btn { min-width: 0; }
   .bug-actions .btn.ghost { flex: 1; }
   .bug-actions .btn.green { flex: 2; }
+  @media (max-width: 560px) {
+    .bug-row { flex-direction: column; gap: 0; }
+    .bug-actions { flex-direction: column; }
+    .bug-actions .btn { width: 100%; flex: none; }
+  }
   .btn.ghost {
     background: transparent; border: 1px solid #2c2c48; color: #d6d6e6;
   }

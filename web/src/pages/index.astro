@@ -114,11 +114,12 @@ const shots = [
 
 <style>
   .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 44px;
-          align-items: center; padding: 58px 0 30px; }
+          align-items: center; padding: 58px 0 30px; min-width: 0; }
+  .hero-copy, .hero-art { min-width: 0; }
   .badge { display: inline-block; padding: 6px 14px; border-radius: 999px;
            border: 1px solid rgba(124,92,255,.3); background: rgba(124,92,255,.1);
            color: #c9bcff; font-size: 12.5px; font-weight: 700; margin-bottom: 18px; }
-  h1 { font-size: 46px; line-height: 1.12; letter-spacing: -1.4px; font-weight: 800; }
+  h1 { font-size: clamp(26px, 8vw, 46px); line-height: 1.12; letter-spacing: -1.4px; font-weight: 800; }
   .grad { background: linear-gradient(120deg, var(--violet), var(--cyan));
           -webkit-background-clip: text; background-clip: text; color: transparent; }
   .lead { font-size: 16.5px; margin: 18px 0 26px; max-width: 520px; }
@@ -127,7 +128,7 @@ const shots = [
   .hero-art { display: grid; place-items: center; }
   .hero-phone { width: min(280px, 70vw); box-shadow: 0 40px 90px rgba(124,92,255,.28); }
 
-  .section { padding: 46px 0; }
+  .section { padding: 46px 0; min-width: 0; overflow-x: clip; }
   .section-title { font-size: 28px; font-weight: 800; letter-spacing: -.7px; margin-bottom: 22px; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .feat h3 { font-size: 16px; margin-bottom: 6px; }

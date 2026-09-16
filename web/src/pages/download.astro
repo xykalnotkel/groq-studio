@@ -76,6 +76,30 @@ const shots = [
       </div>
     </section>
 
+    <section class="card dl-wide" id="scan">
+      <h2>Hasil pemindaian</h2>
+      <p class="muted small" style="margin:6px 0 4px">
+        ClamAV 1.4.3 memindai ketiga APK rilis: bersih (0 terinfeksi).
+        VirusTotal belum mengindeks hash ini — unggahan API mereka minta recaptcha,
+        jadi tidak ada angka 0/70 palsu di sini. Tempel SHA-256 atau unggah APK
+        resmi di VirusTotal kalau mau cek 70+ mesin.
+      </p>
+      <div class="scan-grid">
+        <figure>
+          <img src="/scan/virustotal.png" alt="Kartu hash VirusTotal untuk APK XyStudio 3.2.2" width="1200" height="720" loading="lazy" decoding="async" />
+          <figcaption>VirusTotal — hash 64-bit belum ada di indeks. Buka tautan di bawah untuk unggah.</figcaption>
+        </figure>
+        <figure>
+          <img src="/scan/clamav.jpg" alt="Keluar ClamAV: tiga APK OK, infected files 0" width="1400" height="780" loading="lazy" decoding="async" />
+          <figcaption>ClamAV 1.4.3 — 16 Sep 2026, tiga APK OK.</figcaption>
+        </figure>
+      </div>
+      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px">
+        <a class="btn sm" href="https://www.virustotal.com/gui/file/70dc3545a950eb8c90c2fdfff72a7164e907476aff0c32359784ceb457aeb3fa" target="_blank" rel="noopener">Buka VirusTotal (hash 64-bit)</a>
+        <a class="btn sm ghost" href="https://www.virustotal.com/gui/home/upload" target="_blank" rel="noopener">Unggah APK di VirusTotal</a>
+      </div>
+    </section>
+
     <section class="card dl-wide" id="keamanan">
       <h2>Keamanan &amp; Play Store</h2>
       <div class="safe-grid">
@@ -128,7 +152,7 @@ const shots = [
     font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--cyan); margin-bottom: 8px;
   }
-  h1 { font-size: 32px; font-weight: 800; letter-spacing: -.7px; line-height: 1.15; }
+  h1 { font-size: clamp(26px, 8vw, 32px); font-weight: 800; letter-spacing: -.7px; line-height: 1.15; }
   h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
   h3 { font-size: 14.5px; font-weight: 800; margin-bottom: 6px; }
   code { background: rgba(124,92,255,.16); padding: 2px 6px; border-radius: 6px; font-size: 13px; }
@@ -139,9 +163,15 @@ const shots = [
     gap: 18px;
     padding: 36px 0 20px;
   }
-  .dl-wide { grid-column: 1 / -1; }
+  .dl-wide { grid-column: 1 / -1; min-width: 0; overflow-x: clip; }
   .safe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
   .safe-grid p { font-size: 13.8px; line-height: 1.65; }
+  .sha {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+  }
   @media (max-width: 900px) {
     .dl-page { grid-template-columns: 1fr; }
     .safe-grid { grid-template-columns: 1fr; }
