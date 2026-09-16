@@ -39,6 +39,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   static const MethodChannel _pipChannel = MethodChannel('xystudio/pip');
   static const MethodChannel _launchChannel = MethodChannel('xystudio/launch');
+  static const MethodChannel _voiceChannel = MethodChannel('xystudio/voice');
+  bool _listening = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -51,14 +53,32 @@ class _HomeScreenState extends State<HomeScreen>
     _launchChannel
         .invokeMethod<String>('getLaunchMode')
         .then(_applyWidgetMode)
-        .catchError((Object _) {}); // tanpa implementasi native (web/test).
+        .catchError((Object _) {});
+    _launchChannel
+        .invokeMethod<String>('getSharedText')
+        .then(_applySharedText)
+        .catchError((Object _) {});
   }
 
   Future<dynamic> _handleLaunchCall(MethodCall call) async {
     if (call.method == 'onLaunchMode') {
       _applyWidgetMode(call.arguments as String?);
+    } else if (call.method == 'onSharedText') {
+      _applySharedText(call.arguments as String?);
     }
     return null;
+  }
+
+  void _applySharedText(String? text) {
+    final value = text?.trim() ?? '';
+    if (value.isEmpty) return;
+    if (!mounted) return;
+    setState(() => _brief.text = value);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Teks dari aplikasi lain sudah masuk ke brief.'),
+      ),
+    );
   }
 
   void _applyWidgetMode(String? id) {
@@ -108,7 +128,8 @@ class _HomeScreenState extends State<HomeScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Mengambang aktif. Ketuk gelembung untuk generate, geser untuk pindah, K/S/B atau sudut kanan bawah untuk ukuran.',
+              'Mengambang aktif. Ketuk gelembung untuk studio mini. '
+              'Geser header, K/S/B untuk ukuran.',
             ),
           ),
         );
@@ -120,9 +141,57 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    if (_listening) {
+      _voiceChannel.invokeMethod<void>('stop').catchError((Object _) {});
+    }
     _brief.dispose();
     _extra.dispose();
     super.dispose();
+  }
+
+  Future<void> _pasteClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text?.trim() ?? '';
+    if (!mounted) return;
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Papan klip kosong')),
+      );
+      return;
+    }
+    setState(() => _brief.text = text);
+  }
+
+  Future<void> _dictate() async {
+    if (_listening) {
+      await _voiceChannel.invokeMethod<void>('stop').catchError((Object _) {});
+      if (mounted) setState(() => _listening = false);
+      return;
+    }
+    setState(() => _listening = true);
+    try {
+      final spoken = await _voiceChannel.invokeMethod<String>('listen');
+      if (!mounted) return;
+      final value = spoken?.trim() ?? '';
+      if (value.isNotEmpty) {
+        final current = _brief.text.trim();
+        setState(() {
+          _brief.text = current.isEmpty ? value : '$current $value';
+        });
+      }
+    } on PlatformException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message ?? 'Dikte gagal')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dikte gagal. Coba lagi.')),
+      );
+    } finally {
+      if (mounted) setState(() => _listening = false);
+    }
   }
 
   AppController get controller => widget.controller;
@@ -214,6 +283,9 @@ class _HomeScreenState extends State<HomeScreen>
                           brief: _brief,
                           extra: _extra,
                           controller: controller,
+                          listening: _listening,
+                          onPaste: _pasteClipboard,
+                          onDictate: _dictate,
                         ),
                         const SizedBox(height: 20),
                         const SectionLabel('Hasil'),
@@ -364,7 +436,8 @@ class _Header extends StatelessWidget {
             const SizedBox(width: 2),
             if (defaultTargetPlatform == TargetPlatform.android)
               IconButton(
-                tooltip: 'Mengambang: generate di atas aplikasi lain, bisa digeser dan diubah ukurannya',
+                tooltip:
+                    'Mengambang: studio mini di atas aplikasi lain, geser dan ubah ukuran',
                 onPressed: onEnterPip,
                 icon: const Icon(Icons.picture_in_picture_alt_rounded),
               ),
@@ -433,12 +506,18 @@ class _BriefCard extends StatelessWidget {
     required this.brief,
     required this.extra,
     required this.controller,
+    required this.listening,
+    required this.onPaste,
+    required this.onDictate,
   });
 
   final GenerationMode mode;
   final TextEditingController brief;
   final TextEditingController extra;
   final AppController controller;
+  final bool listening;
+  final VoidCallback onPaste;
+  final VoidCallback onDictate;
 
   @override
   Widget build(BuildContext context) {
@@ -501,6 +580,18 @@ class _BriefCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: <Widget>[
+              _SettingChip(
+                icon: listening
+                    ? Icons.mic_rounded
+                    : Icons.mic_none_rounded,
+                label: listening ? 'Mendengar…' : 'Dikte',
+                onTap: onDictate,
+              ),
+              _SettingChip(
+                icon: Icons.content_paste_rounded,
+                label: 'Tempel klip',
+                onTap: onPaste,
+              ),
               _SettingChip(
                 icon: Icons.translate_rounded,
                 label: settings.language.label,

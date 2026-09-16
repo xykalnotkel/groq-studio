@@ -16,10 +16,9 @@ enum SpeechStatus { idle, loading, playing, paused }
 /// Membacakan hasil generate dengan suara.
 ///
 /// * Bahasa Indonesia (dan bahasa lain) → TTS bawaan perangkat
-///   (`flutter_tts`), dijeda/dilanjut per kalimat.
-/// * Bahasa Inggris → Groq Orpheus (`canopylabs/orpheus-v1-english`,
-///   endpoint `/openai/v1/audio/speech`). Bila Orpheus belum disetujui
-///   syaratnya di console Groq, aplikasi otomatis jatuh ke TTS perangkat.
+///   (`flutter_tts`).
+/// * Bahasa Inggris → Groq Orpheus. Bila syarat Orpheus belum
+///   disetujui, jatuh ke TTS perangkat.
 class SpeechService extends ChangeNotifier {
   SpeechService(this._clientFor, [this._testing = false]);
 
@@ -38,6 +37,7 @@ class SpeechService extends ChangeNotifier {
   int _sentenceIndex = 0;
   bool _pausedByUser = false;
   bool _stopRequested = false;
+  bool _ttsReady = false;
   StreamSubscription<void>? _completeSub;
 
   SpeechStatus get status => _status;
@@ -46,12 +46,71 @@ class SpeechService extends ChangeNotifier {
   String? get playingModelLabel => _playingModelLabel;
   bool get isActive => _status != SpeechStatus.idle;
 
+  /// Kode BCP-47 yang dipahami mesin TTS Android/iOS.
+  static String ttsLocale(String code) {
+    switch (code) {
+      case 'id':
+        return 'id-ID';
+      case 'en':
+        return 'en-US';
+      case 'ms':
+        return 'ms-MY';
+      case 'ja':
+        return 'ja-JP';
+      case 'zh':
+        return 'zh-CN';
+      case 'ar':
+        return 'ar-SA';
+      case 'es':
+        return 'es-ES';
+      default:
+        return code.contains('-') ? code : 'id-ID';
+    }
+  }
+
   Future<void> _prepareTts() async {
+    if (_ttsReady) return;
+    await _tts.setVolume(1.0);
+    await _tts.awaitSpeakCompletion(false);
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      try {
+        await _tts.setQueueMode(1);
+      } catch (_) {}
+    }
+    _tts.setStartHandler(() {
+      if (_status != SpeechStatus.playing) {
+        _setStatus(SpeechStatus.playing);
+      }
+    });
     _tts.setCompletionHandler(() => _onSentenceDone());
+    _tts.setCancelHandler(() {
+      if (!_pausedByUser && !_stopRequested) _finish();
+    });
     _tts.setErrorHandler((dynamic message) {
       _lastError = 'Suara perangkat bermasalah: $message';
       _finish();
     });
+    try {
+      await _player.setReleaseMode(ReleaseMode.stop);
+      await _player.setVolume(1.0);
+    } catch (_) {}
+    _ttsReady = true;
+  }
+
+  Future<String> _pickLocale(String languageCode) async {
+    final wanted = ttsLocale(languageCode);
+    try {
+      final available = await _tts.isLanguageAvailable(wanted);
+      if (available == true || available == 1) return wanted;
+    } catch (_) {}
+    final fallbacks = <String>[wanted, 'id-ID', 'en-US', 'en'];
+    for (final code in fallbacks) {
+      try {
+        final ok = await _tts.isLanguageAvailable(code);
+        if (ok == true || ok == 1) return code;
+      } catch (_) {}
+    }
+    return wanted;
   }
 
   /// Mulai membacakan [text].
@@ -108,21 +167,21 @@ class SpeechService extends ChangeNotifier {
       await file.writeAsBytes(bytes, flush: true);
 
       _completeSub = _player.onPlayerComplete.listen((_) => _finish());
-      await _player.play(DeviceFileSource(file.path));
+      await _player.play(DeviceFileSource(file.path), volume: 1.0);
       _setStatus(SpeechStatus.playing);
     } on GroqException catch (error) {
-      // Syarat Orpheus belum diterima di console → pakai suara perangkat.
       if (error.message.contains('syarat') || error.statusCode == 400) {
         _lastError = error.message;
         notifyListeners();
-        await _speakDevice(text, languageCode: 'en-US', pitch: 1.0, rate: rate);
+        await _speakDevice(text, languageCode: 'en', pitch: 1.0, rate: rate);
         return;
       }
       _lastError = error.message;
       _finish();
     } catch (error) {
-      _lastError = 'Gagal memuat suara Orpheus: $error';
-      _finish();
+      _lastError = 'Gagal memuat suara Orpheus. Mencoba suara perangkat.';
+      notifyListeners();
+      await _speakDevice(text, languageCode: 'en', pitch: 1.0, rate: rate);
     }
   }
 
@@ -138,10 +197,24 @@ class SpeechService extends ChangeNotifier {
 
     _sentences = _splitSentences(text);
     _sentenceIndex = 0;
+    if (_sentences.isEmpty) {
+      _lastError = 'Tidak ada kalimat yang bisa dibacakan.';
+      _finish();
+      return;
+    }
 
-    await _tts.setLanguage(languageCode);
-    // flutter_tts: rate 0..1 (0.5 normal), pitch 0.5..2.
-    await _tts.setSpeechRate((rate * 0.5).clamp(0.1, 1.0));
+    final locale = await _pickLocale(languageCode);
+    final langResult = await _tts.setLanguage(locale);
+    if (langResult != 1 && langResult != true) {
+      _lastError =
+          'HP ini belum punya suara untuk $locale. '
+          'Pasang mesin TTS Indonesia di Setelan Android, lalu coba lagi.';
+      _finish();
+      return;
+    }
+
+    await _tts.setVolume(1.0);
+    await _tts.setSpeechRate((rate * 0.5).clamp(0.2, 1.0));
     await _tts.setPitch(pitch.clamp(0.5, 2.0));
 
     _setStatus(SpeechStatus.playing);
@@ -155,7 +228,13 @@ class SpeechService extends ChangeNotifier {
       return;
     }
     try {
-      await _tts.speak(_sentences[_sentenceIndex]);
+      final result = await _tts.speak(_sentences[_sentenceIndex]);
+      if (result != 1 && result != true) {
+        _lastError =
+            'Mesin suara menolak memutar. Cek volume media HP-mu '
+            'dan pastikan tidak dalam mode senyap.';
+        _finish();
+      }
     } catch (error) {
       _lastError = 'Gagal membacakan teks: $error';
       _finish();
@@ -185,7 +264,6 @@ class SpeechService extends ChangeNotifier {
       unawaited(_player.resume());
     } else {
       _pausedByUser = false;
-      // Ulangi kalimat yang sedang dibaca saat dijeda.
       unawaited(_speakCurrentSentence());
     }
     _setStatus(SpeechStatus.playing);
@@ -201,14 +279,10 @@ class SpeechService extends ChangeNotifier {
     _pausedByUser = false;
     try {
       await _tts.stop();
-    } catch (_) {
-      // diabaikan
-    }
+    } catch (_) {}
     try {
       await _player.stop();
-    } catch (_) {
-      // diabaikan
-    }
+    } catch (_) {}
     await _completeSub?.cancel();
     _completeSub = null;
   }
@@ -222,6 +296,14 @@ class SpeechService extends ChangeNotifier {
     if (_status == next) return;
     _status = next;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    unawaited(_cancelAll());
+    unawaited(_tts.stop());
+    unawaited(_player.dispose());
+    super.dispose();
   }
 
   /// Bersihkan Markdown & emoji supaya enak didengar.
@@ -248,7 +330,6 @@ class SpeechService extends ChangeNotifier {
         .map((part) => part.trim())
         .where((part) => part.isNotEmpty)
         .toList();
-    // Potong kalimat yang terlalu panjang untuk mesin TTS.
     final result = <String>[];
     for (final part in parts) {
       if (part.length <= 400) {

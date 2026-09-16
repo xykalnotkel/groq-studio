@@ -1,5 +1,6 @@
 package com.xyverse.xystudio
 
+import android.Manifest
 import android.app.AlertDialog
 import android.app.Notification
 import android.app.NotificationChannel
@@ -10,10 +11,19 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
+import android.graphics.Typeface
+import android.media.AudioAttributes
+import android.media.AudioManager
 import android.os.Build
+import android.os.Bundle
 import android.os.IBinder
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
+import android.speech.tts.TextToSpeech
 import android.util.TypedValue
 import android.view.ContextThemeWrapper
 import android.view.Gravity
@@ -24,14 +34,17 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import java.util.Locale
 import kotlin.math.abs
 import org.json.JSONObject
 
 /**
- * Overlay mengambang: gelembung bisa digeser, panel bisa diubah ukurannya,
- * dan generate jalan di atas aplikasi lain.
+ * Overlay mengambang: studio mini di atas aplikasi lain.
+ * Chip mode, bahasa, nada, generate, dengar, dikte, tempel, bagikan.
  */
 class FloatingService : Service() {
 
@@ -44,12 +57,36 @@ class FloatingService : Service() {
     private val groq = OverlayGroq()
     private var currentMode: OverlayMode = OverlayCatalog.modes.first()
     private var currentEngine: String? = null
+    private var currentLang: OverlayOption = OverlayCatalog.languages.first()
+    private var currentTone: OverlayOption = OverlayCatalog.tones.first()
+    private var lastResult: String = ""
+    private var speaking = false
+    private var listening = false
+    private var tts: TextToSpeech? = null
+    private var ttsReady = false
+    private var recognizer: SpeechRecognizer? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
         startInForeground()
+        tts = TextToSpeech(this) { status ->
+            ttsReady = status == TextToSpeech.SUCCESS
+            if (ttsReady) {
+                tts?.setSpeechRate(1.0f)
+                tts?.setPitch(1.0f)
+                if (Build.VERSION.SDK_INT >= 21) {
+                    tts?.setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                            .build(),
+                    )
+                }
+                applyTtsLanguage()
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -66,6 +103,13 @@ class FloatingService : Service() {
 
     override fun onDestroy() {
         groq.cancel()
+        stopMic()
+        stopSpeak()
+        try {
+            tts?.shutdown()
+        } catch (_: Exception) {
+        }
+        tts = null
         removeOverlay()
         super.onDestroy()
     }
@@ -180,40 +224,34 @@ class FloatingService : Service() {
     private fun bind(view: View, layoutParams: WindowManager.LayoutParams) {
         val fab = view.findViewById<View>(R.id.overlay_fab)
         val brief = view.findViewById<EditText>(R.id.overlay_brief)
+        val extra = view.findViewById<EditText>(R.id.overlay_extra)
         val result = view.findViewById<TextView>(R.id.overlay_result)
         val generate = view.findViewById<TextView>(R.id.overlay_generate)
-        val modeView = view.findViewById<TextView>(R.id.overlay_mode)
-        val engineView = view.findViewById<TextView>(R.id.overlay_engine)
+        val langView = view.findViewById<TextView>(R.id.overlay_lang)
+        val toneView = view.findViewById<TextView>(R.id.overlay_tone)
         val resize = view.findViewById<View>(R.id.overlay_resize)
+        val listen = view.findViewById<TextView>(R.id.overlay_listen)
+        val mic = view.findViewById<TextView>(R.id.overlay_mic)
+        val paste = view.findViewById<TextView>(R.id.overlay_paste)
+        val share = view.findViewById<TextView>(R.id.overlay_share)
+        val preview = view.findViewById<TextView>(R.id.overlay_preview)
 
-        fun syncMode() {
-            modeView.text = currentMode.label
-            val engines = currentMode.engines
-            if (engines.isEmpty()) {
-                engineView.visibility = View.GONE
-                currentEngine = null
-            } else {
-                if (currentEngine == null || currentEngine !in engines) {
-                    currentEngine = engines.first()
-                }
-                engineView.visibility = View.VISIBLE
-                engineView.text = currentEngine
+        rebuildModes(view)
+        rebuildEngines(view)
+        langView.text = currentLang.label
+        toneView.text = currentTone.label
+
+        langView.setOnClickListener {
+            showChooser("Bahasa hasil", OverlayCatalog.languages.map { it.label }) { index ->
+                currentLang = OverlayCatalog.languages[index]
+                langView.text = currentLang.label
+                applyTtsLanguage()
             }
         }
-        syncMode()
-        modeView.setOnClickListener {
-            showChooser("Mode", OverlayCatalog.labels()) { index ->
-                currentMode = OverlayCatalog.modes[index]
-                currentEngine = currentMode.engines.firstOrNull()
-                syncMode()
-            }
-        }
-        engineView.setOnClickListener {
-            val engines = currentMode.engines
-            if (engines.isEmpty()) return@setOnClickListener
-            showChooser("Engine", engines) { index ->
-                currentEngine = engines[index]
-                engineView.text = currentEngine
+        toneView.setOnClickListener {
+            showChooser("Gaya", OverlayCatalog.tones.map { it.label }) { index ->
+                currentTone = OverlayCatalog.tones[index]
+                toneView.text = currentTone.label
             }
         }
 
@@ -221,9 +259,15 @@ class FloatingService : Service() {
         view.findViewById<ImageButton>(R.id.overlay_panel_close).setOnClickListener {
             collapse(view, layoutParams)
         }
-        view.findViewById<View>(R.id.overlay_size_s).setOnClickListener { applyPreset(view, layoutParams, 0) }
-        view.findViewById<View>(R.id.overlay_size_m).setOnClickListener { applyPreset(view, layoutParams, 1) }
-        view.findViewById<View>(R.id.overlay_size_l).setOnClickListener { applyPreset(view, layoutParams, 2) }
+        view.findViewById<View>(R.id.overlay_size_s).setOnClickListener {
+            applyPreset(view, layoutParams, 0)
+        }
+        view.findViewById<View>(R.id.overlay_size_m).setOnClickListener {
+            applyPreset(view, layoutParams, 1)
+        }
+        view.findViewById<View>(R.id.overlay_size_l).setOnClickListener {
+            applyPreset(view, layoutParams, 2)
+        }
 
         generate.setOnClickListener {
             setInputFocus(layoutParams, view, false)
@@ -233,11 +277,11 @@ class FloatingService : Service() {
                 generate.text = getString(R.string.overlay_generate)
                 return@setOnClickListener
             }
-            startGenerate(brief, result, generate)
+            startGenerate(brief, extra, result, generate)
         }
         view.findViewById<View>(R.id.overlay_copy).setOnClickListener {
-            val text = result.text?.toString().orEmpty()
-            if (text.isBlank() || text == getString(R.string.overlay_result_empty)) {
+            val text = resultText(result)
+            if (text.isBlank()) {
                 toast("Belum ada hasil")
                 return@setOnClickListener
             }
@@ -254,15 +298,121 @@ class FloatingService : Service() {
                 },
             )
         }
+        share.setOnClickListener {
+            val text = resultText(result)
+            if (text.isBlank()) {
+                toast("Belum ada hasil")
+                return@setOnClickListener
+            }
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            try {
+                startActivity(
+                    Intent.createChooser(send, "Bagikan hasil").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                )
+            } catch (_: Exception) {
+                toast("Tidak ada aplikasi untuk berbagi")
+            }
+        }
+        listen.setOnClickListener {
+            if (speaking) {
+                stopSpeak()
+                listen.text = getString(R.string.overlay_listen)
+            } else {
+                val text = resultText(result)
+                if (text.isBlank()) {
+                    toast("Belum ada hasil")
+                    return@setOnClickListener
+                }
+                speak(text, listen)
+            }
+        }
+        mic.setOnClickListener { toggleMic(brief, mic) }
+        paste.setOnClickListener { pasteClipboard(brief) }
+        preview.setOnClickListener {
+            if (!expanded) expand(view, layoutParams)
+        }
 
         brief.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) setInputFocus(layoutParams, view, true)
         }
         brief.setOnClickListener { setInputFocus(layoutParams, view, true) }
+        extra.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) setInputFocus(layoutParams, view, true)
+        }
+        extra.setOnClickListener { setInputFocus(layoutParams, view, true) }
 
         attachDrag(view.findViewById(R.id.overlay_title), view, layoutParams)
         attachDrag(fab, view, layoutParams, toggleOnTap = true)
         attachResize(resize, view, layoutParams)
+    }
+
+    private fun resultText(result: TextView): String {
+        val text = result.text?.toString().orEmpty().trim()
+        if (text.isBlank()) return ""
+        if (text == getString(R.string.overlay_result_empty)) return ""
+        if (text == getString(R.string.overlay_writing)) return ""
+        return text
+    }
+
+    private fun makeChip(label: String, selected: Boolean, onClick: () -> Unit): TextView {
+        val v = TextView(this)
+        v.text = label
+        v.setTextColor(0xFFFFFFFF.toInt())
+        v.textSize = 11.5f
+        v.setTypeface(Typeface.DEFAULT_BOLD)
+        v.setPadding(dp(10), dp(6), dp(10), dp(6))
+        v.background = ContextCompat.getDrawable(
+            this,
+            if (selected) R.drawable.overlay_chip_on else R.drawable.overlay_chip_bg,
+        )
+        val lp = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+        )
+        lp.marginEnd = dp(6)
+        v.layoutParams = lp
+        v.setOnClickListener { onClick() }
+        return v
+    }
+
+    private fun rebuildModes(view: View) {
+        val row = view.findViewById<LinearLayout>(R.id.overlay_modes)
+        row.removeAllViews()
+        OverlayCatalog.modes.forEach { mode ->
+            row.addView(
+                makeChip(mode.label, mode.id == currentMode.id) {
+                    currentMode = mode
+                    currentEngine = mode.engines.firstOrNull()
+                    rebuildModes(view)
+                    rebuildEngines(view)
+                },
+            )
+        }
+    }
+
+    private fun rebuildEngines(view: View) {
+        val scroll = view.findViewById<View>(R.id.overlay_engines_scroll)
+        val row = view.findViewById<LinearLayout>(R.id.overlay_engines)
+        row.removeAllViews()
+        val engines = currentMode.engines
+        if (engines.isEmpty()) {
+            scroll.visibility = View.GONE
+            currentEngine = null
+            return
+        }
+        scroll.visibility = View.VISIBLE
+        engines.forEach { engine ->
+            row.addView(
+                makeChip(engine, engine == currentEngine) {
+                    currentEngine = engine
+                    rebuildEngines(view)
+                },
+            )
+        }
     }
 
     private fun overlayType(): Int {
@@ -360,8 +510,10 @@ class FloatingService : Service() {
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    val w = (startW + (event.rawX - downX)).toInt().coerceIn(dp(260), screenW() - dp(16))
-                    val h = (startH + (event.rawY - downY)).toInt().coerceIn(dp(340), screenH() - dp(80))
+                    val w = (startW + (event.rawX - downX)).toInt()
+                        .coerceIn(dp(280), screenW() - dp(16))
+                    val h = (startH + (event.rawY - downY)).toInt()
+                        .coerceIn(dp(380), screenH() - dp(80))
                     val lp = panel.layoutParams
                     lp.width = w
                     lp.height = h
@@ -408,6 +560,7 @@ class FloatingService : Service() {
             applyPreset(root, layoutParams, preset, persist = false)
         }
         panel.visibility = View.VISIBLE
+        root.findViewById<View>(R.id.overlay_preview).visibility = View.GONE
         highlightPreset(root, prefs().getInt(PREF_PRESET, 1))
         layoutParams.flags = focusedFlags()
         try {
@@ -418,11 +571,8 @@ class FloatingService : Service() {
 
     private fun collapse(root: View, layoutParams: WindowManager.LayoutParams) {
         expanded = false
-        groq.cancel()
-        busy = false
         setInputFocus(layoutParams, root, false)
         root.findViewById<View>(R.id.overlay_panel).visibility = View.GONE
-        root.findViewById<TextView>(R.id.overlay_generate).text = getString(R.string.overlay_generate)
         layoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT
         layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
         layoutParams.flags = collapsedFlags()
@@ -431,6 +581,26 @@ class FloatingService : Service() {
         } catch (_: Exception) {
         }
         savePos(layoutParams)
+        updatePreview(root)
+    }
+
+    private fun updatePreview(root: View) {
+        val preview = root.findViewById<TextView>(R.id.overlay_preview)
+        if (expanded) {
+            preview.visibility = View.GONE
+            return
+        }
+        val text = when {
+            busy -> getString(R.string.overlay_writing)
+            lastResult.isNotBlank() -> lastResult.take(90)
+            else -> ""
+        }
+        if (text.isBlank()) {
+            preview.visibility = View.GONE
+        } else {
+            preview.visibility = View.VISIBLE
+            preview.text = text
+        }
     }
 
     private fun applyPreset(
@@ -440,9 +610,9 @@ class FloatingService : Service() {
         persist: Boolean = true,
     ) {
         val (w, h) = when (preset) {
-            0 -> dp(280) to dp(400)
-            2 -> dp(360) to dp(620)
-            else -> dp(320) to dp(500)
+            0 -> dp(300) to dp(440)
+            2 -> dp(380) to dp(660)
+            else -> dp(340) to dp(560)
         }
         val panel = root.findViewById<View>(R.id.overlay_panel)
         val lp = panel.layoutParams
@@ -481,7 +651,11 @@ class FloatingService : Service() {
         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 
-    private fun setInputFocus(layoutParams: WindowManager.LayoutParams, root: View, focus: Boolean) {
+    private fun setInputFocus(
+        layoutParams: WindowManager.LayoutParams,
+        root: View,
+        focus: Boolean,
+    ) {
         layoutParams.flags = if (expanded || focus) focusedFlags() else collapsedFlags()
         try {
             windowManager?.updateViewLayout(root, layoutParams)
@@ -497,7 +671,12 @@ class FloatingService : Service() {
         }
     }
 
-    private fun startGenerate(brief: EditText, result: TextView, generate: TextView) {
+    private fun startGenerate(
+        brief: EditText,
+        extra: EditText,
+        result: TextView,
+        generate: TextView,
+    ) {
         val text = brief.text?.toString()?.trim().orEmpty()
         if (text.isEmpty()) {
             toast("Tulis brief-nya dulu")
@@ -508,6 +687,7 @@ class FloatingService : Service() {
             return
         }
         busy = true
+        lastResult = ""
         generate.text = getString(R.string.overlay_stop)
         result.text = getString(R.string.overlay_writing)
         groq.generate(
@@ -515,24 +695,207 @@ class FloatingService : Service() {
             mode = currentMode,
             brief = text,
             engine = currentEngine,
-            onDelta = { snapshot -> result.text = snapshot },
+            extra = extra.text?.toString().orEmpty(),
+            language = currentLang.id,
+            tone = currentTone.id,
+            onDelta = { snapshot ->
+                result.text = snapshot
+                lastResult = snapshot
+                root?.let { updatePreview(it) }
+            },
             onDone = { finalText ->
                 busy = false
                 generate.text = getString(R.string.overlay_generate)
-                result.text = if (finalText.isBlank()) getString(R.string.overlay_empty_result) else finalText
+                lastResult = if (finalText.isBlank()) {
+                    getString(R.string.overlay_empty_result)
+                } else {
+                    finalText
+                }
+                result.text = lastResult
+                root?.let { updatePreview(it) }
             },
             onError = { message ->
                 busy = false
                 generate.text = getString(R.string.overlay_generate)
                 val current = result.text?.toString().orEmpty()
                 if (current.isNotBlank() && current != getString(R.string.overlay_writing)) {
+                    lastResult = current
                     result.text = current
                     toast(message)
                 } else {
                     result.text = message
                 }
+                root?.let { updatePreview(it) }
             },
         )
+    }
+
+    private fun ttsLocale(): Locale {
+        return when (currentLang.id) {
+            "en" -> Locale.US
+            "ms" -> Locale("ms", "MY")
+            "ja" -> Locale.JAPAN
+            "zh" -> Locale.SIMPLIFIED_CHINESE
+            "ar" -> Locale("ar", "SA")
+            "es" -> Locale("es", "ES")
+            else -> Locale("id", "ID")
+        }
+    }
+
+    private fun applyTtsLanguage() {
+        val engine = tts ?: return
+        if (!ttsReady) return
+        val wanted = ttsLocale()
+        val result = engine.setLanguage(wanted)
+        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            engine.language = Locale("id", "ID")
+        }
+    }
+
+    private fun speak(text: String, listen: TextView) {
+        if (!ttsReady || tts == null) {
+            toast("Suara belum siap. Coba lagi sebentar.")
+            return
+        }
+        applyTtsLanguage()
+        val cleaned = text
+            .replace(Regex("```[\\s\\S]*?```"), " ")
+            .replace(Regex("#{1,6}\\s*"), "")
+            .replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1")
+            .replace(Regex("\\*([^*]+)\\*"), "$1")
+            .trim()
+        if (cleaned.isBlank()) {
+            toast("Tidak ada teks untuk dibacakan")
+            return
+        }
+        speaking = true
+        listen.text = getString(R.string.overlay_stop)
+        tts?.setOnUtteranceProgressListener(object : android.speech.tts.UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) {}
+            override fun onDone(utteranceId: String?) {
+                speaking = false
+                listen.post { listen.text = getString(R.string.overlay_listen) }
+            }
+            override fun onError(utteranceId: String?) {
+                speaking = false
+                listen.post {
+                    listen.text = getString(R.string.overlay_listen)
+                    toast("Gagal membacakan teks")
+                }
+            }
+        })
+        val params = Bundle()
+        params.putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_MUSIC)
+        params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f)
+        val spoken = tts?.speak(cleaned.take(3900), TextToSpeech.QUEUE_FLUSH, params, "xy-overlay")
+        if (spoken != TextToSpeech.SUCCESS) {
+            speaking = false
+            listen.text = getString(R.string.overlay_listen)
+            toast("Mesin suara menolak memutar. Cek volume media HP.")
+        }
+    }
+
+    private fun stopSpeak() {
+        speaking = false
+        try {
+            tts?.stop()
+        } catch (_: Exception) {
+        }
+        root?.findViewById<TextView>(R.id.overlay_listen)?.text = getString(R.string.overlay_listen)
+    }
+
+    private fun hasMicPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun toggleMic(brief: EditText, mic: TextView) {
+        if (listening) {
+            stopMic()
+            return
+        }
+        if (!hasMicPermission()) {
+            toast("Buka aplikasi, izinkan mikrofon, lalu nyalakan mengambang lagi.")
+            return
+        }
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            toast("HP ini tidak punya pengenal suara.")
+            return
+        }
+        try {
+            if (recognizer == null) {
+                recognizer = SpeechRecognizer.createSpeechRecognizer(this)
+                recognizer?.setRecognitionListener(object : RecognitionListener {
+                    override fun onReadyForSpeech(params: Bundle?) {}
+                    override fun onBeginningOfSpeech() {}
+                    override fun onRmsChanged(rmsdB: Float) {}
+                    override fun onBufferReceived(buffer: ByteArray?) {}
+                    override fun onEndOfSpeech() {}
+                    override fun onError(error: Int) {
+                        listening = false
+                        mic.text = getString(R.string.overlay_mic)
+                        toast("Dikte gagal. Coba lagi.")
+                    }
+                    override fun onResults(results: Bundle?) {
+                        listening = false
+                        mic.text = getString(R.string.overlay_mic)
+                        val spoken = results
+                            ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                            ?.firstOrNull()
+                            .orEmpty()
+                        if (spoken.isNotBlank()) {
+                            val current = brief.text?.toString().orEmpty()
+                            brief.setText(
+                                if (current.isBlank()) spoken else "$current $spoken",
+                            )
+                            brief.setSelection(brief.text?.length ?: 0)
+                        }
+                    }
+                    override fun onPartialResults(partialResults: Bundle?) {}
+                    override fun onEvent(eventType: Int, params: Bundle?) {}
+                })
+            }
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,
+            )
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, ttsLocale().toLanguageTag())
+            intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
+            listening = true
+            mic.text = getString(R.string.overlay_mic_on)
+            recognizer?.startListening(intent)
+        } catch (_: Exception) {
+            listening = false
+            mic.text = getString(R.string.overlay_mic)
+            toast("Dikte tidak bisa dimulai.")
+        }
+    }
+
+    private fun stopMic() {
+        listening = false
+        try {
+            recognizer?.stopListening()
+        } catch (_: Exception) {
+        }
+        try {
+            recognizer?.destroy()
+        } catch (_: Exception) {
+        }
+        recognizer = null
+        root?.findViewById<TextView>(R.id.overlay_mic)?.text = getString(R.string.overlay_mic)
+    }
+
+    private fun pasteClipboard(brief: EditText) {
+        val clip = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        val text = clip.primaryClip?.getItemAt(0)?.coerceToText(this)?.toString()?.trim().orEmpty()
+        if (text.isBlank()) {
+            toast("Papan klip kosong")
+            return
+        }
+        brief.setText(text)
+        brief.setSelection(brief.text?.length ?: 0)
+        toast("Teks dari papan klip ditempel")
     }
 
     private fun savePos(layoutParams: WindowManager.LayoutParams) {

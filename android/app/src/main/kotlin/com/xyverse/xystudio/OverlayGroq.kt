@@ -34,6 +34,9 @@ class OverlayGroq {
         mode: OverlayMode,
         brief: String,
         engine: String?,
+        extra: String = "",
+        language: String = "id",
+        tone: String = "natural",
         onDelta: (String) -> Unit,
         onDone: (String) -> Unit,
         onError: (String) -> Unit,
@@ -57,7 +60,9 @@ class OverlayGroq {
                     return@thread
                 }
                 try {
-                    assembled = streamOnce(id, apiKey, model, mode, brief, engine, onDelta)
+                    assembled = streamOnce(
+                        id, apiKey, model, mode, brief, engine, extra, language, tone, onDelta,
+                    )
                     if (!alive()) return@thread
                     if (assembled.isNotBlank()) {
                         main.post { if (alive()) onDone(assembled) }
@@ -94,9 +99,12 @@ class OverlayGroq {
         mode: OverlayMode,
         brief: String,
         engine: String?,
+        extra: String,
+        language: String,
+        tone: String,
         onDelta: (String) -> Unit,
     ): String {
-        val body = payload(model, mode, brief, engine)
+        val body = payload(model, mode, brief, engine, extra, language, tone)
         val conn = (URL("https://api.groq.com/openai/v1/chat/completions").openConnection() as HttpURLConnection)
         connection = conn
         conn.requestMethod = "POST"
@@ -137,14 +145,27 @@ class OverlayGroq {
         return assembled.toString()
     }
 
-    private fun payload(model: String, mode: OverlayMode, brief: String, engine: String?): String {
+    private fun payload(
+        model: String,
+        mode: OverlayMode,
+        brief: String,
+        engine: String?,
+        extra: String,
+        language: String,
+        tone: String,
+    ): String {
+        val lang = OverlayCatalog.languages.firstOrNull { it.id == language }
+            ?: OverlayCatalog.languages.first()
+        val toneOpt = OverlayCatalog.tones.firstOrNull { it.id == tone }
+            ?: OverlayCatalog.tones.first()
         val system = """
             Kamu adalah XyStudio AI, penulis profesional.
             Aturan wajib:
             1. Balas HANYA dengan hasil yang diminta, tanpa basa-basi.
             2. Markdown rapi: ## judul, - poin, **tebal**.
-            3. Bahasa keluaran: Bahasa Indonesia.
-            4. DILARANG memakai emoji atau simbol dekoratif.
+            3. Bahasa keluaran: ${lang.prompt}.
+            4. Gaya penulisan: ${toneOpt.prompt}.
+            5. DILARANG memakai emoji atau simbol dekoratif.
         """.trimIndent()
         val user = buildString {
             if (!engine.isNullOrBlank()) {
@@ -153,6 +174,9 @@ class OverlayGroq {
             }
             append("TUGAS:\n").append(mode.instruction).append("\n\n")
             append("OBJEK / BRIEF PENGGUNA:\n\"\"\"\n").append(brief.trim()).append("\n\"\"\"")
+            if (extra.isNotBlank()) {
+                append("\n\nCATATAN TAMBAHAN:\n").append(extra.trim())
+            }
         }
         val root = JSONObject()
         root.put("model", model)

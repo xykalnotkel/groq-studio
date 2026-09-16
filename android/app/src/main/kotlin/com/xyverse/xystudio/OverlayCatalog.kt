@@ -124,4 +124,27 @@ object OverlayCatalog {
     )
 
     fun labels(): List<String> = modes.map { it.label }
+
+    val languages: List<OverlayOption> = listOf(
+        OverlayOption("id", "Indonesia", "Bahasa Indonesia"),
+        OverlayOption("en", "English", "English"),
+        OverlayOption("ms", "Melayu", "Bahasa Melayu"),
+        OverlayOption("ja", "Jepang", "Japanese"),
+        OverlayOption("zh", "Mandarin", "Chinese"),
+        OverlayOption("ar", "Arab", "Arabic"),
+        OverlayOption("es", "Spanyol", "Spanish"),
+    )
+
+    val tones: List<OverlayOption> = listOf(
+        OverlayOption("natural", "Natural", "natural, seperti ditulis manusia sungguhan"),
+        OverlayOption("profesional", "Profesional", "profesional, jelas, dan dapat dipercaya"),
+        OverlayOption("santai", "Santai", "santai dan ramah, tetap sopan"),
+        OverlayOption("padat", "Padat", "padat, langsung ke inti, tanpa kata mubazir"),
+    )
 }
+
+data class OverlayOption(
+    val id: String,
+    val label: String,
+    val prompt: String,
+)

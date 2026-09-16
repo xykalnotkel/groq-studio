@@ -9,18 +9,21 @@
 
     <FrameLayout
         android:id="@+id/overlay_panel"
-        android:layout_width="320dp"
-        android:layout_height="480dp"
+        android:layout_width="340dp"
+        android:layout_height="560dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/overlay_card_bg"
-        android:elevation="12dp"
+        android:elevation="14dp"
         android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:paddingLeft="10dp"
+            android:paddingTop="8dp"
+            android:paddingRight="10dp"
+            android:paddingBottom="10dp">
 
             <LinearLayout
                 android:id="@+id/overlay_header"
@@ -98,59 +101,144 @@
                     android:tint="#FFFFFF" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/overlay_mode"
+            <HorizontalScrollView
+                android:id="@+id/overlay_modes_scroll"
                 android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:background="@drawable/overlay_input_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:textColor="#EDEDF5"
-                android:textSize="13sp" />
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
 
-            <TextView
-                android:id="@+id/overlay_engine"
+                <LinearLayout
+                    android:id="@+id/overlay_modes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingBottom="2dp" />
+            </HorizontalScrollView>
+
+            <HorizontalScrollView
+                android:id="@+id/overlay_engines_scroll"
                 android:layout_width="match_parent"
-                android:layout_height="36dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:scrollbars="none"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/overlay_engines"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/overlay_input_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:textColor="#EDEDF5"
-                android:textSize="13sp"
-                android:visibility="gone" />
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/overlay_lang"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_marginRight="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/overlay_chip_bg"
+                    android:gravity="center"
+                    android:textColor="#EDEDF5"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overlay_tone"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/overlay_chip_bg"
+                    android:gravity="center"
+                    android:textColor="#EDEDF5"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <EditText
                 android:id="@+id/overlay_brief"
                 android:layout_width="match_parent"
-                android:layout_height="72dp"
+                android:layout_height="64dp"
                 android:layout_marginTop="6dp"
                 android:background="@drawable/overlay_input_bg"
                 android:gravity="top|start"
                 android:hint="@string/overlay_brief_hint"
+                android:importantForAutofill="no"
                 android:inputType="textMultiLine|textCapSentences"
                 android:padding="8dp"
                 android:textColor="#EDEDF5"
                 android:textColorHint="#6E6E8C"
                 android:textSize="12.5sp" />
 
-            <TextView
-                android:id="@+id/overlay_generate"
+            <EditText
+                android:id="@+id/overlay_extra"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/overlay_btn_bg"
-                android:gravity="center"
-                android:text="@string/overlay_generate"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:layout_height="36dp"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/overlay_input_bg"
+                android:gravity="center_vertical|start"
+                android:hint="@string/overlay_extra_hint"
+                android:importantForAutofill="no"
+                android:inputType="textCapSentences"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:textColor="#EDEDF5"
+                android:textColorHint="#6E6E8C"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/overlay_mic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:background="@drawable/overlay_ghost_bg"
+                    android:gravity="center"
+                    android:minWidth="48dp"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/overlay_mic"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overlay_paste"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="6dp"
+                    android:background="@drawable/overlay_ghost_bg"
+                    android:gravity="center"
+                    android:minWidth="48dp"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/overlay_paste"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overlay_generate"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/overlay_btn_bg"
+                    android:gravity="center"
+                    android:text="@string/overlay_generate"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <ScrollView
                 android:id="@+id/overlay_result_scroll"
@@ -182,13 +270,39 @@
                     android:id="@+id/overlay_copy"
                     android:layout_width="0dp"
                     android:layout_height="34dp"
-                    android:layout_marginRight="6dp"
+                    android:layout_marginRight="4dp"
                     android:layout_weight="1"
                     android:background="@drawable/overlay_chip_bg"
                     android:gravity="center"
                     android:text="@string/overlay_copy"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overlay_listen"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_marginRight="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/overlay_chip_bg"
+                    android:gravity="center"
+                    android:text="@string/overlay_listen"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overlay_share"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_marginRight="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/overlay_chip_bg"
+                    android:gravity="center"
+                    android:text="@string/overlay_share"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11.5sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -200,7 +314,7 @@
                     android:gravity="center"
                     android:text="@string/overlay_open"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="11.5sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
@@ -212,6 +326,20 @@
             android:layout_gravity="bottom|end"
             android:background="@drawable/overlay_resize" />
     </FrameLayout>
+
+    <TextView
+        android:id="@+id/overlay_preview"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/overlay_card_bg"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:padding="8dp"
+        android:textColor="#C9C9DC"
+        android:textSize="11sp"
+        android:visibility="gone" />
 
     <FrameLayout
         android:layout_width="wrap_content"
