@@ -45,7 +45,7 @@ const shots = [
     <aside class="card dl-card">
       <h2>Cara pasang</h2>
       <ol class="prose" style="margin-top:10px">
-        <li>Kalau sudah pasang 3.2.1 atau lebih lama, uninstall dulu (tanda tangan APK berubah di 3.2.2).</li>
+        <li>Kalau HP masih 3.2.1 atau lebih lama, uninstall dulu (tanda tangan berubah di 3.2.2). Dari 3.2.2 ke 3.2.4 cukup update.</li>
         <li>Unduh APK 64-bit kalau HP-mu keluaran beberapa tahun terakhir.</li>
         <li>Buka file dari notifikasi unduhan.</li>
         <li>Kalau diminta, izinkan pasang dari sumber ini.</li>
@@ -79,10 +79,10 @@ const shots = [
     <section class="card dl-wide" id="scan">
       <h2>Hasil pemindaian</h2>
       <p class="muted small" style="margin:6px 0 4px">
-        ClamAV 1.4.3 memindai ketiga APK rilis: bersih (0 terinfeksi).
-        VirusTotal belum mengindeks hash ini — unggahan API mereka minta recaptcha,
-        jadi tidak ada angka 0/70 palsu di sini. Tempel SHA-256 atau unggah APK
-        resmi di VirusTotal kalau mau cek 70+ mesin.
+        APK 3.2.4 baru rilis. Bandingkan SHA-256 di kartu unduhan.
+        VirusTotal belum mengindeks hash 3.2.4 — unggahan API mereka minta recaptcha,
+        jadi tidak ada angka 0/70 palsu di sini. Gambar di bawah adalah bukti 3.2.2.
+        Tempel SHA-256 3.2.4 atau unggah APK resmi di VirusTotal kalau mau cek 70+ mesin.
       </p>
       <div class="scan-grid">
         <figure>
@@ -95,7 +95,7 @@ const shots = [
         </figure>
       </div>
       <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px">
-        <a class="btn sm" href="https://www.virustotal.com/gui/file/70dc3545a950eb8c90c2fdfff72a7164e907476aff0c32359784ceb457aeb3fa" target="_blank" rel="noopener">Buka VirusTotal (hash 64-bit)</a>
+        <a class="btn sm" href="https://www.virustotal.com/gui/file/f18d978bf424ad6cb0814e1107b5985c40dfd67b2fcb8d94e69a13f0455e67ec" target="_blank" rel="noopener">Buka VirusTotal (hash 64-bit 3.2.4)</a>
         <a class="btn sm ghost" href="https://www.virustotal.com/gui/home/upload" target="_blank" rel="noopener">Unggah APK di VirusTotal</a>
       </div>
     </section>
@@ -125,9 +125,9 @@ const shots = [
           <h3>Cara cek sendiri</h3>
           <p class="muted">
             Unduh hanya dari <code>{APP.downloadUrl.replace('https://', '')}</code>.
-            Bandingkan SHA-256 di kartu unduhan. APK 3.2.2 lolos ClamAV (bersih)
-            dan ditandatangani CN=XyVerse. Unggah ke VirusTotal kalau mau cek
-            mesin lain. Jangan pasang berkas yang dikirim orang lewat chat.
+            Bandingkan SHA-256 di kartu unduhan. Ditandatangani CN=XyVerse.
+            Unggah ke VirusTotal kalau mau cek mesin lain. Jangan pasang
+            berkas yang dikirim orang lewat chat.
           </p>
         </div>
         <div>

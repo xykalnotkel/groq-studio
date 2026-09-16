@@ -65,10 +65,10 @@ Rilis terbaru: <https://github.com/xykalnotkel/groq-studio/releases/latest>
 
 | File | Untuk |
 |---|---|
-| `XyStudio-3.2.2-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
-| `XyStudio-3.2.2-armeabi-v7a.apk` | HP Android lama / 32-bit |
-| `XyStudio-3.2.2-universal.apk` | Semua arsitektur (ukuran paling besar) |
-| `XyStudio-3.2.2.aab` | Siap untuk Play Store nanti |
+| `XyStudio-3.2.4-arm64-v8a.apk` | **Pilihan utama** — hampir semua HP Android modern |
+| `XyStudio-3.2.4-armeabi-v7a.apk` | HP Android lama / 32-bit |
+| `XyStudio-3.2.4-universal.apk` | Semua arsitektur (ukuran paling besar) |
+| `XyStudio-3.2.4.aab` | Siap untuk Play Store nanti |
 
 Unduh resmi: **https://dl.xystudio.my.id** (bukan tautan github.com).
 Mulai 3.2.2 APK ditandatangani **keystore resmi XyVerse** (bukan debug) dan

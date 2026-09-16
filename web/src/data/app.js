@@ -3,7 +3,7 @@ export const APP = {
   name: 'XyStudio AI',
   brand: 'XyVerse',
   credit: 'Built in XyVerse',
-  version: '3.2.2',
+  version: '3.2.4',
   tagline: 'Tulis apa saja, jadi cepat',
   description:
     'Studio menulis AI: judul, artikel, caption, riset web, prompt video, dan 24 mode lainnya. Ditenagai Groq.',
@@ -26,27 +26,27 @@ export const DOWNLOADS = [
   {
     id: 'android',
     href: 'https://dl.xystudio.my.id/android',
-    file: 'XyStudio-3.2.2-arm64-v8a.apk',
+    file: 'XyStudio-3.2.4-arm64-v8a.apk',
     label: 'Android 64-bit',
     note: 'Pilihan utama. Hampir semua HP Android modern.',
-    sha256: '70dc3545a950eb8c90c2fdfff72a7164e907476aff0c32359784ceb457aeb3fa',
+    sha256: 'f18d978bf424ad6cb0814e1107b5985c40dfd67b2fcb8d94e69a13f0455e67ec',
     primary: true,
   },
   {
     id: 'android-32',
     href: 'https://dl.xystudio.my.id/android-32',
-    file: 'XyStudio-3.2.2-armeabi-v7a.apk',
+    file: 'XyStudio-3.2.4-armeabi-v7a.apk',
     label: 'Android 32-bit',
     note: 'HP Android lama.',
-    sha256: '03a6d51c076439c5f08cedc21ab94be59a1e3f86e6737c67bde8aaa1740b4b79',
+    sha256: '59811e9eff982d529fad5877cbfb385cfeccc00eeb8d4c35079040e7a3ac20f9',
   },
   {
     id: 'universal',
     href: 'https://dl.xystudio.my.id/universal',
-    file: 'XyStudio-3.2.2-universal.apk',
+    file: 'XyStudio-3.2.4-universal.apk',
     label: 'Universal',
     note: 'Semua arsitektur. Ukuran paling besar.',
-    sha256: '143ceccf6c5c16379ee277a4a57a9e2af5d8ccfd08f3d11179b6f42bd756b45f',
+    sha256: '0bbcf35f29a86ebf85b58c8ffe779f1c639ef727040cebdebc8b907cee300b16',
   },
 ];
 
